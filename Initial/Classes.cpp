@@ -213,3 +213,121 @@ float MediaMovel::getMin()
 }
 
 
+///Rotinas de verificação de apogeu
+Apogeu::Apogeu(int n, int r, long s) : N(n), R(r), S(s)
+{
+}
+void Apogeu::resetTimer()
+{
+	TempMax = micros();
+}
+float Apogeu::addAltitude(float H)
+{
+	for (int i = N - 1; i > 0; i--)
+	{
+		Alt[i] = Alt[i - 1];
+	}
+	Alt[0] = H;
+	float Sum = 0;
+	for (uint8_t i = 0; i < N; i++)
+	{
+		Sum += Alt[i];
+	}
+	for (uint8_t i = R - 1; i > 0; i--)
+	{
+		altMed[i] = altMed[i - 1];
+	}
+	altMed[0] = Sum / N;
+	if (altMed[0] > apgPt)
+	{
+		apgPt = Alt[0];
+		apgTm = micros() - TempMax;
+	}
+	return altMed[0];
+}
+float Apogeu::getApgPt()
+{
+	return apgPt;
+}
+float Apogeu::getApgTm()
+{
+	return apgTm;
+}
+boolean Apogeu::getApogeu()
+{
+	boolean *temp = new boolean[R];
+	for (uint8_t i = 0; i < R; i++) temp[i] = 1;
+	for (uint8_t i = R - 1; i > 0; i--)
+	{
+		for (uint8_t j = R - 1; j > 0; j = j - R - i)
+		{
+			if (altMed[j] > altMed[j - 1]) temp[i] &= 1;
+			else temp[i] &= 0;
+		}
+	}
+	return false;
+}
+boolean Apogeu::apgAlpha()
+{
+	volatile boolean temp = 1;
+	for (byte i = R - 1; i > 0; i--)
+	{
+		if (altMed[i] > altMed[i - 1]) temp &= 1;
+		else temp &= 0;
+	}
+	return temp;
+}
+boolean Apogeu::apgBeta()
+{
+	volatile boolean temp = 1;
+	for (byte i = R - 1; i > 0; i -= 2)
+	{
+		if (altMed[i] > altMed[i - 1]) temp &= 1;
+		else temp &= 0;
+	}
+	return temp;
+}
+boolean Apogeu::apgGamma()
+{
+	volatile boolean temp = 1;
+	for (byte i = R - 1; i > 0; i -= 3)
+	{
+		if (altMed[i] > altMed[i - 1]) temp &= 1;
+		else temp &= 0;
+	}
+	return temp;
+}
+boolean Apogeu::apgPi()
+{
+	return (altMed[0] < (altMed[R - 1] + S));
+}
+boolean Apogeu::apgOmega()
+{
+	return apgExterno;
+}
+void Apogeu::setOmega(boolean apgE)
+{
+	apgExterno = apgE;
+}
+int Apogeu::serial()
+{
+	for (int i = 0; i < R; i++)
+	{
+		temp[i] = 1;
+	}
+	for (int i = R - 1; i > 0; i--)
+	{
+		for (int j = R - 1; j > 1; j -= (R - i))
+		{
+			int all = j - R + i;
+			if (all < 0) continue;
+			temp[i] &= (altMed[j] < altMed[all]);
+		}
+	}
+	int sum = 0;
+	for (int k = R - 1; k > 0; k--)
+	{
+		sum += temp[k];
+	}
+	return sum;
+}

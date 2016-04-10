@@ -2,7 +2,8 @@
 #include "Classes.h"
 
 Baro bmp(0x77);
-MediaMovel MM_bmp[3]{ (50),(50),(50) };
+MediaMovel MM_bmp[2]{ (50),(50) };
+Apogeu apg(10, 20, 50);
 void setup()
 {
 	/* add setup code here */
@@ -25,7 +26,9 @@ void loop()
 	Serial.print('\t');
 	Serial.print(MM_bmp[1].addValor(bmp.getPressure()));
 	Serial.print('\t');
-	Serial.println(MM_bmp[2].addValor(bmp.getAltitude()));
+	Serial.print(apg.addAltitude(bmp.getAltitude()));
+	Serial.print('\t');
+	Serial.println(apg.serial());
 	//delay(100);
   /* add main program code here */
 

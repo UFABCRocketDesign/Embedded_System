@@ -53,6 +53,33 @@ public:
 	float getMin();
 };
 
+class Apogeu
+{
+public:
+	Apogeu(int n, int r, long s);
+private:
+	boolean apgExterno = 0;
+	long  apgTm = 0;
+	float apgPt = 0;
+	long TempMax;
+	const unsigned int N, R, S;
+	bool *temp = new bool[R];
+	float* Alt = new float[N];
+	float* altMed = new float[N];
+public:
+	void resetTimer();
+	float addAltitude(float H);
+	float getApgPt();
+	float getApgTm();
+	boolean getApogeu();
+	boolean apgAlpha();
+	boolean apgBeta();
+	boolean apgGamma();
+	boolean apgPi();
+	boolean apgOmega();
+	void setOmega(boolean apgE);
+	int serial();
+};
 
 #endif
 
