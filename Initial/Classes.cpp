@@ -4,8 +4,11 @@
 
 #include "Classes.h"
 
-///Bar?metro
-Baro::Baro(int ad):BMP085_Address(ad){}
+///Barômetro
+Baro::Baro(int ad):BMP085_Address(ad)
+{
+
+}
 void Baro::begin()
 {
 	Wire.begin();
@@ -21,7 +24,6 @@ void Baro::begin()
 	mb = ReadInt(0xBA);
 	mc = ReadInt(0xBC);
 	md = ReadInt(0xBE);
-	Serial.print("Baro");
 }
 char Baro::ReadChar(unsigned char address)
 {
@@ -56,7 +58,6 @@ int Baro::ReadInt(unsigned char address)
 
 	return (int)msb << 8 | lsb;
 }
-
 float Baro::readTemperature()
 {
 	unsigned int ut;
@@ -75,7 +76,7 @@ float Baro::readTemperature()
 	ut = ReadInt(0xF6);
 
 	b5 = ((((long)ut - (long)ac6)*(long)ac5) >> 15) + ((long)mc << 11) / (((((long)ut - (long)ac6)*(long)ac5) >> 15) + md);
-	celcius = ((b5 + 8) >> 4) / 10;
+	celcius = (float)((b5 + 8) >> 4) / 10;
 	return celcius;
 }
 float Baro::getTemperature()
@@ -138,12 +139,12 @@ long Baro::getPressure()
 }
 float Baro::readAltitude(int Base)
 {
-	meters = ((1 - pow(pascal / 101325, 1 / 5.25588)) / 0.0000225577) - Base;
+	meters = ((1 - pow((float)pascal / 101325, 1 / 5.25588)) / 0.0000225577) - Base;
 	return meters;
 }
 float Baro::readAltitude()
 {
-	meters = ((1 - pow(pascal / 101325, 1 / 5.25588)) / 0.0000225577) - base;
+	meters = ((1 - pow((float)pascal / 101325, 1 / 5.25588)) / 0.0000225577) - base;
 	return meters;
 }
 float Baro::getAltitude()
@@ -174,3 +175,41 @@ float Baro::getZero()
 {
 	return base;
 }
+
+
+///Filtro de média móvel
+MediaMovel::MediaMovel(int n) : N(n)
+{
+
+}
+float MediaMovel::addValor(float valor)
+{
+	for (byte i = N - 1; i > 0; i--)
+	{
+		Vals[i] = Vals[i - 1];
+	}
+	Vals[0] = valor;
+	media = 0;
+	for (byte i = 0; i < N; i++)
+	{
+		media += Vals[i];
+	}
+	media /= N;
+	if (media > max) max = media;
+	if (media < min) min = media;
+	return media;
+}
+float MediaMovel::getMedia()
+{
+	return media;
+}
+float MediaMovel::getMax()
+{
+	return max;
+}
+float MediaMovel::getMin()
+{
+	return min;
+}
+
+

@@ -20,7 +20,8 @@ private:
 	int b1, b2;
 	int mb, mc, md;
 	long b5;
-	float celcius, pascal, atm, meters, base;//Bmp
+	float celcius, meters, base = 0;//Bmp
+	long pascal;
 	char ReadChar(unsigned char address);
 	int ReadInt(unsigned char address);
 public:
@@ -35,6 +36,21 @@ public:
 	void readAll();
 	float readZero(int i);
 	float getZero();
+};
+
+class MediaMovel
+{
+public:	//Inicializadores
+	MediaMovel(int n);
+private:
+	const unsigned int N;
+	float* Vals = new float[N];
+	float media, max = 0, min;
+public:
+	float addValor(float valor);
+	float getMedia();
+	float getMax();
+	float getMin();
 };
 
 
