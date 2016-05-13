@@ -1,4 +1,4 @@
-//#include <Wire.h>
+#include <Wire.h>
 #include "Classes.h"
 
 Baro bmp(0x77);
@@ -6,7 +6,7 @@ MediaMovel MM_bmp[2]{ (50),(50) };
 Apogeu apg(10, 20, 50);
 void setup()
 {
-	/* add setup code here */
+	Wire.begin();
 	Serial.begin(250000);
 	bmp.begin();
 	bmp.readAll();

@@ -334,6 +334,13 @@ int Apogeu::serial()
 ///Magnet?metro
 Mag::Mag()
 {
+	
+}
+Mag::Mag(int ad):HMC5883_Address(ad)
+{
+}
+void Mag::begin()
+{
 	Wire.beginTransmission(HMC5883_Address);
 	Wire.write(0x02);                 // Seleciona o modo
 	Wire.write(0x00);                 // Modo de medicao continuo
@@ -365,6 +372,119 @@ float Mag::getY()
 	return Y;
 }
 float Mag::getZ()
+{
+	return Z;
+}
+
+
+///Girosc?pio
+Giro::Giro(int sc): scale(sc)
+{
+
+}
+Giro::Giro(int sc, int ad):scale(sc), L3G4200D_Address(ad)
+{
+
+}
+void Giro::begin()
+{
+	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
+	Wire.write(CTRL_REG1);    // send register address
+	Wire.write(0b00001111);   // send value to write
+	Wire.endTransmission();   // end transmission
+
+	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
+	Wire.write(CTRL_REG2);    // send register address
+	Wire.write(0b00000000);   // send value to write
+	Wire.endTransmission();   // end transmission
+
+	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
+	Wire.write(CTRL_REG3);       // send register address
+	Wire.write(0b00001000);         // send value to write
+	Wire.endTransmission();     // end transmission
+
+	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
+	Wire.write(CTRL_REG4);       // send register address
+	switch (scale)
+	{ // Configura o L3G4200 para 200, 500 ou 2000 graus/seg
+	case 250:
+		Wire.write(0b00000000);         // send value to write
+		break;
+	case 500:
+		Wire.write(0b00010000);         // send value to write
+		break;
+	default:
+		Wire.write(0b00110000);         // send value to write
+		break;
+	}
+	Wire.endTransmission();     // end transmission
+
+	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
+	Wire.write(CTRL_REG5);       // send register address
+	Wire.write(0b00000000);         // send value to write
+	Wire.endTransmission();     // end transmission
+}
+void Giro::readAll()
+{
+	///Faz a leitura de todos os eixos///
+	Wire.beginTransmission(L3G4200D_Address);
+	Wire.write(Gyro_Xmsb);
+	Wire.endTransmission();
+	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+	if (Wire.available())
+	{
+		X = Wire.read() << 8; //X msb
+	}
+	Wire.beginTransmission(L3G4200D_Address);
+	Wire.write(Gyro_Xlsb);
+	Wire.endTransmission();
+	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+	if (Wire.available())
+	{
+		X += Wire.read();   //X lsb
+	}
+	Wire.beginTransmission(L3G4200D_Address);
+	Wire.write(Gyro_Ymsb);
+	Wire.endTransmission();
+	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+	if (Wire.available())
+	{
+		Y = Wire.read() << 8; //Y msb
+	}
+	Wire.beginTransmission(L3G4200D_Address);
+	Wire.write(Gyro_Ylsb);
+	Wire.endTransmission();
+	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+	if (Wire.available())
+	{
+		Y += Wire.read();   //Y lsb
+	}
+	Wire.beginTransmission(L3G4200D_Address);
+	Wire.write(Gyro_Zmsb);
+	Wire.endTransmission();
+	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+	if (Wire.available())
+	{
+		Z = Wire.read() << 8; //X msb
+	}
+	Wire.beginTransmission(L3G4200D_Address);
+	Wire.write(Gyro_Zlsb);
+	Wire.endTransmission();
+	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+	if (Wire.available())
+	{
+		Z += Wire.read();   //X lsb
+	}
+}
+float Giro::getX()
+{
+	return X;
+}
+float Giro::getY()
+{
+	return Y;
+}
+float Giro::getZ()
 {
 	return Z;
 }
