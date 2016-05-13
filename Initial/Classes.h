@@ -11,6 +11,7 @@
 class Baro  //BMP085
 {
 public:	//Inicializadores
+	Baro();
 	Baro(int ad);
 private:
 	const int BMP085_Address = 0x77;
@@ -80,6 +81,22 @@ public:
 	void setOmega(boolean apgE);
 	int serial();
 };
+
+class Mag //HMC5883
+{
+public: //Inicializadores
+	Mag();
+private:
+	const uint8_t HMC5883_Address = 0x1E;
+	const int Mag_Xmsb = 0x03;
+	float X, Y, Z;
+public:
+	void readAll();
+	float getX();
+	float getY();
+	float getZ();
+};
+
 
 #endif
 

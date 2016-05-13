@@ -1,13 +1,11 @@
-// 
-// 
-// 
-
 #include "Classes.h"
 
-///Barômetro
+///BarÃ´metro
+Baro::Baro()
+{
+}
 Baro::Baro(int ad):BMP085_Address(ad)
 {
-
 }
 void Baro::begin()
 {
@@ -177,7 +175,7 @@ float Baro::getZero()
 }
 
 
-///Filtro de média móvel
+///Filtro de mï¿½dia mï¿½vel
 MediaMovel::MediaMovel(int n) : N(n)
 {
 
@@ -213,7 +211,7 @@ float MediaMovel::getMin()
 }
 
 
-///Rotinas de verificação de apogeu
+///Rotinas de verificaï¿½ï¿½o de apogeu
 Apogeu::Apogeu(int n, int r, long s) : N(n), R(r), S(s)
 {
 }
@@ -311,13 +309,13 @@ void Apogeu::setOmega(boolean apgE)
 }
 int Apogeu::serial()
 {
-	for (int i = 0; i < R; i++)
+	for (unsigned int i = 0; i < R; i++)
 	{
 		temp[i] = 1;
 	}
-	for (int i = R - 1; i > 0; i--)
+	for (unsigned int i = R - 1; i > 0; i--)
 	{
-		for (int j = R - 1; j > 1; j -= (R - i))
+		for (unsigned int j = R - 1; j > 1; j -= (R - i))
 		{
 			int all = j - R + i;
 			if (all < 0) continue;
@@ -325,9 +323,48 @@ int Apogeu::serial()
 		}
 	}
 	int sum = 0;
-	for (int k = R - 1; k > 0; k--)
+	for (unsigned int k = R - 1; k > 0; k--)
 	{
 		sum += temp[k];
 	}
 	return sum;
+}
+
+
+///Magnet?metro
+Mag::Mag()
+{
+	Wire.beginTransmission(HMC5883_Address);
+	Wire.write(0x02);                 // Seleciona o modo
+	Wire.write(0x00);                 // Modo de medicao continuo
+	Wire.endTransmission();
+}
+void Mag::readAll()
+{
+	///Faz a leitura de todos os eixos///
+	Wire.beginTransmission(HMC5883_Address);
+	Wire.write(Mag_Xmsb);
+	Wire.endTransmission();
+	Wire.requestFrom(HMC5883_Address, (uint8_t)6);
+	if (6 <= Wire.available())
+	{
+		X = Wire.read() << 8; //X msb
+		X += Wire.read();    //X lsb
+		Z = Wire.read() << 8; //Z msb
+		Z += Wire.read();    //Z lsb
+		Y = Wire.read() << 8; //Y msb
+		Y += Wire.read();    //Y lsb
+	}
+}
+float Mag::getX()
+{
+	return X;
+}
+float Mag::getY()
+{
+	return Y;
+}
+float Mag::getZ()
+{
+	return Z;
 }
