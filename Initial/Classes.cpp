@@ -4,9 +4,6 @@
 Baro::Baro()
 {
 }
-Baro::Baro(int ad):BMP085_Address(ad)
-{
-}
 void Baro::begin()
 {
 	Wire.begin();
@@ -156,17 +153,15 @@ void Baro::readAll()
 	readPressure();
 	readAltitude();
 }
-float Baro::readZero(int I)
+float Baro::readZero(unsigned int I)
 {
 	float Regis = 0;
 	for (byte i = 0; i < I; i++)
 	{
-		celcius = readTemperature();
-		pascal = readPressure();
-		meters = ((1 - pow(pascal / 101325, 1 / 5.25588)) / 0.0000225577);
-		Regis += meters / I;
+		readAll();
+		Regis += meters;
 	}
-	base = Regis;
+	base = Regis/I;
 	return base;
 }
 float Baro::getZero()
@@ -313,9 +308,9 @@ int Apogeu::serial()
 	{
 		temp[i] = 1;
 	}
-	for (unsigned int i = R - 1; i > 0; i--)
+	for (int i = R - 1; i > 0; i--)
 	{
-		for (unsigned int j = R - 1; j > 1; j -= (R - i))
+		for (int j = R - 1; j > 1; j -= (R - i))
 		{
 			int all = j - R + i;
 			if (all < 0) continue;
@@ -335,9 +330,6 @@ int Apogeu::serial()
 Mag::Mag()
 {
 	
-}
-Mag::Mag(int ad):HMC5883_Address(ad)
-{
 }
 void Mag::begin()
 {
@@ -379,10 +371,6 @@ float Mag::getZ()
 
 ///Girosc?pio
 Giro::Giro(int sc): scale(sc)
-{
-
-}
-Giro::Giro(int sc, int ad):scale(sc), L3G4200D_Address(ad)
 {
 
 }
@@ -485,6 +473,52 @@ float Giro::getY()
 	return Y;
 }
 float Giro::getZ()
+{
+	return Z;
+}
+
+
+///Aceler?metro
+Acel::Acel()
+{
+}
+void Acel::begin()
+{
+	Wire.begin();
+	Wire.beginTransmission(ADXL345_Address);// enable to measute g data
+	Wire.write(Register_2D);
+	Wire.write(8);                    //measuring enable
+	Wire.endTransmission();           // stop transmitting
+}
+void Acel::readAll()
+{
+	///Faz a leitura de todos os eixos///
+	Wire.beginTransmission(ADXL345_Address);
+	Wire.write(Acel_Xlsb);
+	Wire.endTransmission();
+	Wire.requestFrom(ADXL345_Address, (uint8_t)6);
+	if (6 <= Wire.available())
+	{
+		X = Wire.read();    //X lsb
+		X += Wire.read() << 8;  //X msb
+		Y = Wire.read();    //Y lsb
+		Y += Wire.read() << 8;  //Y msb
+		Z = Wire.read();    //Z lsb
+		Z += Wire.read() << 8;  //Z msb
+	}
+	X /= 256.0;
+	Y /= 256.0;
+	Z /= 256.0;
+}
+float Acel::getX()
+{
+	return X;
+}
+float Acel::getY()
+{
+	return Y;
+}
+float Acel::getZ()
 {
 	return Z;
 }

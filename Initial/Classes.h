@@ -12,7 +12,6 @@ class Baro  //BMP085
 {
 public:	//Inicializadores
 	Baro();
-	Baro(int ad);
 private:
 	const int BMP085_Address = 0x77;
 	const int OSS = 0;	//Oversampling Setting
@@ -35,7 +34,7 @@ public:
 	float readAltitude();
 	float getAltitude();
 	void readAll();
-	float readZero(int i);
+	float readZero(unsigned int I);
 	float getZero();
 };
 
@@ -86,7 +85,6 @@ class Mag //HMC5883
 {
 public: //Inicializadores
 	Mag();
-	Mag(int ad);
 private:
 	const uint8_t HMC5883_Address = 0x1E;
 	const int Mag_Xmsb = 0x03;
@@ -103,7 +101,6 @@ class Giro  //L3G4200D
 {
 public: //Inicializadores
 	Giro(int sc);
-	Giro(int sc, int ad);
 private:
 	const uint8_t L3G4200D_Address = 105;
 	const uint8_t scale;
@@ -127,6 +124,23 @@ public:
 	float getZ();
 };
 
+class Acel  //ADXL345
+{
+public:  //Inicializadores
+	Acel();
+private:
+	const uint8_t ADXL345_Address = 0x53;
+	const uint8_t Acel_Xlsb = 0x32;
+	const uint8_t Register_ID = 0;
+	const uint8_t Register_2D = 0x2D;
+	float X, Y, Z;
+public:
+	void begin();
+	void readAll();
+	float getX();
+	float getY();
+	float getZ();
+};
 
 #endif
 
