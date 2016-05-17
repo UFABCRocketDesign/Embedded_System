@@ -238,6 +238,10 @@ float Apogeu::addAltitude(float H)
 	}
 	return altMed[0];
 }
+float Apogeu::getAltutude()
+{
+	return altMed[0];
+}
 float Apogeu::getApgPt()
 {
 	return apgPt;
@@ -521,4 +525,98 @@ float Acel::getY()
 float Acel::getZ()
 {
 	return Z;
+}
+
+
+///Controle de paraquedas
+DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2),Tign((long)(ignT * 1000000)), Delay((long)(delay * 1000000))
+{
+	pinMode(P1, OUTPUT);
+	pinMode(P2, OUTPUT);
+	pinMode(I1, INPUT_PULLUP);
+	pinMode(I2, INPUT_PULLUP);
+}
+void DuDeploy::resetTimers()
+{
+	TimeZero = micros();
+}
+bool DuDeploy::info1()
+{
+	return digitalRead(I1);
+}
+bool DuDeploy::info2()
+{
+	return digitalRead(I2);
+}
+bool DuDeploy::begin()
+{
+	resetTimers();
+	return info1() || info2();
+}
+void DuDeploy::setTmax(float Time)
+{
+	Tmax =(unsigned long)(Time*1000000);
+	TmaxAux = true;
+}
+void DuDeploy::setP1height(float H)
+{
+	P1H = H;
+	P1H_A = true;
+}
+void DuDeploy::setP2height(float H)
+{
+	P2H = H;
+	P2H_A = true;
+}
+void DuDeploy::sealApogee(bool apg)
+{
+	if (!apogee) apogee = apg;
+}
+bool DuDeploy::getApogee()
+{
+	return apogee;
+}
+bool DuDeploy::getP1S()
+{
+	return P1S;
+}
+bool DuDeploy::getP2S()
+{
+	return P2S;
+}
+bool DuDeploy::refresh(float height)
+{
+	Sys = (P1T_A && P2T_A && (P1S || P2S)) || (P2T_A && !P1S && (!P1T_A || P2S)) || (P2T_A && !P2S && (P1S || !P2T_A));
+	Tnow = micros() - TimeZero;
+	if (TmaxAux && Tnow > Tmax && !apogee) apogee = true;	//Caso o tempo máximo seja exigido e tenha sido ultrapassado
+	if (apogee && (Sys || (!P1S && !P2S && (!P1T_A || !P1T_A))))	//Se o apogeu foi dado
+	{
+		if (!P1H_A || (P1H_A && height <= P1H))	//Caso altura seja exigida, será verificada
+		{
+			if (!P1T_A)	//Salvar tempo de P1 somente uma vez
+			{
+				P1T_A = 1;
+				P1T = Tnow;
+			}
+			if (Tnow < P1T + Tign && P1T_A) P1S = 1;	//Comando efetivo
+			else P1S = 0;
+		}
+		if ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H))	//Verifica tempo de atraso ou altura exigida
+		{
+			if (!P2T_A)	//Salva tempo de P2 somente uma vez
+			{
+				P2T_A = 1;
+				P2T = Tnow;
+			}
+			if (Tnow < P2T + Tign && P2T_A) P2S = 1;	//Comando efetivo
+			else P2S = 0;
+		}
+	}
+	pinMode(P1, P1S);
+	pinMode(P2, P2S);
+	return Sys;	//Retornará 1 quando o processo estiver terminado
+}
+bool DuDeploy::getSysState(bool type=1)
+{
+	return Sys || (!type && !P1S && !P2S && (!P1T_A || !P1T_A));
 }

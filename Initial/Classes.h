@@ -69,6 +69,7 @@ private:
 public:
 	void resetTimer();
 	float addAltitude(float H);
+	float getAltutude();
 	float getApgPt();
 	float getApgTm();
 	boolean getApogeu();
@@ -103,7 +104,7 @@ public: //Inicializadores
 	Giro(int sc);
 private:
 	const uint8_t L3G4200D_Address = 105;
-	const uint8_t scale;
+	const long scale;
 	const uint8_t Gyro_Xlsb = 0x28;
 	const uint8_t Gyro_Xmsb = 0x29;
 	const uint8_t Gyro_Ylsb = 0x2A;
@@ -140,6 +141,43 @@ public:
 	float getX();
 	float getY();
 	float getZ();
+};
+
+class DuDeploy
+{
+public:
+	DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay);
+
+private:
+	const unsigned int P1, P2;	//Pinos de comando
+	const unsigned int I1, I2;	//Pinos de verificação
+	const unsigned long Tign;	//Tempo de comando ativo
+	const unsigned long Delay;	//Tempo de atraso dentre comando ( caso altura não determinada)
+	unsigned long P1T = 0, P2T = 0;	//Momento que o ignitor ligou
+	unsigned long TimeZero = 0;	//Momento zero
+	unsigned long Tmax = 0;	//Tempo máximo para segunrança
+	unsigned long Tnow = 0;	//Tempo atual (com zeragem)
+	float P1H = 0, P2H = 0;	//Altura de comando
+	bool P1S = 0, P2S = 0;	//Estado atual do comando
+	bool P1H_A = 0, P2H_A = 0;	//Condicional para comando em altura
+	bool apogee = 0;	//Representante interno do apogeu
+	bool TmaxAux = 0;	//Condicional para verificar tempo de segurança
+	bool P1T_A = 0, P2T_A = 0;	//Condicional para momento do ignitor
+	bool Sys=0;
+public:
+	void resetTimers();
+	bool info1();	//Retorna informação sobre estado do ignitor de acionamento 1
+	bool info2();	//Retorna informação sobre estado do ignitor de acionamento 2
+	bool begin();
+	void setTmax(float Time);
+	void setP1height(float H);
+	void setP2height(float H);
+	void sealApogee(bool apg);
+	bool getApogee();
+	bool getP1S();
+	bool getP2S();
+	bool refresh(float height);
+	bool getSysState(bool type);
 };
 
 #endif
