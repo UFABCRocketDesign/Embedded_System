@@ -4,22 +4,6 @@
 Baro::Baro()
 {
 }
-void Baro::begin()
-{
-	Wire.begin();
-	Serial.begin(250000);
-	ac1 = ReadInt(0xAA);
-	ac2 = ReadInt(0xAC);
-	ac3 = ReadInt(0xAE);
-	ac4 = ReadInt(0xB0);
-	ac5 = ReadInt(0xB2);
-	ac6 = ReadInt(0xB4);
-	b1 = ReadInt(0xB6);
-	b2 = ReadInt(0xB8);
-	mb = ReadInt(0xBA);
-	mc = ReadInt(0xBC);
-	md = ReadInt(0xBE);
-}
 char Baro::ReadChar(unsigned char address)
 {
 	Wire.beginTransmission(BMP085_Address);
@@ -30,7 +14,7 @@ char Baro::ReadChar(unsigned char address)
 	unsigned long temp = micros();
 	while (!Wire.available())
 	{
-		if (temp + 100000 < micros())break;
+		if (temp + 10 < micros())break;
 	}
 	return Wire.read();
 }
@@ -46,7 +30,7 @@ int Baro::ReadInt(unsigned char address)
 	unsigned long temp = micros();
 	while (Wire.available() < 2)
 	{
-		if (temp + 100000 < micros())break;
+		if (temp + 10 < micros())break;
 	}
 	msb = Wire.read();
 	lsb = Wire.read();
@@ -55,7 +39,6 @@ int Baro::ReadInt(unsigned char address)
 }
 float Baro::readTemperature()
 {
-	unsigned int ut;
 
 	// Write 0x2E into Register 0xF4
 	// This requests a temperature reading
@@ -65,7 +48,7 @@ float Baro::readTemperature()
 	Wire.endTransmission();
 
 	// Wait at least 4.5ms
-	delay(5);
+	delayMicroseconds(4550);
 
 	// Read two bytes from registers 0xF6 and 0xF7
 	ut = ReadInt(0xF6);
@@ -74,16 +57,8 @@ float Baro::readTemperature()
 	celcius = (float)((b5 + 8) >> 4) / 10;
 	return celcius;
 }
-float Baro::getTemperature()
+long Baro::readPressure()
 {
-	return celcius;
-}
-long Baro::readPressure() {
-	long x1, x2, x3, b3, b6, p;
-	unsigned long b4, b7;
-	unsigned char msb, lsb, xlsb;
-	unsigned long up = 0;
-
 	// Write 0x34+(OSS<<6) into register 0xF4
 	// Request a pressure reading w/ oversampling setting
 	Wire.beginTransmission(BMP085_Address);
@@ -128,30 +103,25 @@ long Baro::readPressure() {
 	pascal = p;
 	return pascal;
 }
-long Baro::getPressure()
-{
-	return pascal;
-}
-float Baro::readAltitude(int Base)
-{
-	meters = ((1 - pow((float)pascal / 101325, 1 / 5.25588)) / 0.0000225577) - Base;
-	return meters;
-}
 float Baro::readAltitude()
 {
-	meters = ((1 - pow((float)pascal / 101325, 1 / 5.25588)) / 0.0000225577) - base;
+	meters = ((1 - pow((float)pascal / 101325, 1 / 5.25588)) / 0.0000225577);
 	return meters;
 }
-float Baro::getAltitude()
+void Baro::begin()
 {
-	return meters;
-}
-void Baro::readAll()
-{
-	///Faz a leitura de todos os eixos///
-	readTemperature();
-	readPressure();
-	readAltitude();
+	Serial.begin(250000);
+	ac1 = ReadInt(0xAA);
+	ac2 = ReadInt(0xAC);
+	ac3 = ReadInt(0xAE);
+	ac4 = ReadInt(0xB0);
+	ac5 = ReadInt(0xB2);
+	ac6 = ReadInt(0xB4);
+	b1 = ReadInt(0xB6);
+	b2 = ReadInt(0xB8);
+	mb = ReadInt(0xBA);
+	mc = ReadInt(0xBC);
+	md = ReadInt(0xBE);
 }
 float Baro::readZero(unsigned int I)
 {
@@ -161,19 +131,107 @@ float Baro::readZero(unsigned int I)
 		readAll();
 		Regis += meters;
 	}
-	base = Regis/I;
+	base = (I > 0) ? Regis / I : 0;
 	return base;
 }
 float Baro::getZero()
 {
 	return base;
 }
+float Baro::getTemperature()
+{
+	return celcius;
+}
+long Baro::getPressure()
+{
+	return pascal;
+}
+float Baro::getAltitude(int Base)
+{
+	return meters - Base;
+}
+float Baro::getAltitude()
+{
+	return meters - base;
+}
+bool Baro::readAll()
+{
+	//Calculo de temperatura
+
+	// Write 0x2E into Register 0xF4
+	// This requests a temperature reading
+	Wire.beginTransmission(BMP085_Address);
+	Wire.write(0xF4);
+	Wire.write(0x2E);
+	state = Wire.endTransmission() == 0;
+	if (state)
+	{
+		// Wait at least 4.5ms
+		delayMicroseconds(4550);
+
+		// Read two bytes from registers 0xF6 and 0xF7
+		ut = ReadInt(0xF6);
+
+		b5 = ((((long)ut - (long)ac6)*(long)ac5) >> 15) + ((long)mc << 11) / (((((long)ut - (long)ac6)*(long)ac5) >> 15) + md);
+		celcius = (float)((b5 + 8) >> 4) / 10;
+
+
+		//Calculo de pressão
+
+		// Write 0x34+(OSS<<6) into register 0xF4
+		// Request a pressure reading w/ oversampling setting
+		Wire.beginTransmission(BMP085_Address);
+		Wire.write(0xF4);
+		Wire.write(0x34 + (OSS << 6));
+		Wire.endTransmission();
+
+		// Wait for conversion, delay time dependent on OSS
+		delay(2 + (3 << OSS));
+
+		// Read register 0xF6 (MSB), 0xF7 (LSB), and 0xF8 (XLSB)
+		msb = ReadChar(0xF6);
+		lsb = ReadChar(0xF7);
+		xlsb = ReadChar(0xF8);
+
+		up = (((unsigned long)msb << 16) | ((unsigned long)lsb << 8) | (unsigned long)xlsb) >> (8 - OSS);
+
+		b6 = b5 - 4000;
+		// Calcula B3
+		x1 = (b2 * (b6 * b6) >> 12) >> 11;
+		x2 = (ac2 * b6) >> 11;
+		x3 = x1 + x2;
+		b3 = (((((long)ac1) * 4 + x3) << OSS) + 2) >> 2;
+
+		// Calcula B4
+		x1 = (ac3 * b6) >> 13;
+		x2 = (b1 * ((b6 * b6) >> 12)) >> 16;
+		x3 = ((x1 + x2) + 2) >> 2;
+		b4 = (ac4 * (unsigned long)(x3 + 32768)) >> 15;
+
+		b7 = ((unsigned long)(up - b3) * (50000 >> OSS));
+		if (b7 < 0x80000000)
+			p = (b7 << 1) / b4;
+		else
+			p = (b7 / b4) << 1;
+
+		x1 = (p >> 8) * (p >> 8);
+		x1 = (x1 * 3038) >> 16;
+		x2 = (-7357 * p) >> 16;
+		p += (x1 + x2 + 3791) >> 4;
+
+		pascal = p;
+
+		//Calculo de altitude
+		meters = ((1 - pow((float)pascal / 101325, 1 / 5.25588)) / 0.0000225577);
+	}
+	return state;
+}
 
 
 ///Filtro de m�dia m�vel
 MediaMovel::MediaMovel(int n) : N(n)
 {
-
+	for (unsigned int i = 0; i < N; i++) Vals[i] = 0;
 }
 float MediaMovel::addValor(float valor)
 {
@@ -209,6 +267,8 @@ float MediaMovel::getMin()
 ///Rotinas de verifica��o de apogeu
 Apogeu::Apogeu(int n, int r, long s) : N(n), R(r), S(s)
 {
+	for (unsigned int i = 0; i < R; i++) altMed[i] = 0;
+	for (unsigned int i = 0; i < N;i++) Alt[i] = 0;
 }
 void Apogeu::resetTimer()
 {
@@ -236,6 +296,8 @@ float Apogeu::addAltitude(float H)
 		apgPt = Alt[0];
 		apgTm = micros() - TempMax;
 	}
+	minH = (altMed[0] < minH) ? altMed[0] : minH;
+	maxH = (altMed[0] > maxH) ? altMed[0] : maxH;
 	return altMed[0];
 }
 float Apogeu::getAltutude()
@@ -249,6 +311,14 @@ float Apogeu::getApgPt()
 float Apogeu::getApgTm()
 {
 	return apgTm;
+}
+float Apogeu::getMaxH()
+{
+	return maxH;
+}
+float Apogeu::getMinH()
+{
+	return minH;
 }
 boolean Apogeu::getApogeu()
 {
@@ -266,28 +336,8 @@ boolean Apogeu::getApogeu()
 }
 boolean Apogeu::apgAlpha()
 {
-	volatile boolean temp = 1;
+	boolean temp = 1;
 	for (byte i = R - 1; i > 0; i--)
-	{
-		if (altMed[i] > altMed[i - 1]) temp &= 1;
-		else temp &= 0;
-	}
-	return temp;
-}
-boolean Apogeu::apgBeta()
-{
-	volatile boolean temp = 1;
-	for (byte i = R - 1; i > 0; i -= 2)
-	{
-		if (altMed[i] > altMed[i - 1]) temp &= 1;
-		else temp &= 0;
-	}
-	return temp;
-}
-boolean Apogeu::apgGamma()
-{
-	volatile boolean temp = 1;
-	for (byte i = R - 1; i > 0; i -= 3)
 	{
 		if (altMed[i] > altMed[i - 1]) temp &= 1;
 		else temp &= 0;
@@ -306,25 +356,22 @@ void Apogeu::setOmega(boolean apgE)
 {
 	apgExterno = apgE;
 }
-int Apogeu::serial()
+float Apogeu::apgSigma()
 {
-	for (unsigned int i = 0; i < R; i++)
-	{
-		temp[i] = 1;
-	}
+	float sum = 0;
+	for (unsigned int i = 0; i < R; i++) temp[i] = 1;
 	for (int i = R - 1; i > 0; i--)
 	{
 		for (int j = R - 1; j > 1; j -= (R - i))
 		{
 			int all = j - R + i;
 			if (all < 0) continue;
-			temp[i] &= (altMed[j] < altMed[all]);
+			temp[i] &= (altMed[j] > altMed[all]);	//MUDEI AQUI NÃO ESQUECE
 		}
 	}
-	int sum = 0;
-	for (unsigned int k = R - 1; k > 0; k--)
+	for (unsigned int i = 0; i < R; i++)
 	{
-		sum += temp[k];
+		sum += (float)temp[i] * (float)(i + 1) / Rf;
 	}
 	return sum;
 }
@@ -333,7 +380,7 @@ int Apogeu::serial()
 ///Magnet?metro
 Mag::Mag()
 {
-	
+
 }
 void Mag::begin()
 {
@@ -342,22 +389,26 @@ void Mag::begin()
 	Wire.write(0x00);                 // Modo de medicao continuo
 	Wire.endTransmission();
 }
-void Mag::readAll()
+bool Mag::readAll()
 {
 	///Faz a leitura de todos os eixos///
 	Wire.beginTransmission(HMC5883_Address);
 	Wire.write(Mag_Xmsb);
-	Wire.endTransmission();
+	state = Wire.endTransmission() == 0;
 	Wire.requestFrom(HMC5883_Address, (uint8_t)6);
-	if (6 <= Wire.available())
+	if (state)
 	{
-		X = Wire.read() << 8; //X msb
-		X += Wire.read();    //X lsb
-		Z = Wire.read() << 8; //Z msb
-		Z += Wire.read();    //Z lsb
-		Y = Wire.read() << 8; //Y msb
-		Y += Wire.read();    //Y lsb
+		if (6 <= Wire.available())
+		{
+			X = Wire.read() << 8; //X msb
+			X += Wire.read();    //X lsb
+			Z = Wire.read() << 8; //Z msb
+			Z += Wire.read();    //Z lsb
+			Y = Wire.read() << 8; //Y msb
+			Y += Wire.read();    //Y lsb
+		}
 	}
+	return state;
 }
 float Mag::getX()
 {
@@ -374,7 +425,7 @@ float Mag::getZ()
 
 
 ///Girosc?pio
-Giro::Giro(int sc): scale(sc)
+Giro::Giro(int sc) : scale(sc)
 {
 
 }
@@ -416,57 +467,61 @@ void Giro::begin()
 	Wire.write(0b00000000);         // send value to write
 	Wire.endTransmission();     // end transmission
 }
-void Giro::readAll()
+bool Giro::readAll()
 {
 	///Faz a leitura de todos os eixos///
 	Wire.beginTransmission(L3G4200D_Address);
 	Wire.write(Gyro_Xmsb);
-	Wire.endTransmission();
+	state = Wire.endTransmission() == 0;
 	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-	if (Wire.available())
+	if (state)
 	{
-		X = Wire.read() << 8; //X msb
+		if (Wire.available())
+		{
+			X = Wire.read() << 8; //X msb
+		}
+		Wire.beginTransmission(L3G4200D_Address);
+		Wire.write(Gyro_Xlsb);
+		Wire.endTransmission();
+		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+		if (Wire.available())
+		{
+			X += Wire.read();   //X lsb
+		}
+		Wire.beginTransmission(L3G4200D_Address);
+		Wire.write(Gyro_Ymsb);
+		Wire.endTransmission();
+		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+		if (Wire.available())
+		{
+			Y = Wire.read() << 8; //Y msb
+		}
+		Wire.beginTransmission(L3G4200D_Address);
+		Wire.write(Gyro_Ylsb);
+		Wire.endTransmission();
+		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+		if (Wire.available())
+		{
+			Y += Wire.read();   //Y lsb
+		}
+		Wire.beginTransmission(L3G4200D_Address);
+		Wire.write(Gyro_Zmsb);
+		Wire.endTransmission();
+		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+		if (Wire.available())
+		{
+			Z = Wire.read() << 8; //X msb
+		}
+		Wire.beginTransmission(L3G4200D_Address);
+		Wire.write(Gyro_Zlsb);
+		Wire.endTransmission();
+		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
+		if (Wire.available())
+		{
+			Z += Wire.read();   //X lsb
+		}
 	}
-	Wire.beginTransmission(L3G4200D_Address);
-	Wire.write(Gyro_Xlsb);
-	Wire.endTransmission();
-	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-	if (Wire.available())
-	{
-		X += Wire.read();   //X lsb
-	}
-	Wire.beginTransmission(L3G4200D_Address);
-	Wire.write(Gyro_Ymsb);
-	Wire.endTransmission();
-	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-	if (Wire.available())
-	{
-		Y = Wire.read() << 8; //Y msb
-	}
-	Wire.beginTransmission(L3G4200D_Address);
-	Wire.write(Gyro_Ylsb);
-	Wire.endTransmission();
-	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-	if (Wire.available())
-	{
-		Y += Wire.read();   //Y lsb
-	}
-	Wire.beginTransmission(L3G4200D_Address);
-	Wire.write(Gyro_Zmsb);
-	Wire.endTransmission();
-	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-	if (Wire.available())
-	{
-		Z = Wire.read() << 8; //X msb
-	}
-	Wire.beginTransmission(L3G4200D_Address);
-	Wire.write(Gyro_Zlsb);
-	Wire.endTransmission();
-	Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-	if (Wire.available())
-	{
-		Z += Wire.read();   //X lsb
-	}
+	return state;
 }
 float Giro::getX()
 {
@@ -494,25 +549,29 @@ void Acel::begin()
 	Wire.write(8);                    //measuring enable
 	Wire.endTransmission();           // stop transmitting
 }
-void Acel::readAll()
+bool Acel::readAll()
 {
 	///Faz a leitura de todos os eixos///
 	Wire.beginTransmission(ADXL345_Address);
 	Wire.write(Acel_Xlsb);
-	Wire.endTransmission();
+	state = Wire.endTransmission() == 0;
 	Wire.requestFrom(ADXL345_Address, (uint8_t)6);
-	if (6 <= Wire.available())
+	if (state)
 	{
-		X = Wire.read();    //X lsb
-		X += Wire.read() << 8;  //X msb
-		Y = Wire.read();    //Y lsb
-		Y += Wire.read() << 8;  //Y msb
-		Z = Wire.read();    //Z lsb
-		Z += Wire.read() << 8;  //Z msb
+		if (6 <= Wire.available())
+		{
+			X = Wire.read();    //X lsb
+			X += Wire.read() << 8;  //X msb
+			Y = Wire.read();    //Y lsb
+			Y += Wire.read() << 8;  //Y msb
+			Z = Wire.read();    //Z lsb
+			Z += Wire.read() << 8;  //Z msb
+		}
+		X /= 256.0;
+		Y /= 256.0;
+		Z /= 256.0;
 	}
-	X /= 256.0;
-	Y /= 256.0;
-	Z /= 256.0;
+	return state;
 }
 float Acel::getX()
 {
@@ -529,7 +588,7 @@ float Acel::getZ()
 
 
 ///Controle de paraquedas
-DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2),Tign((long)(ignT * 1000000)), Delay((long)(delay * 1000000))
+DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2), Tign((long)(ignT * 1000000)), Delay((long)(delay * 1000000))
 {
 	pinMode(P1, OUTPUT);
 	pinMode(P2, OUTPUT);
@@ -555,7 +614,7 @@ bool DuDeploy::begin()
 }
 void DuDeploy::setTmax(float Time)
 {
-	Tmax =(unsigned long)(Time*1000000);
+	Tmax = (unsigned long)(Time * 1000000);
 	TmaxAux = true;
 }
 void DuDeploy::setP1height(float H)
@@ -616,7 +675,7 @@ bool DuDeploy::refresh(float height)
 	pinMode(P2, P2S);
 	return Sys;	//Retornará 1 quando o processo estiver terminado
 }
-bool DuDeploy::getSysState(bool type=1)
+bool DuDeploy::getSysState(bool type = 1)
 {
 	return Sys || (!type && !P1S && !P2S && (!P1T_A || !P1T_A));
 }

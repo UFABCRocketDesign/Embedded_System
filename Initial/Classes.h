@@ -15,27 +15,39 @@ public:	//Inicializadores
 private:
 	const int BMP085_Address = 0x77;
 	const int OSS = 0;	//Oversampling Setting
+
+	unsigned int ut = 0;
+	unsigned long up = 0;
+
+	int b1, b2;
+	long b3, b6, p;
+	long b5;
+	unsigned long b4, b7;
+	long x1, x2, x3;
+	unsigned char msb, lsb, xlsb;
+
 	int ac1, ac2, ac3;	//Calibration values
 	unsigned int ac4, ac5, ac6;
-	int b1, b2;
 	int mb, mc, md;
-	long b5;
+
 	float celcius, meters, base = 0;//Bmp
 	long pascal;
+	bool state = 1;
+
 	char ReadChar(unsigned char address);
 	int ReadInt(unsigned char address);
+	float readTemperature();
+	long readPressure();
+	float readAltitude();
 public:
 	void begin();
-	float readTemperature();
-	float getTemperature();
-	long readPressure();
-	long getPressure();
-	float readAltitude(int Base);
-	float readAltitude();
-	float getAltitude();
-	void readAll();
+	bool readAll();
 	float readZero(unsigned int I);
 	float getZero();
+	float getTemperature();
+	long getPressure();
+	float getAltitude(int Base);
+	float getAltitude();
 };
 
 class MediaMovel
@@ -61,8 +73,11 @@ private:
 	boolean apgExterno = 0;
 	long  apgTm = 0;
 	float apgPt = 0;
+	float maxH = 0;
+	float minH = 0;
 	long TempMax;
 	const unsigned int N, R, S;
+	const float Rf = ((float)(1 + R)*(float)(R / 2.0));
 	bool *temp = new bool[R];
 	float* Alt = new float[N];
 	float* altMed = new float[N];
@@ -72,14 +87,14 @@ public:
 	float getAltutude();
 	float getApgPt();
 	float getApgTm();
+	float getMaxH();
+	float getMinH();
 	boolean getApogeu();
 	boolean apgAlpha();
-	boolean apgBeta();
-	boolean apgGamma();
 	boolean apgPi();
 	boolean apgOmega();
 	void setOmega(boolean apgE);
-	int serial();
+	float apgSigma();
 };
 
 class Mag //HMC5883
@@ -90,9 +105,10 @@ private:
 	const uint8_t HMC5883_Address = 0x1E;
 	const int Mag_Xmsb = 0x03;
 	float X, Y, Z;
+	bool state = 1;
 public:
 	void begin();
-	void readAll();
+	bool readAll();
 	float getX();
 	float getY();
 	float getZ();
@@ -117,9 +133,10 @@ private:
 	const uint8_t CTRL_REG4 = 0x23;
 	const uint8_t CTRL_REG5 = 0x24;
 	float X, Y, Z;
+	bool state = 1;
 public:
 	void begin();
-	void readAll();
+	bool readAll();
 	float getX();
 	float getY();
 	float getZ();
@@ -135,9 +152,10 @@ private:
 	const uint8_t Register_ID = 0;
 	const uint8_t Register_2D = 0x2D;
 	float X, Y, Z;
+	bool state = 0;
 public:
 	void begin();
-	void readAll();
+	bool readAll();
 	float getX();
 	float getY();
 	float getZ();
