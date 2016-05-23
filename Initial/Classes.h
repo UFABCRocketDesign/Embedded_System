@@ -8,11 +8,30 @@
 #include "WProgram.h"
 #endif
 #include <Wire.h>
+
+
+class MediaMovel
+{
+public:	//Inicializadores
+	MediaMovel(int n);
+private:
+	const unsigned int N;
+	float* Vals = new float[N];
+	float media, max = 0, min;
+public:
+	float addValor(float valor);
+	float getMedia();
+	float getMax();
+	float getMin();
+};
+
 class Baro  //BMP085
 {
 public:	//Inicializadores
+	Baro(float Tzero);
 	Baro();
 private:
+	const long recalibrateT;
 	const int BMP085_Address = 0x77;
 	const int OSS = 0;	//Oversampling Setting
 
@@ -32,17 +51,20 @@ private:
 
 	float celcius, meters, base = 0;//Bmp
 	long pascal;
+	long lastT = 0;
 	bool state = 1;
 
 	char ReadChar(unsigned char address);
 	int ReadInt(unsigned char address);
 	float readTemperature();
 	long readPressure();
-	float readAltitude();
+	float readAltitude(float sealevelP = 101325);
 public:
 	void begin();
-	bool readAll();
+	long getTimeLapse();
+	bool readAll(float sealevelP = 101325);
 	float readZero(unsigned int I);
+	long readSealevel(float altitude);
 	float getZero();
 	float getTemperature();
 	long getPressure();
@@ -50,25 +72,86 @@ public:
 	float getAltitude();
 };
 
-class MediaMovel
+class Mag //HMC5883
 {
-public:	//Inicializadores
-	MediaMovel(int n);
+public: //Inicializadores
+	Mag(float Tzero);
+	Mag();
 private:
-	const unsigned int N;
-	float* Vals = new float[N];
-	float media, max = 0, min;
+	const long recalibrateT;
+	const uint8_t HMC5883_Address = 0x1E;
+	const int Mag_Xmsb = 0x03;
+	float X, Y, Z;
+	long lastT = 0;
+	bool state = 1;
 public:
-	float addValor(float valor);
-	float getMedia();
-	float getMax();
-	float getMin();
+	void begin();
+	long getTimeLapse();
+	bool readAll();
+	float getX();
+	float getY();
+	float getZ();
+};
+
+class Giro  //L3G4200D
+{
+public: //Inicializadores
+	Giro(int sc, float Tzero);
+	Giro(int sc);
+private:
+	const long recalibrateT;
+	const uint8_t L3G4200D_Address = 105;
+	const long scale;
+	const uint8_t Gyro_Xlsb = 0x28;
+	const uint8_t Gyro_Xmsb = 0x29;
+	const uint8_t Gyro_Ylsb = 0x2A;
+	const uint8_t Gyro_Ymsb = 0x2B;
+	const uint8_t Gyro_Zlsb = 0x2C;
+	const uint8_t Gyro_Zmsb = 0x2D;
+	const uint8_t CTRL_REG1 = 0x20;
+	const uint8_t CTRL_REG2 = 0x21;
+	const uint8_t CTRL_REG3 = 0x22;
+	const uint8_t CTRL_REG4 = 0x23;
+	const uint8_t CTRL_REG5 = 0x24;
+	float X, Y, Z;
+	long lastT = 0;
+	bool state = 1;
+public:
+	void begin();
+	long getTimeLapse();
+	bool readAll();
+	float getX();
+	float getY();
+	float getZ();
+};
+
+class Acel  //ADXL345
+{
+public:  //Inicializadores
+	Acel(float Tzero);
+	Acel();
+private:
+	const long recalibrateT;
+	const uint8_t ADXL345_Address = 0x53;
+	const uint8_t Acel_Xlsb = 0x32;
+	const uint8_t Register_ID = 0;
+	const uint8_t Register_2D = 0x2D;
+	float X, Y, Z;
+	long lastT = 0;
+	bool state = 0;
+public:
+	void begin();
+	long getTimeLapse();
+	bool readAll();
+	float getX();
+	float getY();
+	float getZ();
 };
 
 class Apogeu
 {
 public:
-	Apogeu(int n, int r, long s);
+	Apogeu(unsigned int n, unsigned int r, float s);
 private:
 	boolean apgExterno = 0;
 	long  apgTm = 0;
@@ -76,9 +159,10 @@ private:
 	float maxH = 0;
 	float minH = 0;
 	long TempMax;
-	const unsigned int N, R, S;
-	const float Rf = ((float)(1 + R)*(float)(R / 2.0));
-	bool *temp = new bool[R];
+	const unsigned int N, R, Rl1;
+	const float S;
+	float Rf;
+	bool *temp = new bool[Rl1];
 	float* Alt = new float[N];
 	float* altMed = new float[N];
 public:
@@ -94,71 +178,7 @@ public:
 	boolean apgPi();
 	boolean apgOmega();
 	void setOmega(boolean apgE);
-	float apgSigma();
-};
-
-class Mag //HMC5883
-{
-public: //Inicializadores
-	Mag();
-private:
-	const uint8_t HMC5883_Address = 0x1E;
-	const int Mag_Xmsb = 0x03;
-	float X, Y, Z;
-	bool state = 1;
-public:
-	void begin();
-	bool readAll();
-	float getX();
-	float getY();
-	float getZ();
-};
-
-class Giro  //L3G4200D
-{
-public: //Inicializadores
-	Giro(int sc);
-private:
-	const uint8_t L3G4200D_Address = 105;
-	const long scale;
-	const uint8_t Gyro_Xlsb = 0x28;
-	const uint8_t Gyro_Xmsb = 0x29;
-	const uint8_t Gyro_Ylsb = 0x2A;
-	const uint8_t Gyro_Ymsb = 0x2B;
-	const uint8_t Gyro_Zlsb = 0x2C;
-	const uint8_t Gyro_Zmsb = 0x2D;
-	const uint8_t CTRL_REG1 = 0x20;
-	const uint8_t CTRL_REG2 = 0x21;
-	const uint8_t CTRL_REG3 = 0x22;
-	const uint8_t CTRL_REG4 = 0x23;
-	const uint8_t CTRL_REG5 = 0x24;
-	float X, Y, Z;
-	bool state = 1;
-public:
-	void begin();
-	bool readAll();
-	float getX();
-	float getY();
-	float getZ();
-};
-
-class Acel  //ADXL345
-{
-public:  //Inicializadores
-	Acel();
-private:
-	const uint8_t ADXL345_Address = 0x53;
-	const uint8_t Acel_Xlsb = 0x32;
-	const uint8_t Register_ID = 0;
-	const uint8_t Register_2D = 0x2D;
-	float X, Y, Z;
-	bool state = 0;
-public:
-	void begin();
-	bool readAll();
-	float getX();
-	float getY();
-	float getZ();
+	float apgSigma(bool serial = 0);
 };
 
 class DuDeploy
