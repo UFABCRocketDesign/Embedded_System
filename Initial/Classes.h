@@ -99,9 +99,8 @@ public: //Inicializadores
 	Giro(int sc, float Tzero);
 	Giro(int sc);
 private:
-	const long recalibrateT;
+	const long scale, recalibrateT;
 	const uint8_t L3G4200D_Address = 105;
-	const long scale;
 	const uint8_t Gyro_Xlsb = 0x28;
 	const uint8_t Gyro_Xmsb = 0x29;
 	const uint8_t Gyro_Ylsb = 0x2A;
@@ -201,9 +200,10 @@ private:
 	bool apogee = 0;	//Representante interno do apogeu
 	bool TmaxAux = 0;	//Condicional para verificar tempo de segurança
 	bool P1T_A = 0, P2T_A = 0;	//Condicional para momento do ignitor
-	bool Sys=0;
+	bool P1seal = 0, P2seal = 0;	//Selo de comando
+	bool emer = 0, P1H_Am = 0, P2H_Am = 0;
 public:
-	void resetTimers();
+	void resetTimer();
 	bool info1();	//Retorna informação sobre estado do ignitor de acionamento 1
 	bool info2();	//Retorna informação sobre estado do ignitor de acionamento 2
 	bool begin();
@@ -214,8 +214,9 @@ public:
 	bool getApogee();
 	bool getP1S();
 	bool getP2S();
-	bool refresh(float height);
-	bool getSysState(bool type);
+	bool getSysState(bool type = 1);
+	void refresh(float height);
+	void emergency(bool state = 1);
 };
 
 #endif

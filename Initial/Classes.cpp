@@ -142,7 +142,7 @@ long Baro::readPressure()
 
 	pascal = p;
 	return pascal;
-}
+} 
 float Baro::readAltitude(float sealevelP)
 {
 	meters = ((1 - pow((float)pascal / sealevelP, 1 / 5.25588)) / 0.0000225577);
@@ -162,6 +162,7 @@ void Baro::begin()
 	mb = ReadInt(0xBA);
 	mc = ReadInt(0xBC);
 	md = ReadInt(0xBE);
+	lastT = micros();
 }
 long Baro::getTimeLapse()
 {
@@ -310,6 +311,7 @@ void Mag::begin()
 	Wire.write(0x02);                 // Seleciona o modo
 	Wire.write(0x00);                 // Modo de medicao continuo
 	Wire.endTransmission();
+	lastT = micros();
 }
 long Mag::getTimeLapse()
 {
@@ -404,6 +406,7 @@ void Giro::begin()
 	Wire.write(CTRL_REG5);       // send register address
 	Wire.write(0b00000000);         // send value to write
 	Wire.endTransmission();     // end transmission
+	lastT = micros();
 }
 long Giro::getTimeLapse()
 {
@@ -501,6 +504,7 @@ void Acel::begin()
 	Wire.write(Register_2D);
 	Wire.write(8);                    //measuring enable
 	Wire.endTransmission();           // stop transmitting
+	lastT = micros();
 }
 long Acel::getTimeLapse()
 {
@@ -554,7 +558,7 @@ float Acel::getZ()
 
 
 ///Rotinas de verifica��o de apogeu
-Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R(r, Rl1(r - 1)), S(s)
+Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R(r), Rl1(r - 1), S(s)
 {
 	Rf = 0;
 	for (unsigned int i = 0; i < R; i++) altMed[i] = 0;
@@ -673,14 +677,14 @@ float Apogeu::apgSigma(bool serial)
 
 
 ///Controle de paraquedas
-DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2), Tign((long)(ignT * 1000000)), Delay((long)(delay * 1000000))
+DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2), Tign((long)(ignT * 1000000.0)), Delay((long)(delay * 1000000.0))
 {
 	pinMode(P1, OUTPUT);
 	pinMode(P2, OUTPUT);
 	pinMode(I1, INPUT_PULLUP);
 	pinMode(I2, INPUT_PULLUP);
 }
-void DuDeploy::resetTimers()
+void DuDeploy::resetTimer()
 {
 	TimeZero = micros();
 }
@@ -694,7 +698,7 @@ bool DuDeploy::info2()
 }
 bool DuDeploy::begin()
 {
-	resetTimers();
+	resetTimer();
 	return info1() || info2();
 }
 void DuDeploy::setTmax(float Time)
@@ -728,25 +732,35 @@ bool DuDeploy::getP2S()
 {
 	return P2S;
 }
-bool DuDeploy::refresh(float height)
+bool DuDeploy::getSysState(bool type)
 {
-	Sys = (P1T_A && P2T_A && (P1S || P2S)) || (P2T_A && !P1S && (!P1T_A || P2S)) || (P2T_A && !P2S && (P1S || !P2T_A));
+	return (P1T_A && P2T_A && (P1S || P2S)) || (P2T_A && !P1S && (!P1T_A || P2S)) || (P1T_A && !P2S && (P1S || !P2T_A)) || (!type && !P1S && !P2S && (!P1T_A || !P1T_A));
+}
+void DuDeploy::refresh(float height)
+{
 	Tnow = micros() - TimeZero;
 	if (TmaxAux && Tnow > Tmax && !apogee) apogee = true;	//Caso o tempo máximo seja exigido e tenha sido ultrapassado
-	if (apogee && (Sys || (!P1S && !P2S && (!P1T_A || !P1T_A))))	//Se o apogeu foi dado
+	if (apogee && getSysState(0))	//Se o apogeu foi dado
 	{
-		if (!P1H_A || (P1H_A && height <= P1H))	//Caso altura seja exigida, será verificada
+		if (!P1H_A || (P1H_A && height <= P1H) || P1seal)	//Caso altura seja exigida, será verificada
 		{
+			if (!P1seal) P1seal = 1;
 			if (!P1T_A)	//Salvar tempo de P1 somente uma vez
 			{
 				P1T_A = 1;
 				P1T = Tnow;
 			}
-			if (Tnow < P1T + Tign && P1T_A) P1S = 1;	//Comando efetivo
+			if ((Tnow - P1T < Tign) && P1T_A)
+			{
+				P1S = 1;	//Comando efetivo
+
+			}
 			else P1S = 0;
+
 		}
-		if ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H))	//Verifica tempo de atraso ou altura exigida
+		if ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H) || P2seal)	//Verifica tempo de atraso ou altura exigida
 		{
+			if (!P2seal) P2seal = 1;
 			if (!P2T_A)	//Salva tempo de P2 somente uma vez
 			{
 				P2T_A = 1;
@@ -755,12 +769,31 @@ bool DuDeploy::refresh(float height)
 			if (Tnow < P2T + Tign && P2T_A) P2S = 1;	//Comando efetivo
 			else P2S = 0;
 		}
+		Serial.print(P1T_A);
+		Serial.print(P1S);
+		Serial.print(P2T_A);
+		Serial.print(P2S);
+		Serial.print('\t');
 	}
 	pinMode(P1, P1S);
 	pinMode(P2, P2S);
-	return Sys;	//Retornará 1 quando o processo estiver terminado
 }
-bool DuDeploy::getSysState(bool type = 1)
+void DuDeploy::emergency(bool state)
 {
-	return Sys || (!type && !P1S && !P2S && (!P1T_A || !P1T_A));
+	if (state && !emer)
+	{
+		P1H_Am = P1H_A;
+		P2H_Am = P2H_A;
+		Serial.print("aconteceu");
+		P1H_A = false;
+		P2H_A = false;
+		apogee = true;
+	}
+	if (!state && emer)
+	{
+		P1H_A = P1H_Am;
+		P2H_A = P2H_Am;
+		Serial.print("Desaconteceu");
+	}
+	emer = state;
 }
