@@ -1,7 +1,10 @@
 #include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
 #include "Classes.h"
 
 #define GY80 1
+#define SDCard 1
 
 
 
@@ -42,7 +45,8 @@ char Dname[] = { "INF000.txt" };
 #define MM_mag M_mag
 #define GYutil GYutilitario
 
-
+#define SDutil SDutilitario
+#define SDC SecureDigitalCard
 
 #define Serial Serial
 
@@ -63,6 +67,10 @@ DuDeploy rec(11, 12, 10, 9, 5, 15);
 Helpful GYutil;
 #endif // GY80
 
+#if SDCard
+Helpful SDutil;
+SDCardHelper SDC(53, "Tupa");
+#endif // SDCard
 
 Helpful util;
 
@@ -74,6 +82,16 @@ void setup()
 #if Serial
 		Serial.begin(250000);
 #endif // Serial
+
+#if SDCard
+		SDC.begin();
+		if (SDC)
+		{
+			SDC.print("titulo");
+			SDC.close();
+		}
+		SDutil.begin();
+#endif // SDCard
 
 #if GY80
 	Wire.begin();
@@ -223,6 +241,124 @@ void loop()
 	Serial.println();
 #endif // PRINT
 
+
+#if SDCard
+	if (!SDutil.mem)
+	{
+		if (SDC)
+		{
+#if GY80
+			if (acele)
+			{
+				MM_acel[0].addValor(acele.getX());
+				MM_acel[1].addValor(acele.getY());
+				MM_acel[2].addValor(acele.getZ());
+			}
+			if (giros)
+			{
+				MM_giro[0].addValor(giros.getX());
+				MM_giro[1].addValor(giros.getY());
+				MM_giro[2].addValor(giros.getZ());
+			}
+			if (megnt)
+			{
+				MM_mag[0].addValor(megnt.getX());
+				MM_mag[1].addValor(megnt.getY());
+				MM_mag[2].addValor(megnt.getZ());
+			}
+			SDC.printab(GYutil.sinceBegin(), 3);
+			for (int i = 0; i < 3; i++) SDC.printab(MM_acel[i], 3);
+			for (int i = 0; i < 3; i++) SDC.printab(MM_giro[i], 1);
+			for (int i = 0; i < 3; i++) SDC.printab(MM_mag[i], 1);
+			for (int i = 0; i < 2; i++) SDC.printab(MM_bmp[i]);
+			SDC.printab(apg.getAltutude());
+
+			if (apg.getApogeu(0.9, 0))
+			{
+				SDC.print("Apogeu: altitude - ");
+				SDC.print(apg.getApgPt());
+				SDC.print(" m, tempo - ");
+				SDC.print(apg.getApgTm());
+				SDC.printab(" s");
+			}
+			if (rec.getSysState())
+			{
+				if (rec.getP1S(0)) SDC.printab("Acionamento 1");
+				if (rec.getP2S(0)) SDC.printab("Acionamento 2");
+			}
+#endif // GY80
+			SDC.println();
+			SDC.close();
+		}
+		else SDutil.mem = 1;
+	}
+	else if (SDutil.eachT(15)) if (SDC.begin()) SDutil.mem = 0;
+	/*
+	InF = SD.open(Dname, FILE_WRITE);
+	if (InF)
+	{
+	if (acele.readAll())
+	{
+	MM_acel[0].addValor(acele.getX());
+	MM_acel[1].addValor(acele.getY());
+	MM_acel[2].addValor(acele.getZ());
+	}
+	if (giros.readAll())
+	{
+	MM_giro[0].addValor(giros.getX());
+	MM_giro[1].addValor(giros.getY());
+	MM_giro[2].addValor(giros.getZ());
+	}
+	if (megnt.readAll())
+	{
+	MM_mag[0].addValor(megnt.getX());
+	MM_mag[1].addValor(megnt.getY());
+	MM_mag[2].addValor(megnt.getZ());
+	}
+	InF.print(GYutil.sinceBegin());
+	InF.print('\t');
+	InF.print(MM_acel[0].getMedia(), 3);
+	InF.print('\t');
+	InF.print(MM_acel[1].getMedia(), 3);
+	InF.print('\t');
+	InF.print(MM_acel[2].getMedia(), 1);
+	InF.print('\t');
+	InF.print(MM_giro[0].getMedia(), 1);
+	InF.print('\t');
+	InF.print(MM_giro[1].getMedia(), 1);
+	InF.print('\t');
+	InF.print(MM_giro[2].getMedia(), 1);
+	InF.print('\t');
+	InF.print(MM_mag[0].getMedia(), 1);
+	InF.print('\t');
+	InF.print(MM_mag[1].getMedia(), 1);
+	InF.print('\t');
+	InF.print(MM_mag[2].getMedia(), 1);
+	InF.print('\t');
+	InF.print(MM_bmp[0].getMedia());
+	InF.print('\t');
+	InF.print(MM_bmp[1].getMedia());
+	InF.print('\t');
+	InF.print(apg.getAltutude());
+	InF.print('\t');
+	if (apg.getApogeu(0.9, 0))
+	{
+	InF.print("Apogeu: altitude - ");
+	InF.print(apg.getApgPt());
+	InF.print(" m, tempo - ");
+	InF.print(apg.getApgTm());
+	InF.print(" s\t");
+	}
+	if (rec.getSysState())
+	{
+	if (rec.getP1S(0)) InF.print("Acionamento 1\t");
+	if (rec.getP2S(0)) InF.print("Acionamento 2\t");
+	}
+	InF.println();
+	InF.close();
+	}
+	//*/
+#endif // SDCard
 
 }
 
