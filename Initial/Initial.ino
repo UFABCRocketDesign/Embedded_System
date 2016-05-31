@@ -1,11 +1,12 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
+#include <TinyGPS.h>
 #include "Classes.h"
 
 #define GY80 1
 #define SDCard 1
-
+#define GPSmode 1
 
 
 
@@ -48,6 +49,9 @@ char Dname[] = { "INF000.txt" };
 #define SDutil SDutilitario
 #define SDC SecureDigitalCard
 
+#define GpS GlobalPSystem
+#define GpSerial Serial2
+
 #define Serial Serial
 
 #define util utilitario
@@ -72,7 +76,20 @@ Helpful SDutil;
 SDCardHelper SDC(53, "Tupa");
 #endif // SDCard
 
+#if GPSmode
+TinyGPS GpS;
+unsigned short sentences, failed;
+unsigned char sat;
+float flat, flon;
+unsigned long prec, chars;
+bool newGps = false;
+bool GyGPS();
+#endif // GPSmode
+
 Helpful util;
+
+
+
 
 float maxCond = 0;
 
@@ -92,6 +109,10 @@ void setup()
 		}
 		SDutil.begin();
 #endif // SDCard
+
+#if GPSmode
+		GpSerial.begin(9600);
+#endif // GPSmode
 
 #if GY80
 	Wire.begin();
@@ -174,6 +195,9 @@ void loop()
 	analogWrite(13, (int)(apg.getSigma() * 255));
 #endif // GY80
 
+#if GPSmode
+	GyGPS();
+#endif // GPSmode
 
 #if PRINT
 
@@ -272,7 +296,29 @@ void loop()
 			for (int i = 0; i < 3; i++) SDC.printab(MM_mag[i], 1);
 			for (int i = 0; i < 2; i++) SDC.printab(MM_bmp[i]);
 			SDC.printab(apg.getAltutude());
+#endif // GY80
 
+#if GPSmode
+			if (newGps)
+			{
+				SDC.printab(flat, 6);//Latitude
+				SDC.printab(flon, 6);//Longitude
+				SDC.printab(sat);//Número de satélites
+				SDC.printab(prec);//Precisão
+			}
+			else
+			{
+				SDC.printab();
+				SDC.printab();
+				SDC.printab();
+				SDC.printab();
+			}
+			SDC.printab(chars);//Número de caracteres recebidos
+			SDC.printab(sentences);//Sentensas escritas
+			SDC.printab(failed);//Número de erros
+#endif // GPSmode
+
+#if GY80
 			if (apg.getApogeu(0.9, 0))
 			{
 				SDC.print("Apogeu: altitude - ");
@@ -362,6 +408,27 @@ void loop()
 
 }
 
+#if GPSmode
+bool GyGPS()
+{ //Gps
+	newGps = false;
+	// Recebe as informações do GPS durante um intervalo de tempo relativamente curto e as transmite via comunicação serial (visível pelo serial monitor)
+	if (GpSerial.available()) while (GpSerial.available())
+	{
+		char c = GpSerial.read();
+		if (GpS.encode(c)) newGps = true;
+	}
+	if (newGps)
+	{
+		unsigned long age;
+		GpS.f_get_position(&flat, &flon, &age);
+		sat = GpS.satellites();
+		prec = GpS.hdop();
+	}
+	GpS.stats(&chars, &sentences, &failed);
+	return newGps;
+}
+#endif // GPSmode
 
 /*
 																													  .

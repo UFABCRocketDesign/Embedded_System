@@ -737,7 +737,6 @@ float Apogeu::getMinH()
 }
 
 
-
 ///Controle de paraquedas
 DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2), Tign((long)(ignT * 1000000.0)), Delay((long)(delay * 1000000.0))
 {
