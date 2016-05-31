@@ -7,9 +7,7 @@
 #define GY80 1
 #define SDCard 1
 #define GPSmode 1
-
-
-
+#define LoRamode 1
 #define PRINT 1
 
 #define Pbmp 1
@@ -52,6 +50,9 @@ char Dname[] = { "INF000.txt" };
 #define GpS GlobalPSystem
 #define GpSerial Serial2
 
+#define LoRa Serial3
+#define LRutil LRutilitario
+
 #define Serial Serial
 
 #define util utilitario
@@ -86,6 +87,10 @@ bool newGps = false;
 bool GyGPS();
 #endif // GPSmode
 
+#if LoRamode
+Helpful LRutil;
+#endif // LoRamode
+
 Helpful util;
 
 
@@ -99,6 +104,11 @@ void setup()
 #if Serial
 		Serial.begin(250000);
 #endif // Serial
+
+#if LoRamode
+		Serial3.begin(9600);
+		LRutil.begin();
+#endif // LoRamode
 
 #if SDCard
 		SDC.begin();
@@ -151,7 +161,6 @@ void loop()
 	Serial.print(util.getCount());
 	Serial.print(":\t");
 #endif // Lcom
-
 
 #if GY80
 	if (bmp)
@@ -264,7 +273,6 @@ void loop()
 
 	Serial.println();
 #endif // PRINT
-
 
 #if SDCard
 	if (!SDutil.mem)
@@ -406,6 +414,33 @@ void loop()
 	//*/
 #endif // SDCard
 
+#if LoRamode
+	LRutil.counter();
+	if (LRutil.eachT(2))
+	{
+#if GPSmode
+		LoRa.print(flat, 6);//Latitude
+		LoRa.print('\t');
+		LoRa.print(flon, 6);//Longitude
+		LoRa.print('\t');
+		LoRa.print(sat);//Número de satélites
+		LoRa.print('\t');
+		LoRa.print(prec);//Precisão
+		LoRa.print('\t');
+#endif // GPSmode
+#if GY80
+		LoRa.print(apg.getAltutude());
+		LoRa.print('\t');
+		LoRa.print(apg.getSigma());
+		LoRa.print('\t');
+#endif // GY80
+#if !GPSmode && !GY80
+		LoRa.print(LRutil.getCount());
+#endif // !GPSmode && !GY80
+		LoRa.println();
+		//Serial3.println(cond);
+	}
+#endif // LoRamode
 }
 
 #if GPSmode
