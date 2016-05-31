@@ -7,3 +7,8 @@ Initial/.vs/Initial/v14/.suo
 *.ino.elf
 *.ino.hex
 *.buildinfo
+*.pdb
+Initial/Debug/Initial.tlog/CL.write.1.tlog
+*.tlog
+*.log
+Initial/Debug/vc140.idb

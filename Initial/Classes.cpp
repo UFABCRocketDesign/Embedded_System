@@ -1,5 +1,59 @@
 #include "Classes.h"
 
+
+///Coleção de utilitários
+void Helpful::begin()
+{
+	T0 = micros();
+}
+long Helpful::counter()
+{
+	return count++;
+}
+long Helpful::getCount()
+{
+	return count;
+}
+bool Helpful::eachN(unsigned int N)
+{
+	conEach++;
+	return (N == 0) ? false : conEach%N == 0;
+}
+bool Helpful::eachT(float T)
+{
+	unsigned long time = (long)(T*1000000.0);
+	if (micros() - timerEach > time)
+	{
+		timerEach = micros();
+		return true;
+	}
+	return false;
+}
+float Helpful::lapse()
+{
+	unsigned long tnow = micros(), t = tnow - lapseT;
+	lapseT = tnow;
+	return (float)t / 1000000.0;
+}
+float Helpful::sinceBegin()
+{
+	return float(micros() - T0) / 1000000.0;
+}
+bool Helpful::oneTime()
+{
+	if (!one)
+	{
+		one = 1;
+		return true;
+	}
+	return false;
+}
+void Helpful::oneTimeReset()
+{
+	if (one) one = 0;
+}
+
+
 ///Filtro de m�dia m�vel
 MediaMovel::MediaMovel(int n) : N(n)
 {
@@ -34,13 +88,14 @@ float MediaMovel::getMin()
 {
 	return min;
 }
+MediaMovel::operator float()
+{
+	return media;
+}
 
 
 ///Barômetro
-Baro::Baro(float Tzero) :recalibrateT((long)Tzero * 1000000)
-{
-}
-Baro::Baro() : recalibrateT(1000000)
+Baro::Baro(float Tzero) :recalibrateT((long)(Tzero * 1000000))
 {
 }
 
@@ -142,7 +197,7 @@ long Baro::readPressure()
 
 	pascal = p;
 	return pascal;
-} 
+}
 float Baro::readAltitude(float sealevelP)
 {
 	meters = ((1 - pow((float)pascal / sealevelP, 1 / 5.25588)) / 0.0000225577);
@@ -162,15 +217,14 @@ void Baro::begin()
 	mb = ReadInt(0xBA);
 	mc = ReadInt(0xBC);
 	md = ReadInt(0xBE);
-	lastT = micros();
 }
 long Baro::getTimeLapse()
 {
-	return micros() - lastT;
+	return lastReadT - lastWorkT;
 }
 bool Baro::readAll(float sealevelP)
 {
-
+	thisReadT = micros();
 	Wire.beginTransmission(BMP085_Address);
 	state = Wire.endTransmission() == 0;
 	if (state)
@@ -254,9 +308,11 @@ bool Baro::readAll(float sealevelP)
 
 			//Calculo de altitude
 			meters = ((1 - pow((float)pascal / sealevelP, 1 / 5.25588)) / 0.0000225577);
-			lastT = micros();
+
+			lastWorkT = thisReadT;
 		}
 	}
+	lastReadT = thisReadT;
 	return state;
 }
 float Baro::readZero(unsigned int I)
@@ -295,15 +351,15 @@ float Baro::getAltitude()
 {
 	return meters - base;
 }
+Baro:: operator bool()
+{
+	return readAll();
+}
 
 
 ///Magnet?metro
-Mag::Mag(float Tzero) :recalibrateT((long)Tzero * 1000000)
+Mag::Mag(float Tzero) :recalibrateT((long)(Tzero * 1000000))
 {
-}
-Mag::Mag() : recalibrateT(1000000)
-{
-
 }
 void Mag::begin()
 {
@@ -311,14 +367,14 @@ void Mag::begin()
 	Wire.write(0x02);                 // Seleciona o modo
 	Wire.write(0x00);                 // Modo de medicao continuo
 	Wire.endTransmission();
-	lastT = micros();
 }
 long Mag::getTimeLapse()
 {
-	return micros() - lastT;
+	return lastReadT - lastWorkT;
 }
 bool Mag::readAll()
 {
+	thisReadT = micros();
 	Wire.beginTransmission(HMC5883_Address);
 	state = Wire.endTransmission() == 0;
 	if (state)
@@ -335,15 +391,16 @@ bool Mag::readAll()
 		Wire.requestFrom(HMC5883_Address, (uint8_t)6);
 		if (6 <= Wire.available())
 		{
-			X = Wire.read() << 8; //X msb
-			X += Wire.read();    //X lsb
-			Z = Wire.read() << 8; //Z msb
-			Z += Wire.read();    //Z lsb
-			Y = Wire.read() << 8; //Y msb
-			Y += Wire.read();    //Y lsb
+			X = Wire.read() << 8 | Wire.read(); //X msb
+			//X += Wire.read();    //X lsb
+			Z = Wire.read() << 8 | Wire.read(); //Z msb
+			//Z += Wire.read();    //Z lsb
+			Y = Wire.read() << 8 | Wire.read(); //Y msb
+			//Y += Wire.read();    //Y lsb
 		}
-		lastT = micros();
+		lastWorkT = thisReadT;
 	}
+	lastReadT = thisReadT;
 	return state;
 }
 float Mag::getX()
@@ -358,14 +415,14 @@ float Mag::getZ()
 {
 	return Z;
 }
+Mag:: operator bool()
+{
+	return readAll();
+}
 
 
 ///Girosc?pio
-Giro::Giro(int sc, float Tzero) : scale(sc), recalibrateT((long)Tzero * 1000000)
-{
-
-}
-Giro::Giro(int sc) : scale(sc), recalibrateT(1000000)
+Giro::Giro(int sc, float Tzero) : scale(sc), recalibrateT((long)(Tzero * 1000000))
 {
 
 }
@@ -406,14 +463,14 @@ void Giro::begin()
 	Wire.write(CTRL_REG5);       // send register address
 	Wire.write(0b00000000);         // send value to write
 	Wire.endTransmission();     // end transmission
-	lastT = micros();
 }
 long Giro::getTimeLapse()
 {
-	return micros() - lastT;
+	return lastReadT - lastWorkT;
 }
 bool Giro::readAll()
 {
+	thisReadT = micros();
 	Wire.beginTransmission(L3G4200D_Address);
 	state = Wire.endTransmission() == 0;
 	if (state)
@@ -425,55 +482,18 @@ bool Giro::readAll()
 		}
 		///Faz a leitura de todos os eixos///
 		Wire.beginTransmission(L3G4200D_Address);
-		Wire.write(Gyro_Xmsb);
+		Wire.write(Gyro_Xlsb | (1 << 7));
 		Wire.endTransmission();
-		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-		if (Wire.available())
+		Wire.requestFrom(L3G4200D_Address, (uint8_t)6);
+		if (6 <= Wire.available())
 		{
-			X = Wire.read() << 8; //X msb
+			X = Wire.read() | (Wire.read() << 8);
+			Y = Wire.read() | (Wire.read() << 8);
+			Z = Wire.read() | (Wire.read() << 8);
 		}
-		Wire.beginTransmission(L3G4200D_Address);
-		Wire.write(Gyro_Xlsb);
-		Wire.endTransmission();
-		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-		if (Wire.available())
-		{
-			X += Wire.read();   //X lsb
-		}
-		Wire.beginTransmission(L3G4200D_Address);
-		Wire.write(Gyro_Ymsb);
-		Wire.endTransmission();
-		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-		if (Wire.available())
-		{
-			Y = Wire.read() << 8; //Y msb
-		}
-		Wire.beginTransmission(L3G4200D_Address);
-		Wire.write(Gyro_Ylsb);
-		Wire.endTransmission();
-		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-		if (Wire.available())
-		{
-			Y += Wire.read();   //Y lsb
-		}
-		Wire.beginTransmission(L3G4200D_Address);
-		Wire.write(Gyro_Zmsb);
-		Wire.endTransmission();
-		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-		if (Wire.available())
-		{
-			Z = Wire.read() << 8; //X msb
-		}
-		Wire.beginTransmission(L3G4200D_Address);
-		Wire.write(Gyro_Zlsb);
-		Wire.endTransmission();
-		Wire.requestFrom(L3G4200D_Address, (uint8_t)1);
-		if (Wire.available())
-		{
-			Z += Wire.read();   //X lsb
-		}
-		lastT = micros();
+		lastWorkT = thisReadT;
 	}
+	lastReadT = thisReadT;
 	return state;
 }
 float Giro::getX()
@@ -488,37 +508,54 @@ float Giro::getZ()
 {
 	return Z;
 }
+Giro:: operator bool()
+{
+	return readAll();
+}
 
 
 ///Aceler?metro
-Acel::Acel(float Tzero) :recalibrateT((long)Tzero * 1000000)
-{
-}
-Acel::Acel() : recalibrateT(1000000)
+Acel::Acel(float Tzero) :recalibrateT((long)(Tzero * 1000000))
 {
 }
 void Acel::begin()
 {
-	Wire.begin();
 	Wire.beginTransmission(ADXL345_Address);// enable to measute g data
 	Wire.write(Register_2D);
 	Wire.write(8);                    //measuring enable
 	Wire.endTransmission();           // stop transmitting
-	lastT = micros();
+
+	Wire.beginTransmission(ADXL345_Address);// enable to measute g data
+	Wire.write(Register_31);
+	Wire.endTransmission();
+	Wire.requestFrom(ADXL345_Address, (uint8_t)1);
+	unsigned long temp = micros();
+	while (!Wire.available())
+	{
+		if (temp + 10 < micros())break;
+	}
+	char B = Wire.read();
+	B &= ~0x0F;
+	B |= 0b11;
+	B |= 8;
+	Wire.beginTransmission(ADXL345_Address);
+	Wire.write(Register_31);
+	Wire.write(B);                    //measuring enable
+	Wire.endTransmission();           // stop transmitting
 }
 long Acel::getTimeLapse()
 {
-	return micros() - lastT;
+	return lastReadT - lastWorkT;
 }
 bool Acel::readAll()
 {
-
+	thisReadT = micros();
 	Wire.beginTransmission(ADXL345_Address);
 	state = Wire.endTransmission() == 0;
 	///Faz a leitura de todos os eixos///
 	if (state)
 	{
-		if (getTimeLapse() > 1000000)
+		if (getTimeLapse() > recalibrateT)
 		{
 			begin();
 			Serial.println("Relacibrado A");
@@ -529,18 +566,20 @@ bool Acel::readAll()
 		Wire.requestFrom(ADXL345_Address, (uint8_t)6);
 		if (6 <= Wire.available())
 		{
-			X = Wire.read();    //X lsb
-			X += Wire.read() << 8;  //X msb
-			Y = Wire.read();    //Y lsb
-			Y += Wire.read() << 8;  //Y msb
-			Z = Wire.read();    //Z lsb
-			Z += Wire.read() << 8;  //Z msb
+			X = Wire.read() | Wire.read() << 8;    //X lsb
+			//X += Wire.read() << 8;  //X msb
+			Y = Wire.read() | Wire.read() << 8;    //Y lsb
+			//Y += Wire.read() << 8;  //Y msb
+			Z = Wire.read() | Wire.read() << 8;    //Z lsb
+			//Z += Wire.read() << 8;  //Z msb
 		}
-		X /= 256.0;
-		Y /= 256.0;
-		Z /= 256.0;
-		lastT = micros();
+		X *= 0.004 * 9.80665F;
+		Y *= 0.004 * 9.80665F;
+		Z *= 0.004 * 9.80665F;
+
+		lastWorkT = thisReadT;
 	}
+	lastReadT = thisReadT;
 	return state;
 }
 float Acel::getX()
@@ -555,6 +594,10 @@ float Acel::getZ()
 {
 	return Z;
 }
+Acel:: operator bool()
+{
+	return readAll();
+}
 
 
 ///Rotinas de verifica��o de apogeu
@@ -565,12 +608,12 @@ Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R(r), Rl1(r - 1)
 	for (unsigned int i = 0; i < N;i++) Alt[i] = 0;
 	for (int i = Rl1; i > 0; i--)
 	{
-		Rf += (float)i*i;
+		Rf += (float)(i*i);
 	}
 }
 void Apogeu::resetTimer()
 {
-	TempMax = micros();
+	TimeZero = micros();
 }
 float Apogeu::addAltitude(float H)
 {
@@ -584,31 +627,105 @@ float Apogeu::addAltitude(float H)
 	{
 		Sum += Alt[i];
 	}
-	for (uint8_t i = R - 1; i > 0; i--)
+	for (uint8_t i = Rl1 - 1; i > 0; i--)
 	{
 		altMed[i] = altMed[i - 1];
 	}
 	altMed[0] = Sum / N;
 	if (altMed[0] > apgPt)
 	{
-		apgPt = Alt[0];
-		apgTm = micros() - TempMax;
+		apgPt = altMed[0];
+		apgTm = micros() - TimeZero;
 	}
 	minH = (altMed[0] < minH) ? altMed[0] : minH;
 	maxH = (altMed[0] > maxH) ? altMed[0] : maxH;
 	return altMed[0];
 }
+void Apogeu::setOmega(bool apgE)
+{
+	Gamma = apgE;
+}
+
+bool Apogeu::apgAlpha()
+{
+	Alpha = 1;
+	for (byte i = Rl1 - 1; i > 0; i--)
+	{
+		if (altMed[i] > altMed[i - 1]) Alpha &= 1;
+		else Alpha &= 0;
+	}
+	return Alpha;
+}
+bool Apogeu::apgBeta()
+{
+	return Beta = altMed[0] < apgPt - S;
+}
+bool Apogeu::apgGamma()
+{
+	return Gamma;
+}
+float Apogeu::apgSigma(bool serial)
+{
+	Sigma = 0;
+	for (unsigned int i = 0; i < Rl1; i++) cond[i] = 1;
+	for (int i = Rl1; i > 0; i--)
+	{
+		for (int j = Rl1; j > 0; j -= (R - i))
+		{
+			int all = j - (R - i);
+			if (all < 0) continue;
+			cond[i - 1] &= (altMed[j] > altMed[all]);
+		}
+	}
+	if (serial) for (int i = Rl1 - 1; i >= 0; i--) Serial.print(cond[i]);
+	for (unsigned int i = Rl1; i > 0; i--)
+	{
+		Sigma += (float)cond[i - 1] * (float)(i*i) / Rf;
+	}
+	return Sigma;
+}
+
+bool Apogeu::getApogeu(float percent, bool type)
+{
+	if (type) return Alpha || Beta || Gamma || (Sigma > percent);
+	else
+	{
+		if (!apg_A && (Alpha || Beta || Gamma || (Sigma > percent)))
+		{
+			apg_A = 1;
+			return 1;
+		}
+		else return 0;
+	}
+}
+bool Apogeu::getAlpha()
+{
+	return Alpha;
+}
+bool Apogeu::getBeta()
+{
+	return Beta;
+}
+bool Apogeu::getGamma()
+{
+	return Gamma;
+}
+float Apogeu::getSigma()
+{
+	return Sigma;
+}
+
 float Apogeu::getAltutude()
 {
 	return altMed[0];
 }
 float Apogeu::getApgPt()
 {
-	return apgPt;
+	return (float)apgPt;
 }
 float Apogeu::getApgTm()
 {
-	return apgTm;
+	return (float)apgTm / 1000000.0;
 }
 float Apogeu::getMaxH()
 {
@@ -618,62 +735,7 @@ float Apogeu::getMinH()
 {
 	return minH;
 }
-boolean Apogeu::getApogeu()
-{
-	boolean *temp = new boolean[R];
-	for (uint8_t i = 0; i < R; i++) temp[i] = 1;
-	for (uint8_t i = R - 1; i > 0; i--)
-	{
-		for (uint8_t j = R - 1; j > 0; j = j - R - i)
-		{
-			if (altMed[j] > altMed[j - 1]) temp[i] &= 1;
-			else temp[i] &= 0;
-		}
-	}
-	return false;
-}
-boolean Apogeu::apgAlpha()
-{
-	boolean temp = 1;
-	for (byte i = R - 1; i > 0; i--)
-	{
-		if (altMed[i] > altMed[i - 1]) temp &= 1;
-		else temp &= 0;
-	}
-	return temp;
-}
-boolean Apogeu::apgPi()
-{
-	return (altMed[0] < apgPt - S);
-}
-boolean Apogeu::apgOmega()
-{
-	return apgExterno;
-}
-void Apogeu::setOmega(boolean apgE)
-{
-	apgExterno = apgE;
-}
-float Apogeu::apgSigma(bool serial)
-{
-	float sum = 0;
-	for (unsigned int i = 0; i < Rl1; i++) temp[i] = 1;
-	for (int i = Rl1; i > 0; i--)
-	{
-		for (int j = Rl1; j > 0; j -= (R - i))
-		{
-			int all = j - (R - i);
-			if (all < 0) continue;
-			temp[i - 1] &= (altMed[j] > altMed[all]);
-		}
-	}
-	if (serial) for (int i = Rl1 - 1; i >= 0; i--) Serial.print(temp[i]);
-	for (unsigned int i = 0; i < Rl1; i++)
-	{
-		sum += (float)temp[i] * (float)((i + 1)*(i + 1)) / Rf;
-	}
-	return sum;
-}
+
 
 
 ///Controle de paraquedas
@@ -683,6 +745,8 @@ DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int in
 	pinMode(P2, OUTPUT);
 	pinMode(I1, INPUT_PULLUP);
 	pinMode(I2, INPUT_PULLUP);
+	digitalWrite(P1, LOW);
+	digitalWrite(P2, LOW);
 }
 void DuDeploy::resetTimer()
 {
@@ -724,13 +788,31 @@ bool DuDeploy::getApogee()
 {
 	return apogee;
 }
-bool DuDeploy::getP1S()
+bool DuDeploy::getP1S(bool type)
 {
-	return P1S;
+	if (type) return P1S;
+	else
+	{
+		if (!P1S_A && P1S)
+		{
+			P1S_A = 1;
+			return 1;
+		}
+		else return 0;
+	}
 }
-bool DuDeploy::getP2S()
+bool DuDeploy::getP2S(bool type)
 {
-	return P2S;
+	if (type) return P2S;
+	else
+	{
+		if (!P2S_A && P2S)
+		{
+			P2S_A = 1;
+			return 1;
+		}
+		else return 0;
+	}
 }
 bool DuDeploy::getSysState(bool type)
 {
@@ -769,14 +851,9 @@ void DuDeploy::refresh(float height)
 			if (Tnow < P2T + Tign && P2T_A) P2S = 1;	//Comando efetivo
 			else P2S = 0;
 		}
-		Serial.print(P1T_A);
-		Serial.print(P1S);
-		Serial.print(P2T_A);
-		Serial.print(P2S);
-		Serial.print('\t');
 	}
-	pinMode(P1, P1S);
-	pinMode(P2, P2S);
+	digitalWrite(P1, P1S);
+	digitalWrite(P2, P2S);
 }
 void DuDeploy::emergency(bool state)
 {
@@ -784,7 +861,6 @@ void DuDeploy::emergency(bool state)
 	{
 		P1H_Am = P1H_A;
 		P2H_Am = P2H_A;
-		Serial.print("aconteceu");
 		P1H_A = false;
 		P2H_A = false;
 		apogee = true;
@@ -793,7 +869,8 @@ void DuDeploy::emergency(bool state)
 	{
 		P1H_A = P1H_Am;
 		P2H_A = P2H_Am;
-		Serial.print("Desaconteceu");
 	}
 	emer = state;
 }
+
+
