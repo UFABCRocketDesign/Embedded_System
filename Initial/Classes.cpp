@@ -1,7 +1,7 @@
 #include "Classes.h"
 
 
-///Coleção de utilitários
+///Coleaao de utilitarios
 void Helpful::begin()
 {
 	T0 = micros();
@@ -52,33 +52,60 @@ void Helpful::oneTimeReset()
 {
 	if (one) one = 0;
 }
+void Helpful::comparer(float n)
+{
+	maxi = (n > maxi) ? n : maxi;
+	mini = (n < mini) ? n : mini;
+}
+float Helpful::getMax()
+{
+	return maxi;
+}
+float Helpful::getMin()
+{
+	return mini;
+}
 
 
-///Filtro de m�dia m�vel
+///Filtro de media movel
 MediaMovel::MediaMovel(int n) : N(n)
 {
 	for (unsigned int i = 0; i < N; i++) Vals[i] = 0;
 }
+MediaMovel::~MediaMovel()
+{
+	delete[] Vals;
+}
 float MediaMovel::addValor(float valor)
 {
-	for (byte i = N - 1; i > 0; i--)
+	for (unsigned int i = N - 1; i > 0; i--)
 	{
 		Vals[i] = Vals[i - 1];
 	}
 	Vals[0] = valor;
 	media = 0;
-	for (byte i = 0; i < N; i++)
+	for (unsigned int i = 0; i < N; i++)
 	{
 		media += Vals[i];
 	}
 	media /= N;
-	if (media > max) max = media;
-	if (media < min) min = media;
+	max = (media > max)? media : max;
+	min = (media < min)? media : min;
 	return media;
 }
 float MediaMovel::getMedia()
 {
 	return media;
+}
+float MediaMovel::getVar()
+{
+	sigma = 0;
+	for (unsigned int i = 0; i < N; i++)
+	{
+		sigma += pow(Vals[i] - media, 2);
+	}
+	sigma = pow(sigma / (N - 1), .5);
+	return sigma;
 }
 float MediaMovel::getMax()
 {
@@ -94,7 +121,7 @@ MediaMovel::operator float()
 }
 
 
-///Barômetro
+///Barometro
 Baro::Baro(float Tzero) :recalibrateT((long)(Tzero * 1000000))
 {
 }
@@ -232,7 +259,9 @@ bool Baro::readAll(float sealevelP)
 		if (getTimeLapse() > recalibrateT)
 		{
 			begin();
+#if PRINT
 			Serial.println("Relacibrado B");
+#endif // PRINT
 		}
 		//Leitura de temperatura
 
@@ -249,7 +278,7 @@ bool Baro::readAll(float sealevelP)
 		// Read two bytes from registers 0xF6 and 0xF7
 		ut = ReadInt(0xF6);
 
-		//Leitura de pressão
+		//Leitura de pressao
 
 		// Write 0x34+(OSS<<6) into register 0xF4
 		// Request a pressure reading w/ oversampling setting
@@ -277,7 +306,7 @@ bool Baro::readAll(float sealevelP)
 			b5 = ((((long)ut - (long)ac6)*(long)ac5) >> 15) + ((long)mc << 11) / (((((long)ut - (long)ac6)*(long)ac5) >> 15) + md);
 			celcius = (float)((b5 + 8) >> 4) / 10;
 
-			//Calculo de pressão
+			//Calculo de pressao
 			up = (((unsigned long)msb << 16) | ((unsigned long)lsb << 8) | (unsigned long)xlsb) >> (8 - OSS);
 
 			b6 = b5 - 4000;
@@ -357,7 +386,7 @@ Baro:: operator bool()
 }
 
 
-///Magnet?metro
+///Magnetometro
 Mag::Mag(float Tzero) :recalibrateT((long)(Tzero * 1000000))
 {
 }
@@ -382,7 +411,9 @@ bool Mag::readAll()
 		if (getTimeLapse() > recalibrateT)
 		{
 			begin();
+#if PRINT
 			Serial.println("Relacibrado M");
+#endif // PRINT
 		}
 		///Faz a leitura de todos os eixos///
 		Wire.beginTransmission(HMC5883_Address);
@@ -421,7 +452,7 @@ Mag:: operator bool()
 }
 
 
-///Girosc?pio
+///Giroscopio
 Giro::Giro(int sc, float Tzero) : scale(sc), recalibrateT((long)(Tzero * 1000000))
 {
 
@@ -478,7 +509,9 @@ bool Giro::readAll()
 		if (getTimeLapse() > recalibrateT)
 		{
 			begin();
+#if PRINT
 			Serial.println("Relacibrado G");
+#endif // PRINT
 		}
 		///Faz a leitura de todos os eixos///
 		Wire.beginTransmission(L3G4200D_Address);
@@ -514,7 +547,7 @@ Giro:: operator bool()
 }
 
 
-///Aceler?metro
+///Acelerometro
 Acel::Acel(float Tzero) :recalibrateT((long)(Tzero * 1000000))
 {
 }
@@ -558,7 +591,9 @@ bool Acel::readAll()
 		if (getTimeLapse() > recalibrateT)
 		{
 			begin();
+#if PRINT
 			Serial.println("Relacibrado A");
+#endif // PRINT
 		}
 		Wire.beginTransmission(ADXL345_Address);
 		Wire.write(Acel_Xlsb);
@@ -600,7 +635,7 @@ Acel:: operator bool()
 }
 
 
-///Rotinas de verifica��o de apogeu
+///Rotinas de verificacao de apogeu
 Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R(r), Rl1(r - 1), S(s)
 {
 	Rf = 0;
@@ -677,7 +712,9 @@ float Apogeu::apgSigma(bool serial)
 			cond[i - 1] &= (altMed[j] > altMed[all]);
 		}
 	}
+#if PRINT
 	if (serial) for (int i = Rl1 - 1; i >= 0; i--) Serial.print(cond[i]);
+#endif // PRINT
 	for (unsigned int i = Rl1; i > 0; i--)
 	{
 		Sigma += (float)cond[i - 1] * (float)(i*i) / Rf;
@@ -873,7 +910,7 @@ void DuDeploy::emergency(bool state)
 }
 
 
-///Auxiliar para o uso do cartão SD
+///Auxiliar para o uso do cartao SD
 SDCardHelper::SDCardHelper(uint8_t csPin, String name, String type, float Tzero) :CS(csPin), Fname0(name), Ftype((type.length() > 3) ? ((String)type[0] + (String)type[1] + (String)type[2]) : (type.length() == 3) ? type : (type.length() == 2) ? type + (String)"0" : (type.length() == 1) ? type + (String)"00" : (String)"txt"), recalibrateT((long)(Tzero * 1000000))
 {
 	coef = 8 - Fname0.length();
@@ -904,10 +941,14 @@ void SDCardHelper::newName()
 
 bool SDCardHelper::begin(bool type)
 {
+#if PRINT
 	Serial.println("SDbegin");
+#endif // PRINT
 	if (!SD.begin(CS))
 	{
+#if PRINT
 		Serial.println("SDFail");
+#endif // PRINT
 		return false;
 	}
 	else
@@ -922,10 +963,14 @@ bool SDCardHelper::begin(bool type)
 		{
 			println("temp\t\tacel\t\t\tgiro\t\t\tmag\t\t");
 			file.close();
+#if PRINT
 			Serial.print(F("done: "));
 			Serial.println(Fname);
+#endif // PRINT
 		}
+#if PRINT
 		else Serial.println("error opening file file");
+#endif // PRINT
 		return true;
 	}
 }

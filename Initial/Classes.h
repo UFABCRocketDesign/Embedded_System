@@ -20,6 +20,7 @@ private:
 	unsigned long T0 = 0;
 	bool one = 0;
 	long count = 0;
+	float maxi = 0, mini = 0;
 public:
 	bool mem;
 	void begin();
@@ -31,19 +32,24 @@ public:
 	float sinceBegin();
 	bool oneTime();
 	void oneTimeReset();
+	void comparer(float n);
+	float getMax();
+	float getMin();
 };
 
 class MediaMovel
 {
 public:	//Inicializadores
 	MediaMovel(int n);
+	~MediaMovel();
 private:
 	const unsigned int N;
 	float* Vals = new float[N];
-	float media, max = 0, min;
+	float media, max = 0, min, sigma;
 public:
 	float addValor(float valor);
 	float getMedia();
+	float getVar();
 	float getMax();
 	float getMin();
 	operator float();
@@ -229,26 +235,26 @@ public:
 
 private:
 	const unsigned int P1, P2;	//Pinos de comando
-	const unsigned int I1, I2;	//Pinos de verificação
+	const unsigned int I1, I2;	//Pinos de verificacao
 	const unsigned long Tign;	//Tempo de comando ativo
-	const unsigned long Delay;	//Tempo de atraso dentre comando ( caso altura não determinada)
+	const unsigned long Delay;	//Tempo de atraso dentre comando ( caso altura nao determinada)
 	unsigned long P1T = 0, P2T = 0;	//Momento que o ignitor ligou
 	unsigned long TimeZero = 0;	//Momento zero
-	unsigned long Tmax = 0;	//Tempo máximo para segunrança
+	unsigned long Tmax = 0;	//Tempo máximo para segunranca
 	unsigned long Tnow = 0;	//Tempo atual (com zeragem)
 	float P1H = 0, P2H = 0;	//Altura de comando
 	bool P1S = 0, P2S = 0;
 	bool P1S_A = 0, P2S_A = 0;	//Estado atual do comando
 	bool P1H_A = 0, P2H_A = 0;	//Condicional para comando em altura
 	bool apogee = 0;	//Representante interno do apogeu
-	bool TmaxAux = 0;	//Condicional para verificar tempo de segurança
+	bool TmaxAux = 0;	//Condicional para verificar tempo de seguranca
 	bool P1T_A = 0, P2T_A = 0;	//Condicional para momento do ignitor
 	bool P1seal = 0, P2seal = 0;	//Selo de comando
 	bool emer = 0, P1H_Am = 0, P2H_Am = 0;
 public:
 	void resetTimer();
-	bool info1();	//Retorna informação sobre estado do ignitor de acionamento 1
-	bool info2();//Retorna informação sobre estado do ignitor de acionamento 2
+	bool info1();	//Retorna informacao sobre estado do ignitor de acionamento 1
+	bool info2();//Retorna informacao sobre estado do ignitor de acionamento 2
 	bool begin();
 	void setTmax(float Time);
 	void setP1height(float H);

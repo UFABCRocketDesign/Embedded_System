@@ -4,33 +4,26 @@
 #include <TinyGPS.h>
 #include "Classes.h"
 
-#define GY80 1
-#define SDCard 1
-#define GPSmode 1
-#define LoRamode 1
-#define PRINT 1
+/////////////////////////////////////////////////CONFIGURATION/////////////////////////////////////////////////
 
-#define Pbmp 1
-#define Pacel 1
-#define Pgiro 1
-#define Pmag 1
-#define Papg 1
+#define GY80 1		//Use GY80 sensor
+#define BMP085 1	//Use BMP085 sensor
+#define SDCard 1	//Use SD card
+#define GPSmode 1	//Use GPS
+#define LoRamode 1	//Serial mode for transmission on LoRa module
+#define PRINT 1		//Print or not things on Serial
 
-#define Tcom 1
-#define Lcom 1
+#define Pbmp 1		//Print barometer informations
+#define Pacel 1		//Print acelerometer informations
+#define Pgiro 1		//Print gyroscope informations
+#define Pmag 1		//Print magnetometer informations
+#define Papg 1		//Print apogee informations
 
-/*
-#if SDCard	//Variáveis e declarações SD
-#define CS 53   //Pino utilizado como CS para cartão SD
-#define zer0 6
-#define InF Informations
+#define Tcom 1		//Print time counter
+#define Lcom 1		//Print loop counter
+#define MaxCond 1	//Print maximum apogee coefficient detected
 
-File InF;
-
-char Dname[] = { "INF000.txt" };
-#endif // SDcard
-*/
-//POO
+//////////////////////////////////////////////////////POO//////////////////////////////////////////////////////
 
 #define bmp Barometer
 #define giros Gyroscope
@@ -42,7 +35,7 @@ char Dname[] = { "INF000.txt" };
 #define MM_acel M_acel
 #define MM_giro M_giro
 #define MM_mag M_mag
-#define GYutil GYutilitario
+#define APGutil APGutilitario
 
 #define SDutil SDutilitario
 #define SDC SecureDigitalCard
@@ -58,18 +51,22 @@ char Dname[] = { "INF000.txt" };
 #define util utilitario
 
 
-#if GY80
+#if BMP085 || GY80
 Baro bmp;
-Acel acele;
-Giro giros(2000);
-Mag megnt;
 MediaMovel MM_bmp[2]{ (10),(10) };
-MediaMovel MM_acel[3]{ (10),(10),(10) };
-MediaMovel MM_giro[3]{ (10),(10),(10) };
-MediaMovel MM_mag[3]{ (10),(10),(10) };
 Apogeu apg(10, 50, 50);
 DuDeploy rec(11, 12, 10, 9, 5, 15);
-Helpful GYutil;
+Helpful APGutil;
+#define LapsMaxT 3	//seconds
+#endif // BMP085 || GY80
+
+#if GY80
+Acel acele;
+MediaMovel MM_acel[3]{ (10),(10),(10) };
+Giro giros(2000);
+MediaMovel MM_giro[3]{ (10),(10),(10) };
+Mag megnt;
+MediaMovel MM_mag[3]{ (10),(10),(10) };
 #endif // GY80
 
 #if SDCard
@@ -93,67 +90,66 @@ Helpful LRutil;
 
 Helpful util;
 
-
-
-
-float maxCond = 0;
+/////////////////////////////////////////////////////SETUP/////////////////////////////////////////////////////
 
 void setup()
 {
 	pinMode(13, OUTPUT);
-#if Serial
-		Serial.begin(250000);
+#if PRINT
+	Serial.begin(250000);
 #endif // Serial
 
 #if LoRamode
-		Serial3.begin(9600);
-		LRutil.begin();
+	Serial3.begin(9600);
+	LRutil.begin();
 #endif // LoRamode
 
 #if SDCard
-		SDC.begin();
-		if (SDC)
-		{
-			SDC.print("titulo");
-			SDC.close();
-		}
-		SDutil.begin();
+	SDC.begin();
+	if (SDC)
+	{
+		SDC.print("titulo");
+		SDC.close();
+	}
+	SDutil.begin();
 #endif // SDCard
 
 #if GPSmode
-		GpSerial.begin(9600);
+	GpSerial.begin(9600);
 #endif // GPSmode
 
-#if GY80
+#if BMP085 || GY80 
 	Wire.begin();
 	bmp.begin();
 	bmp.readAll();
 	bmp.readZero(100);
-	//Serial.println(bmp.getZero());
-
-	giros.begin();
-	megnt.begin();
-	acele.begin();
-
 	apg.resetTimer();
 	rec.setP2height(-100);
 	rec.begin();
-	GYutil.begin();
+	APGutil.begin();
+#endif // BMP085 || GY80
+
+#if GY80
+	giros.begin();
+	megnt.begin();
+	acele.begin();
 #endif // GY80
 
 }
+
+/////////////////////////////////////////////////////LOOP//////////////////////////////////////////////////////
 
 void loop()
 {
 	util.counter();
 #if Tcom
-	if (GYutil.eachN(100))
+	if (APGutil.eachN(100))
 	{
-		Serial.println(GYutil.lapse(),5);
+		Serial.println(APGutil.lapse(), 5);
 	}
 	else
 	{
-		GYutil.lapse();
+		APGutil.lapse();
 	}
 #endif // Tcom
 
@@ -162,15 +158,16 @@ void loop()
 	Serial.print(":\t");
 #endif // Lcom
 
-#if GY80
+#if BMP085 || GY80
 	if (bmp)
 	{
 		MM_bmp[0].addValor(bmp.getTemperature());
 		MM_bmp[1].addValor(bmp.getPressure());
 	}
-
 	apg.addAltitude(bmp.getAltitude());
+#endif // BMP085 || GY80
 
+#if GY80
 	if (acele)
 	{
 		MM_acel[0].addValor(acele.getX());
@@ -189,20 +186,23 @@ void loop()
 		MM_mag[1].addValor(megnt.getY());
 		MM_mag[2].addValor(megnt.getZ());
 	}
+#endif // GY80
 
 
-	rec.emergency(bmp.getTimeLapse() > 3000000);
+#if MBP085 || GY80
+	rec.emergency(bmp.getTimeLapse() > 1000000 * LapsMaxT);
 	if (rec.getSysState(0))
 	{
 		apg.apgSigma();
 		apg.apgAlpha();
 		rec.sealApogee(apg.getApogeu(0.9f));
 		rec.refresh(bmp.getAltitude());
-		maxCond = (maxCond < apg.getSigma()) ? apg.getSigma() : maxCond;
+#if MaxCond
+		APGutil.comparer(apg.getSigma());
+#endif // MaxCond
 	}
-
 	analogWrite(13, (int)(apg.getSigma() * 255));
-#endif // GY80
+#endif // MBP085 || GY80
 
 #if GPSmode
 	GyGPS();
@@ -241,6 +241,9 @@ void loop()
 	Serial.print('\t');
 #endif // Pmag
 	////////////////////////////////////////////////////
+
+#endif // GY80
+#if BMP085 || GY80
 #if Pbmp
 	Serial.print('|');
 	Serial.print(MM_bmp[0]);
@@ -265,11 +268,12 @@ void loop()
 	Serial.print('\t');
 	Serial.print(apg.getSigma(), 7);
 	Serial.print('\t');
-	Serial.print(maxCond, 5);
+#if MaxCond
+	Serial.print(APGutil.getMax(), 5);
 	Serial.print('\t');
+#endif // MaxCond
 #endif // Papg  
-
-#endif // GY80
+#endif // BMP085 || GY80
 
 	Serial.println();
 #endif // PRINT
@@ -298,20 +302,25 @@ void loop()
 				MM_mag[1].addValor(megnt.getY());
 				MM_mag[2].addValor(megnt.getZ());
 			}
-			SDC.printab(GYutil.sinceBegin(), 3);
+#endif // GY80
+
+			SDC.printab(APGutil.sinceBegin(), 3);
+#if GY80
 			for (int i = 0; i < 3; i++) SDC.printab(MM_acel[i], 3);
 			for (int i = 0; i < 3; i++) SDC.printab(MM_giro[i], 1);
 			for (int i = 0; i < 3; i++) SDC.printab(MM_mag[i], 1);
+#endif // GY80
+#if BMP085 || GY80
 			for (int i = 0; i < 2; i++) SDC.printab(MM_bmp[i]);
 			SDC.printab(apg.getAltutude());
-#endif // GY80
+#endif // BMP085 || GY80
 
 #if GPSmode
 			if (newGps)
 			{
 				SDC.printab(flat, 6);//Latitude
 				SDC.printab(flon, 6);//Longitude
-				SDC.printab(sat);//Número de satélites
+				SDC.printab(sat);//Número de satelites
 				SDC.printab(prec);//Precisão
 			}
 			else
@@ -326,7 +335,7 @@ void loop()
 			SDC.printab(failed);//Número de erros
 #endif // GPSmode
 
-#if GY80
+#if BMP085 || GY80
 			if (apg.getApogeu(0.9, 0))
 			{
 				SDC.print("Apogeu: altitude - ");
@@ -340,78 +349,13 @@ void loop()
 				if (rec.getP1S(0)) SDC.printab("Acionamento 1");
 				if (rec.getP2S(0)) SDC.printab("Acionamento 2");
 			}
-#endif // GY80
+#endif // BMP085 || GY80
 			SDC.println();
 			SDC.close();
 		}
 		else SDutil.mem = 1;
 	}
 	else if (SDutil.eachT(15)) if (SDC.begin()) SDutil.mem = 0;
-	/*
-	InF = SD.open(Dname, FILE_WRITE);
-	if (InF)
-	{
-	if (acele.readAll())
-	{
-	MM_acel[0].addValor(acele.getX());
-	MM_acel[1].addValor(acele.getY());
-	MM_acel[2].addValor(acele.getZ());
-	}
-	if (giros.readAll())
-	{
-	MM_giro[0].addValor(giros.getX());
-	MM_giro[1].addValor(giros.getY());
-	MM_giro[2].addValor(giros.getZ());
-	}
-	if (megnt.readAll())
-	{
-	MM_mag[0].addValor(megnt.getX());
-	MM_mag[1].addValor(megnt.getY());
-	MM_mag[2].addValor(megnt.getZ());
-	}
-	InF.print(GYutil.sinceBegin());
-	InF.print('\t');
-	InF.print(MM_acel[0].getMedia(), 3);
-	InF.print('\t');
-	InF.print(MM_acel[1].getMedia(), 3);
-	InF.print('\t');
-	InF.print(MM_acel[2].getMedia(), 1);
-	InF.print('\t');
-	InF.print(MM_giro[0].getMedia(), 1);
-	InF.print('\t');
-	InF.print(MM_giro[1].getMedia(), 1);
-	InF.print('\t');
-	InF.print(MM_giro[2].getMedia(), 1);
-	InF.print('\t');
-	InF.print(MM_mag[0].getMedia(), 1);
-	InF.print('\t');
-	InF.print(MM_mag[1].getMedia(), 1);
-	InF.print('\t');
-	InF.print(MM_mag[2].getMedia(), 1);
-	InF.print('\t');
-	InF.print(MM_bmp[0].getMedia());
-	InF.print('\t');
-	InF.print(MM_bmp[1].getMedia());
-	InF.print('\t');
-	InF.print(apg.getAltutude());
-	InF.print('\t');
-	if (apg.getApogeu(0.9, 0))
-	{
-	InF.print("Apogeu: altitude - ");
-	InF.print(apg.getApgPt());
-	InF.print(" m, tempo - ");
-	InF.print(apg.getApgTm());
-	InF.print(" s\t");
-	}
-	if (rec.getSysState())
-	{
-	if (rec.getP1S(0)) InF.print("Acionamento 1\t");
-	if (rec.getP2S(0)) InF.print("Acionamento 2\t");
-	}
-	InF.println();
-	InF.close();
-	}
-	//*/
 #endif // SDCard
 
 #if LoRamode
@@ -423,25 +367,26 @@ void loop()
 		LoRa.print('\t');
 		LoRa.print(flon, 6);//Longitude
 		LoRa.print('\t');
-		LoRa.print(sat);//Número de satélites
+		LoRa.print(sat);//Número de satelites
 		LoRa.print('\t');
 		LoRa.print(prec);//Precisão
 		LoRa.print('\t');
 #endif // GPSmode
-#if GY80
+#if BMP085 || GY80
 		LoRa.print(apg.getAltutude());
 		LoRa.print('\t');
 		LoRa.print(apg.getSigma());
 		LoRa.print('\t');
-#endif // GY80
-#if !GPSmode && !GY80
+#endif // BMP085 || GY80
+#if !GPSmode && !(BMP085 || GY80)
 		LoRa.print(LRutil.getCount());
 #endif // !GPSmode && !GY80
 		LoRa.println();
-		//Serial3.println(cond);
 	}
 #endif // LoRamode
 }
+
+//////////////////////////////////////////////////////GPS//////////////////////////////////////////////////////
 
 #if GPSmode
 bool GyGPS()
