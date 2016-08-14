@@ -18,6 +18,8 @@ private:
 	unsigned long timerEach = 0;
 	unsigned long lapseT = 0;
 	unsigned long T0 = 0;
+	unsigned long endT = 0;
+	bool forTstate = 0;
 	bool one = 0;
 	long count = 0;
 	float maxi = 0, mini = 0;
@@ -28,6 +30,8 @@ public:
 	long getCount();
 	bool eachN(unsigned int N);
 	bool eachT(float T);
+	void forT(float T);
+	bool forT();
 	float lapse();
 	float sinceBegin();
 	bool oneTime();
@@ -58,7 +62,7 @@ public:
 class Baro  //BMP085
 {
 public:	//Inicializadores
-	Baro(float Tzero = 1);
+	Baro(float Tzero = 0.1);
 private:
 	const long recalibrateT;
 	const int BMP085_Address = 0x77;
@@ -108,7 +112,7 @@ public:
 class Mag //HMC5883
 {
 public: //Inicializadores
-	Mag(float Tzero = 1);
+	Mag(float Tzero = 0.1);
 private:
 	const long recalibrateT;
 	const uint8_t HMC5883_Address = 0x1E;
@@ -131,7 +135,7 @@ public:
 class Giro  //L3G4200D
 {
 public: //Inicializadores
-	Giro(int sc, float Tzero = 1);
+	Giro(int sc, float Tzero = 0.1);
 private:
 	const long scale, recalibrateT;
 	const uint8_t L3G4200D_Address = 0x69;
@@ -159,7 +163,7 @@ public:
 class Acel  //ADXL345
 {
 public:  //Inicializadores
-	Acel(float Tzero = 1);
+	Acel(float Tzero = 0.1);
 private:
 	const long recalibrateT;
 	const uint8_t ADXL345_Address = 0x53;

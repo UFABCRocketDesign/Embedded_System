@@ -29,6 +29,20 @@ bool Helpful::eachT(float T)
 	}
 	return false;
 }
+void Helpful::forT(float T)
+{
+	endT = micros() + (long)(T*1000000.0);
+	forTstate = 1;
+}
+bool Helpful::forT()
+{
+	if(micros() > endT && forTstate)
+	{
+		endT = 0;
+		return forTstate = 0;
+	}
+	return forTstate;
+}
 float Helpful::lapse()
 {
 	unsigned long tnow = micros(), t = tnow - lapseT;
@@ -777,12 +791,6 @@ float Apogeu::getMinH()
 ///Controle de paraquedas
 DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2), Tign((long)(ignT * 1000000.0)), Delay((long)(delay * 1000000.0))
 {
-	pinMode(P1, OUTPUT);
-	pinMode(P2, OUTPUT);
-	pinMode(I1, INPUT_PULLUP);
-	pinMode(I2, INPUT_PULLUP);
-	digitalWrite(P1, LOW);
-	digitalWrite(P2, LOW);
 }
 void DuDeploy::resetTimer()
 {
@@ -798,6 +806,12 @@ bool DuDeploy::info2()
 }
 bool DuDeploy::begin()
 {
+	pinMode(P1, OUTPUT);
+	pinMode(P2, OUTPUT);
+	digitalWrite(P1, LOW);
+	digitalWrite(P2, LOW);
+	pinMode(I1, INPUT_PULLUP);
+	pinMode(I2, INPUT_PULLUP);
 	resetTimer();
 	return info1() || info2();
 }
@@ -961,7 +975,7 @@ bool SDCardHelper::begin(bool type)
 		file = SD.open(Fname, FILE_WRITE);
 		if (file)
 		{
-			println("temp\t\tacel\t\t\tgiro\t\t\tmag\t\t");
+			println(Fname);
 			file.close();
 #if PRINT
 			Serial.print(F("done: "));
