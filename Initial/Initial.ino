@@ -331,7 +331,7 @@ void setup()
 #if ApoGee
 	apg.resetTimer();
 	APGutil.begin();
-	rec.begin();
+	rec.resetTimer();
 #endif // ApoGee
 
 #if SDCard
@@ -410,6 +410,9 @@ void loop()
 		APGutil.comparer(apg.getSigma());
 #endif // MaxCond
 	}
+#if BuZZ
+	else if (APGutil.oneTime()) pinMode(buzzPin, HIGH);
+#endif // BuZZ
 #endif // ApoGee
 #if PWMapg
 	analogWrite(PWMout, (int)(apg.getSigma() * 255));

@@ -6,13 +6,19 @@ void Helpful::begin()
 {
 	T0 = micros();
 }
-long Helpful::counter()
+unsigned long Helpful::counter()
 {
 	return count++;
 }
-long Helpful::getCount()
+unsigned long Helpful::getCount()
 {
 	return count;
+}
+unsigned long Helpful::counterReset()
+{
+	unsigned long C = count;
+	count = 0;
+	return  C;
 }
 bool Helpful::eachN(unsigned int N)
 {
@@ -21,8 +27,7 @@ bool Helpful::eachN(unsigned int N)
 }
 bool Helpful::eachT(float T)
 {
-	unsigned long time = (long)(T*1000000.0);
-	if (micros() - timerEach > time)
+	if (micros() - timerEach > (unsigned long)(T*1000000.0))
 	{
 		timerEach = micros();
 		return true;

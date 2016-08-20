@@ -21,13 +21,14 @@ private:
 	unsigned long endT = 0;
 	bool forTstate = 0;
 	bool one = 0;
-	long count = 0;
+	unsigned long count = 0;
 	float maxi = 0, mini = 0;
 public:
 	bool mem;
 	void begin();
-	long counter();
-	long getCount();
+	unsigned long counter();
+	unsigned long getCount();
+	unsigned long counterReset();
 	bool eachN(unsigned int N);
 	bool eachT(float T);
 	void forT(float T);
