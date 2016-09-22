@@ -187,6 +187,16 @@ public:
 	operator bool();
 };
 
+class Termo	//LM35
+{
+public:
+	Termo(byte a);
+private:
+	const byte A;
+public:
+	float read();
+};
+
 class Apogeu
 {
 public:
@@ -273,7 +283,7 @@ public:
 	void emergency(bool state = 1);
 };
 
-class SDCardHelper
+class SDCardHelper	
 {
 public:
 	SDCardHelper(uint8_t scPin, String name, String type = "txt", float Tzero = 1);
@@ -303,6 +313,8 @@ public:
 	operator bool();
 
 	void close();
+
+	String getFname();
 
 	size_t print(const __FlashStringHelper *);
 	size_t print(const String &);

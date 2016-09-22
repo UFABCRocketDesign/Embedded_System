@@ -653,6 +653,15 @@ Acel:: operator bool()
 	return readAll();
 }
 
+///Termometro
+Termo::Termo(byte a) :A(a)
+{
+}
+float Termo::read()
+{
+	return (float(analogRead(A)) * 5 / (1023)) / 0.01;
+}
+
 
 ///Rotinas de verificacao de apogeu
 Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R(r), Rl1(r - 1), S(s)
@@ -770,7 +779,6 @@ float Apogeu::getSigma()
 {
 	return Sigma;
 }
-
 float Apogeu::getAltutude()
 {
 	return altMed[0];
@@ -980,7 +988,7 @@ bool SDCardHelper::begin(bool type)
 		file = SD.open(Fname, FILE_WRITE);
 		if (file)
 		{
-			println(Fname);
+			//println(Fname);
 			file.close();
 #if PRINT
 			Serial.print(F("done: "));
@@ -1023,6 +1031,11 @@ SDCardHelper::operator bool()
 void SDCardHelper::close()
 {
 	file.close();
+}
+
+String SDCardHelper::getFname()
+{
+	return Fname;
 }
 
 size_t SDCardHelper::printNumber(unsigned long n, uint8_t base)

@@ -12,3 +12,10 @@ Initial/Debug/Initial.tlog/CL.write.1.tlog
 *.tlog
 *.log
 Initial/Debug/vc140.idb
+*.hex
+*.elf
+*.d
+Initial/Debug/Classes.cpp.o
+*.o
+Initial/Debug/core.a
+*.vcxproj
