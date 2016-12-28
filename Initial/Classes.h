@@ -83,8 +83,9 @@ private:
 	unsigned int ac4, ac5, ac6;
 	int mb, mc, md;
 
-	float celcius, meters, base = 0;//Bmp
+	float celcius;
 	long pascal;
+	//float meters, base = 0;//////////////////////
 
 	unsigned long thisReadT = 0;
 	unsigned long lastReadT = 0;
@@ -93,27 +94,26 @@ private:
 
 	char ReadChar(unsigned char address);
 	int ReadInt(unsigned char address);
-	float readTemperature();
-	long readPressure();
-	float readAltitude(float sealevelP = 101325);
+	//float readAltitude(float sealevelP = 101325);//////////////////////ok
 public:
 	void begin();
 	long getTimeLapse();
-	bool readAll(float sealevelP = 101325);
-	float readZero(unsigned int I);
-	long readSealevel(float altitude);
-	float getZero();
+	bool readAll();
+	//bool readAll(float sealevelP = 101325);
+	//float readZero(unsigned int I);//////////////////////ok
+	//long readSealevel(float altitude);
+	//float getZero();//////////////////////ok
 	float getTemperature();
 	long getPressure();
-	float getAltitude(int Base);
-	float getAltitude();
+	//float getAltitude(int Base);//////////////////////
+	//float getAltitude();//////////////////////
 	operator bool();
 };
 
-class Mag //HMC5883
+class Magn //HMC5883
 {
 public: //Inicializadores
-	Mag(float Tzero = 0.1);
+	Magn(float Tzero = 0.1);
 private:
 	const long recalibrateT;
 	const uint8_t HMC5883_Address = 0x1E;
@@ -187,10 +187,10 @@ public:
 	operator bool();
 };
 
-class Termo	//LM35
+class Term	//LM35
 {
 public:
-	Termo(byte a);
+	Term(byte a);
 private:
 	const byte A;
 public:
@@ -205,6 +205,8 @@ private:
 	const unsigned int N, R, Rl1;
 	const float S;
 	float Rf;
+	float base = 0;
+	int baseIndex = 0;
 
 	bool Alpha = 0;
 	bool Beta = 0;
@@ -217,15 +219,19 @@ private:
 	float minH = 0;
 	long TimeZero = 0;
 	bool apg_A = 0;
-	bool *cond = new bool[Rl1];
+	bool* cond = new bool[Rl1];
 	float* Alt = new float[N];
-	float* altMed = new float[Rl1];
+	float* altMed = new float[R];
 public:
+	float addZero(long P, float sealevelP = 101325);
+	float getZero();
+	void resetZero();
 	void resetTimer();
-	float addAltitude(float H);
-	void setOmega(bool apgE);
+	//float addAltitude(float H);
+	float calcAlt(long P, float sealevelP = 101325);
+	void setGamma(bool apgE);
 
-	bool apgAlpha();
+	bool apgAlpha(bool serial = 0);
 	bool apgBeta();
 	bool apgGamma();
 	float apgSigma(bool serial = 0);
@@ -236,7 +242,8 @@ public:
 	bool getGamma();
 	float getSigma();
 
-	float getAltutude();
+	float getAltitude();
+	float getAltitude(float B);
 	float getApgPt();
 	float getApgTm();
 	float getMaxH();

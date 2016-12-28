@@ -15,23 +15,23 @@
 #define GPSmode 1							//Use GPS
 #define LoRamode 1							//Serial mode for transmission on LoRa module
 #define PRINT 1								//Print or not things on Serial
-#define RBF 1								//Revome Before Flight
+#define RBF 0								//Revome Before Flight
 #define BuZZ 1								//Buzzer mode
 
 #define ApoGee BMP085 & 1					//Detection of apogee
 
-#define Pbmp PRINT & BMP085 & 1				//Print barometer informations
+#define Pbmp PRINT & BMP085 & 0				//Print barometer informations
 #define Pacel PRINT & ADXL345 & 1			//Print acelerometer informations
 #define Pgiro PRINT & L3G4200D & 1			//Print gyroscope informations
 #define Pmag PRINT & HMC5883 & 1			//Print magnetometer informations
 #define Papg PRINT & ApoGee & 1				//Print apogee informations
 #define Pgps PRINT & GPSmode & 1			//Print GPS informations
-#define Psep PRINT & 1						//Print visual separator
+#define Psep PRINT & 0						//Print visual separator
 
 
 #define Tcom PRINT & 0						//Print time counter
 #define Lcom PRINT & 0						//Print loop counter
-#define MaxCond ApoGee & PRINT & 1			//Print maximum apogee coefficient detected
+#define MaxCond ApoGee & PRINT & 0			//Print maximum apogee coefficient detected
 #define PWMapg ApoGee & 1					//Show the apogee coefficient in a LED
 
 #define GMT 0
@@ -55,7 +55,7 @@ MediaMovel MM_bmp[2]{ (10),(10) };			//Array declaration of the moving average f
 #define rec Recover
 #define apg Apogee
 #define APGutil APGutilitario
-Apogeu apg(20, 50, 50);						//Apogee checker object declaration
+Apogeu apg(5, 30, 50);						//Apogee checker object declaration
 DuDeploy rec(8, 10, 6, 5, 5, 15);			//Dual deployment parachute object declaration
 Helpful APGutil;							//Declaration of helpful object to peak detection.
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
@@ -79,7 +79,7 @@ MediaMovel MM_giro[3]{ (10),(10),(10) };	//Array declaration of the moving avera
 #if HMC5883
 #define magn Magnetometer
 #define MM_magn M_magn
-Mag magn;									//Magnetometer object declaration
+Magn magn;									//Magnetometer object declaration
 MediaMovel MM_magn[3]{ (10),(10),(10) };	//Array declaration of the moving average filter objects
 #endif // HMC5883
 
@@ -134,6 +134,10 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 Helpful util;								//Declaration of helpful object to general cases
 
 #if RBF
+#if BuZZ
+#define holdT .05
+#endif // BuZZ
+
 #define rbfHelper ReBeFlight
 #define RBFpin 7							//Pin that the RBF system is connected
 unsigned short sysC = 0;
@@ -207,7 +211,7 @@ void setup()
 		SDC.print("\tbaro\t\t");
 #endif // BMP085
 #if GPSmode
-		SDC.print("\t\tGPS\t\t");
+		SDC.print("\t\t\tGPS\t\t\t");
 #endif // GPSmode
 		SDC.println();
 
@@ -226,7 +230,7 @@ void setup()
 		SDC.print("C\tPascal\tm\t");
 #endif // BMP085
 #if GPSmode
-		SDC.print("Latitude\tLongitude\tSat\tPrec\t");
+		SDC.print("Latitude\tLongitude\tAltutude (m)\tspeed\tSat\tPrec\t");
 #endif // GPSmode
 		SDC.println();
 		SDC.close();
@@ -285,18 +289,22 @@ void setup()
 	baro.begin();
 	if (baro)
 	{
-		baro.readZero(100);
+		for (int i = 0; i < 100; i++)
+		{
+			if (baro) apg.addZero(baro.getPressure());
+		}
+		//baro.readZero(100);
 #if RBF
 		sysC++;
 #endif // RBF
 #if PRINT
 		Serial.print("Baro ok ");
-		Serial.println(baro.getZero());
+		Serial.println(apg.getZero());
 #endif // PRINT
 
 #if LoRamode
 		LoRa.print("Baro ok ");
-		LoRa.println(baro.getZero());
+		LoRa.println(apg.getZero());
 #endif // LoRamode
 	}
 	else
@@ -422,7 +430,7 @@ void setup()
 	Serial.print("\t");
 #endif // MaxCond
 #if GPSmode
-	Serial.print("\t\tGPS\t\t");
+	Serial.print("\t\t\tGPS\t\t\t");
 #endif // GPSmode
 	Serial.println();
 
@@ -447,7 +455,7 @@ void setup()
 	Serial.print("Max S\t");
 #endif // MaxCond
 #if GPSmode
-	Serial.print("Latitude\tLongitude\tSat\tPrec\t");
+	Serial.print("Latitude\tLongitude\tAltitude\tSpeed (m/s)\tSat\tPrec\t");
 #endif // GPSmode
 	Serial.println();
 
@@ -500,7 +508,8 @@ void loop()
 #endif // BMP085
 
 #if ApoGee
-	apg.addAltitude(baro.getAltitude());
+	apg.calcAlt(baro.getPressure());
+	//apg.addAltitude(baro.getAltitude());
 #endif // ApoGee
 
 #if ADXL345
@@ -533,10 +542,12 @@ void loop()
 	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
 	if (rec.getSysState(0))
 	{
-		apg.apgSigma();
-		apg.apgAlpha();
+		//Serial.print("S:");
+		apg.apgSigma();// Serial.print(' ');
+		//Serial.print("A:");
+		apg.apgAlpha();// Serial.print('\t');
 		rec.sealApogee(apg.getApogeu(0.9f));
-		rec.refresh(baro.getAltitude());
+		rec.refresh(apg.getAltitude());
 #if MaxCond
 		APGutil.comparer(apg.getSigma());
 #endif // MaxCond
@@ -602,7 +613,7 @@ void loop()
 	Serial.print('\t');
 #endif // Pbmp 
 #if Papg	/////////////////////////////////////////////////////
-	Serial.print(apg.getAltutude());
+	Serial.print(apg.getAltitude());
 	Serial.print('\t');
 #if Psep
 	Serial.print('|');
@@ -638,6 +649,10 @@ void loop()
 	Serial.print('\t');
 	Serial.print(GpS.longitude, 6);
 	Serial.print('\t');
+	Serial.print(GpS.altitude);
+	Serial.print('\t');
+	Serial.print(GpS.mps, 3);
+	Serial.print('\t');
 	Serial.print(GpS.satellites);
 	Serial.print('\t');
 	Serial.print(GpS.precision);
@@ -650,6 +665,10 @@ void loop()
 #if Papg
 	if (apg.getApogeu(0.9, 0))
 	{
+#if BuZZ
+		digitalWrite(buzzPin, 1);
+#endif // BuZZ
+
 		Serial.print("Apogeu: altitude - ");
 		Serial.print(apg.getApgPt());
 		Serial.print(" m, tempo - ");
@@ -711,7 +730,7 @@ void loop()
 #endif // HMC5883
 #if BMP085
 			for (int i = 0; i < 2; i++) SDC.printab(MM_bmp[i]);
-			SDC.printab(apg.getAltutude());
+			SDC.printab(apg.getAltitude());
 #endif // BMP085
 
 #if GPSmode
@@ -719,11 +738,15 @@ void loop()
 			{
 				SDC.printab(GpS.latitude, 6);//Latitude
 				SDC.printab(GpS.longitude, 6);//Longitude
+				SDC.printab(GpS.altitude);//Altitude
+				SDC.printab(GpS.mps);//Velocidade
 				SDC.printab(GpS.satellites);//Numero de satelites
 				SDC.printab(GpS.precision);//Precisao
 			}
 			else
 			{
+				SDC.printab();
+				SDC.printab();
 				SDC.printab();
 				SDC.printab();
 				SDC.printab();
@@ -771,7 +794,7 @@ void loop()
 		LoRa.print('\t');
 #endif // GPSmode
 #if ApoGee
-		LoRa.print(apg.getAltutude());
+		LoRa.print(apg.getAltitude());
 		LoRa.print('\t');
 		LoRa.print(apg.getSigma());
 		LoRa.print('\t');
@@ -882,9 +905,8 @@ void RemoveBefore()
 #endif // LoRamode
 
 #if BuZZ
-#define holdT .05
 		///////////////////////////////////////
-		if (beeper[0].eachT(2))
+		if (beeper[0].eachT(holdT*SYSTEM_n*2+1))
 		{
 			beeper[0].oneTimeReset();
 			beeper[0].forT(holdT);
