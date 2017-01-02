@@ -29,6 +29,30 @@ public:
 	operator bool();
 };
 
+class Baro :public Sens
+{
+public:
+	Baro(float recalT = 0.1);
+	void begin();
+	bool readAll();
+private:
+	const int OSS = 0;	//Oversampling Setting
+	unsigned int ut = 0;
+	unsigned long up = 0;
+	unsigned long b4, b7;
+	long b1, b2, b3, b5, b6;
+	long x1, x2, x3;
+	int ac1, ac2, ac3;	//Calibration values
+	unsigned int ac4, ac5, ac6;
+	int mb, mc, md;
+
+	float celcius;
+	long pascal;
+public:
+	float getTemperature();
+	long getPressure();
+};
+
 class Helpful
 {
 private:
@@ -76,56 +100,6 @@ public:
 	float getMax();
 	float getMin();
 	operator float();
-};
-
-class Baro  //BMP085
-{
-public:	//Inicializadores
-	Baro(float Tzero = 0.1);
-private:
-	const long recalibrateT;
-	const int BMP085_Address = 0x77;
-	const int OSS = 0;	//Oversampling Setting
-
-	unsigned int ut = 0;
-	unsigned long up = 0;
-
-	int b1, b2;
-	long b3, b6, p;
-	long b5;
-	unsigned long b4, b7;
-	long x1, x2, x3;
-	unsigned char msb, lsb, xlsb;
-
-	int ac1, ac2, ac3;	//Calibration values
-	unsigned int ac4, ac5, ac6;
-	int mb, mc, md;
-
-	float celcius;
-	long pascal;
-	//float meters, base = 0;//////////////////////
-
-	unsigned long thisReadT = 0;
-	unsigned long lastReadT = 0;
-	unsigned long lastWorkT = 0;
-	bool state = 1;
-
-	char ReadChar(unsigned char address);
-	int ReadInt(unsigned char address);
-	//float readAltitude(float sealevelP = 101325);//////////////////////ok
-public:
-	void begin();
-	long getTimeLapse();
-	bool readAll();
-	//bool readAll(float sealevelP = 101325);
-	//float readZero(unsigned int I);//////////////////////ok
-	//long readSealevel(float altitude);
-	//float getZero();//////////////////////ok
-	float getTemperature();
-	long getPressure();
-	//float getAltitude(int Base);//////////////////////
-	//float getAltitude();//////////////////////
-	operator bool();
 };
 
 class Magn //HMC5883
@@ -308,7 +282,7 @@ public:
 	void emergency(bool state = 1);
 };
 
-class SDCardHelper	
+class SDCardHelper
 {
 public:
 	SDCardHelper(uint8_t scPin, String name, String type = "txt", float Tzero = 1);

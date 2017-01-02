@@ -14,6 +14,148 @@ Sens::operator bool()
 }
 
 
+///Barometro
+Baro::Baro(float recalT) :Sens(0x77, recalT)
+{
+}
+void Baro::begin()
+{
+	Wire.beginTransmission(address);
+	Wire.write(0XAA);
+	Wire.endTransmission();
+
+	Wire.requestFrom(0xAA, 22);
+	unsigned long temp = micros();
+	while (Wire.available() < 22)
+	{
+		if (temp + 10 < micros())break;
+	}
+	ac1 = Wire.read() << 8 | Wire.read();
+	ac2 = Wire.read() << 8 | Wire.read();
+	ac3 = Wire.read() << 8 | Wire.read();
+	ac4 = Wire.read() << 8 | Wire.read();
+	ac5 = Wire.read() << 8 | Wire.read();
+	ac6 = Wire.read() << 8 | Wire.read();
+	b1 = Wire.read() << 8 | Wire.read();
+	b2 = Wire.read() << 8 | Wire.read();
+	mb = Wire.read() << 8 | Wire.read();
+	mc = Wire.read() << 8 | Wire.read();
+	md = Wire.read() << 8 | Wire.read();
+}
+bool Baro::readAll()
+{
+	thisReadT = micros();
+	Wire.beginTransmission(address);
+	state = Wire.endTransmission() == 0;
+	if (state)
+	{
+		if (getTimeLapse() > recalibrateT)
+		{
+			begin();
+#if PRINT
+			Serial.println("Relacibrado B");
+#endif // PRINT
+		}
+		//Leitura de temperatura
+
+		// Write 0x2E into Register 0xF4
+		// This requests a temperature reading
+		Wire.beginTransmission(address);
+		Wire.write(0xF4);
+		Wire.write(0x2E);
+		Wire.endTransmission();
+
+		// Wait at least 4.5ms
+		delayMicroseconds(4550);
+
+		// Read two bytes from registers 0xF6 and 0xF7
+		Wire.beginTransmission(address);
+		Wire.write(0xF6);
+		Wire.endTransmission();
+
+		Wire.requestFrom(address, (uint8_t)2);
+		unsigned long temp = micros();
+		while (Wire.available() < 2)
+		{
+			if (temp + 10 < micros())break;
+		}
+		ut = Wire.read() << 8 | Wire.read();
+
+		//Leitura de pressao
+
+		// Write 0x34+(OSS<<6) into register 0xF4
+		// Request a pressure reading w/ oversampling setting
+		Wire.beginTransmission(address);
+		Wire.write(0xF4);
+		Wire.write(0x34 + (OSS << 6));
+		Wire.endTransmission();
+
+		// Wait for conversion, delay time dependent on OSS
+		delay(2 + (3 << OSS));
+
+		// Read register 0xF6 (MSB), 0xF7 (LSB), and 0xF8 (XLSB)
+		Wire.beginTransmission(address);
+		Wire.write(0xF6);
+		Wire.endTransmission();
+
+		Wire.requestFrom(address, (uint8_t)3);
+		temp = micros();
+		while (Wire.available() < 3)
+		{
+			if (temp + 10 < micros())break;
+		}
+
+		up = (((unsigned long)Wire.read() << 16) | ((unsigned long)Wire.read() << 8) | (unsigned long)Wire.read()) >> (8 - OSS);
+
+		//Garante que todas as leituras foram feitas
+		Wire.beginTransmission(address);
+		state = Wire.endTransmission() == 0;
+		if (state)
+		{
+
+			//Calculo de temperatura
+			b5 = ((((long)ut - (long)ac6)*(long)ac5) >> 15) + ((long)mc << 11) / (((((long)ut - (long)ac6)*(long)ac5) >> 15) + md);
+			celcius = (float)((b5 + 8) >> 4) / 10;
+
+			//Calculo de pressao
+			b6 = b5 - 4000;
+			// Calcula B3
+			x1 = (b2 * (b6 * b6) >> 12) >> 11;
+			x2 = (ac2 * b6) >> 11;
+			x3 = x1 + x2;
+			b3 = (((((long)ac1) * 4 + x3) << OSS) + 2) >> 2;
+
+			// Calcula B4
+			x1 = (ac3 * b6) >> 13;
+			x2 = (b1 * ((b6 * b6) >> 12)) >> 16;
+			x3 = ((x1 + x2) + 2) >> 2;
+			b4 = (ac4 * (unsigned long)(x3 + 32768)) >> 15;
+
+			b7 = ((unsigned long)(up - b3) * (50000 >> OSS));
+			if (b7 < 0x80000000) pascal = (b7 << 1) / b4;
+			else pascal = (b7 / b4) << 1;
+
+			x1 = (pascal >> 8) * (pascal >> 8);
+			x1 = (x1 * 3038) >> 16;
+			x2 = (-7357 * pascal) >> 16;
+			pascal += (x1 + x2 + 3791) >> 4;
+
+			lastWorkT = thisReadT;
+		}
+	}
+	lastReadT = thisReadT;
+	return state;
+}
+float Baro::getTemperature()
+{
+	return celcius;
+}
+long Baro::getPressure()
+{
+	return pascal;
+}
+
+
 ///Coleaao de utilitarios
 void Helpful::begin()
 {
@@ -153,206 +295,6 @@ MediaMovel::operator float()
 }
 
 
-///Barometro
-Baro::Baro(float Tzero) :recalibrateT((long)(Tzero * 1000000))
-{
-}
-
-char Baro::ReadChar(unsigned char address)
-{
-	Wire.beginTransmission(BMP085_Address);
-	Wire.write(address);
-	Wire.endTransmission();
-
-	Wire.requestFrom(BMP085_Address, 1);
-	unsigned long temp = micros();
-	while (!Wire.available())
-	{
-		if (temp + 10 < micros())break;
-	}
-	return Wire.read();
-}
-int Baro::ReadInt(unsigned char address)
-{
-	unsigned char msb, lsb;
-
-	Wire.beginTransmission(BMP085_Address);
-	Wire.write(address);
-	Wire.endTransmission();
-
-	Wire.requestFrom(BMP085_Address, 2);
-	unsigned long temp = micros();
-	while (Wire.available() < 2)
-	{
-		if (temp + 10 < micros())break;
-	}
-	msb = Wire.read();
-	lsb = Wire.read();
-
-	return (int)msb << 8 | lsb;
-}
-//float Baro::readAltitude(float sealevelP)
-//{
-//	meters = ((1 - pow((float)pascal / sealevelP, 1 / 5.25588)) / 0.0000225577);
-//	return meters;
-//}
-
-void Baro::begin()
-{
-	ac1 = ReadInt(0xAA);
-	ac2 = ReadInt(0xAC);
-	ac3 = ReadInt(0xAE);
-	ac4 = ReadInt(0xB0);
-	ac5 = ReadInt(0xB2);
-	ac6 = ReadInt(0xB4);
-	b1 = ReadInt(0xB6);
-	b2 = ReadInt(0xB8);
-	mb = ReadInt(0xBA);
-	mc = ReadInt(0xBC);
-	md = ReadInt(0xBE);
-}
-long Baro::getTimeLapse()
-{
-	return lastReadT - lastWorkT;
-}
-//bool Baro::readAll(float sealevelP)
-bool Baro::readAll()
-{
-	thisReadT = micros();
-	Wire.beginTransmission(BMP085_Address);
-	state = Wire.endTransmission() == 0;
-	if (state)
-	{
-		if (getTimeLapse() > recalibrateT)
-		{
-			begin();
-#if PRINT
-			Serial.println("Relacibrado B");
-#endif // PRINT
-		}
-		//Leitura de temperatura
-
-		// Write 0x2E into Register 0xF4
-		// This requests a temperature reading
-		Wire.beginTransmission(BMP085_Address);
-		Wire.write(0xF4);
-		Wire.write(0x2E);
-		Wire.endTransmission();
-
-		// Wait at least 4.5ms
-		delayMicroseconds(4550);
-
-		// Read two bytes from registers 0xF6 and 0xF7
-		ut = ReadInt(0xF6);
-
-		//Leitura de pressao
-
-		// Write 0x34+(OSS<<6) into register 0xF4
-		// Request a pressure reading w/ oversampling setting
-		Wire.beginTransmission(BMP085_Address);
-		Wire.write(0xF4);
-		Wire.write(0x34 + (OSS << 6));
-		Wire.endTransmission();
-
-		// Wait for conversion, delay time dependent on OSS
-		delay(2 + (3 << OSS));
-
-		// Read register 0xF6 (MSB), 0xF7 (LSB), and 0xF8 (XLSB)
-		msb = ReadChar(0xF6);
-		lsb = ReadChar(0xF7);
-		xlsb = ReadChar(0xF8);
-
-		//Garante que todas as leituras foram feitas
-		Wire.beginTransmission(BMP085_Address);
-		state = Wire.endTransmission() == 0;
-		if (state)
-		{
-
-			//Calculo de temperatura
-
-			b5 = ((((long)ut - (long)ac6)*(long)ac5) >> 15) + ((long)mc << 11) / (((((long)ut - (long)ac6)*(long)ac5) >> 15) + md);
-			celcius = (float)((b5 + 8) >> 4) / 10;
-
-			//Calculo de pressao
-			up = (((unsigned long)msb << 16) | ((unsigned long)lsb << 8) | (unsigned long)xlsb) >> (8 - OSS);
-
-			b6 = b5 - 4000;
-			// Calcula B3
-			x1 = (b2 * (b6 * b6) >> 12) >> 11;
-			x2 = (ac2 * b6) >> 11;
-			x3 = x1 + x2;
-			b3 = (((((long)ac1) * 4 + x3) << OSS) + 2) >> 2;
-
-			// Calcula B4
-			x1 = (ac3 * b6) >> 13;
-			x2 = (b1 * ((b6 * b6) >> 12)) >> 16;
-			x3 = ((x1 + x2) + 2) >> 2;
-			b4 = (ac4 * (unsigned long)(x3 + 32768)) >> 15;
-
-			b7 = ((unsigned long)(up - b3) * (50000 >> OSS));
-			if (b7 < 0x80000000)
-				p = (b7 << 1) / b4;
-			else
-				p = (b7 / b4) << 1;
-
-			x1 = (p >> 8) * (p >> 8);
-			x1 = (x1 * 3038) >> 16;
-			x2 = (-7357 * p) >> 16;
-			p += (x1 + x2 + 3791) >> 4;
-
-			pascal = p;
-
-			//Calculo de altitude
-			//meters = ((1 - pow((float)pascal / sealevelP, 1 / 5.25588)) / 0.0000225577);
-
-			lastWorkT = thisReadT;
-		}
-	}
-	lastReadT = thisReadT;
-	return state;
-}
-//float Baro::readZero(unsigned int I)
-//{
-//	float Regis = 0;
-//	for (byte i = 0; i < I; i++)
-//	{
-//		readAll();
-//		Regis += meters;
-//	}
-//	base = (I > 0) ? Regis / I : 0;
-//	return base;
-//}
-//long Baro::readSealevel(float altitude)
-//{
-//	readAll();
-//	return (long)(pascal / pow(1.0 - altitude*0.0000225577, 5.25588));
-//}
-//float Baro::getZero()
-//{
-//	return base;
-//}
-float Baro::getTemperature()
-{
-	return celcius;
-}
-long Baro::getPressure()
-{
-	return pascal;
-}
-//float Baro::getAltitude(int Base)
-//{
-//	return meters - Base;
-//}
-//float Baro::getAltitude()
-//{
-//	return meters - base;
-//}
-Baro:: operator bool()
-{
-	return readAll();
-}
-
-
 ///Magnetometro
 Magn::Magn(float Tzero) :recalibrateT((long)(Tzero * 1000000))
 {
@@ -390,11 +332,11 @@ bool Magn::readAll()
 		if (6 <= Wire.available())
 		{
 			X = Wire.read() << 8 | Wire.read(); //X msb
-			//X += Wire.read();    //X lsb
+												//X += Wire.read();    //X lsb
 			Z = Wire.read() << 8 | Wire.read(); //Z msb
-			//Z += Wire.read();    //Z lsb
+												//Z += Wire.read();    //Z lsb
 			Y = Wire.read() << 8 | Wire.read(); //Y msb
-			//Y += Wire.read();    //Y lsb
+												//Y += Wire.read();    //Y lsb
 		}
 		lastWorkT = thisReadT;
 	}
@@ -569,11 +511,11 @@ bool Acel::readAll()
 		if (6 <= Wire.available())
 		{
 			X = Wire.read() | Wire.read() << 8;    //X lsb
-			//X += Wire.read() << 8;  //X msb
+												   //X += Wire.read() << 8;  //X msb
 			Y = Wire.read() | Wire.read() << 8;    //Y lsb
-			//Y += Wire.read() << 8;  //Y msb
+												   //Y += Wire.read() << 8;  //Y msb
 			Z = Wire.read() | Wire.read() << 8;    //Z lsb
-			//Z += Wire.read() << 8;  //Z msb
+												   //Z += Wire.read() << 8;  //Z msb
 		}
 		X *= 0.004 * 9.80665F;
 		Y *= 0.004 * 9.80665F;
@@ -612,7 +554,7 @@ float Term::read()
 
 
 ///Rotinas de verificacao de apogeu
-Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r>1)?r:2), Rl1((r>1)?r - 1:1), S(s)
+Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r>1) ? r : 2), Rl1((r>1) ? r - 1 : 1), S(s)
 {
 	Rf = 0;
 	for (unsigned int i = 0; i < R; i++) altMed[i] = 0;
@@ -628,9 +570,9 @@ float Apogeu::addZero(long P, float sealevelP)
 	{
 		base = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577);
 	}
-	else 
+	else
 	{
-		base = ((base*baseIndex) + ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577))/(baseIndex+1);
+		base = ((base*baseIndex) + ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577)) / (baseIndex + 1);
 	}
 	baseIndex++;
 	return base;
@@ -780,7 +722,7 @@ float Apogeu::getAltitude()
 }
 float Apogeu::getAltitude(float B)
 {
-	return altMed[0]+base-B;
+	return altMed[0] + base - B;
 }
 float Apogeu::getApgPt()
 {
