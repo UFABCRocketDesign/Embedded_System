@@ -171,6 +171,182 @@ float TriA::getZ()
 }
 
 
+///Acelerometro
+Acel::Acel(long recalT) :Sens(0x1E, recalT)
+{
+}
+void Acel::begin()
+{
+	Wire.beginTransmission(address);// enable to measute g data
+	Wire.write(0x2D);
+	Wire.write(8);                    //measuring enable
+	Wire.endTransmission();           // stop transmitting
+
+	Wire.beginTransmission(address);// enable to measute g data
+	Wire.write(0x31);
+	Wire.endTransmission();
+	Wire.requestFrom(address, (uint8_t)1);
+	unsigned long temp = micros();
+	while (!Wire.available())
+	{
+		if (temp + 10 < micros())break;
+	}
+	char B = Wire.read();
+	B &= ~0x0F;
+	B |= 0b11;
+	B |= 8;
+	Wire.beginTransmission(address);
+	Wire.write(0x31);
+	Wire.write(B);                    //measuring enable
+	Wire.endTransmission();           // stop transmitting
+}
+bool Acel::readAll()
+{
+	thisReadT = micros();
+	Wire.beginTransmission(address);
+	state = Wire.endTransmission() == 0;
+	///Faz a leitura de todos os eixos///
+	if (state)
+	{
+		if (getTimeLapse() > recalibrateT)
+		{
+			begin();
+#if PRINT
+			Serial.println("Relacibrado A");
+#endif // PRINT
+		}
+		Wire.beginTransmission(address);
+		Wire.write(0x32);							//Xlsb register
+		Wire.endTransmission();
+		Wire.requestFrom(address, (uint8_t)6);
+		if (6 <= Wire.available())
+		{
+			X = Wire.read() | Wire.read() << 8;		//X_lsb + X_msb << 8
+			Y = Wire.read() | Wire.read() << 8;		//Y_lsb + Y_msb << 8
+			Z = Wire.read() | Wire.read() << 8;		//Z_lsb + Z_msb << 8
+		}
+		X *= 0.004 * 9.80665F;
+		Y *= 0.004 * 9.80665F;
+		Z *= 0.004 * 9.80665F;
+
+		lastWorkT = thisReadT;
+	}
+	lastReadT = thisReadT;
+	return state;
+}
+
+
+///Magnetometro
+Magn::Magn(long recalT) :Sens(0x53, recalT)
+{
+}
+void Magn::begin()
+{
+	Wire.beginTransmission(address);
+	Wire.write(0x02);                 // Seleciona o modo
+	Wire.write(0x00);                 // Modo de medicao continuo
+	Wire.endTransmission();
+}
+bool Magn::readAll()
+{
+	thisReadT = micros();
+	Wire.beginTransmission(address);
+	state = Wire.endTransmission() == 0;
+	if (state)
+	{
+		if (getTimeLapse() > recalibrateT)
+		{
+			begin();
+#if PRINT
+			Serial.println("Relacibrado M");
+#endif // PRINT
+		}
+		///Faz a leitura de todos os eixos///
+		Wire.beginTransmission(address);
+		Wire.write(0x03);							//Xmsb register
+		Wire.endTransmission();
+		Wire.requestFrom(address, (uint8_t)6);
+		if (6 <= Wire.available())
+		{
+			X = Wire.read() << 8 | Wire.read();		//X_msb << 8 | X_lsb
+			Z = Wire.read() << 8 | Wire.read();		//Z_msb << 8 | Z_lsb
+			Y = Wire.read() << 8 | Wire.read();		//Y_msb << 8 | Y_lsb
+		}
+		lastWorkT = thisReadT;
+	}
+	lastReadT = thisReadT;
+	return state;
+}
+
+
+///Giroscopio
+Giro::Giro(long sc, long recalT) : scale(sc), Sens(0x69, recalT)
+{
+}
+void Giro::begin()
+{
+	Wire.beginTransmission(address);			// start transmission to device
+	Wire.write(0x20);							// send register address ctrl_1
+	Wire.write(0b00001111);						// send value to write
+	Wire.endTransmission();						// end transmission
+
+	Wire.beginTransmission(address);			// start transmission to device
+	Wire.write(0x21);							// send register address ctrl_2
+	Wire.write(0b00000000);						// send value to write
+	Wire.endTransmission();						// end transmission
+
+	Wire.beginTransmission(address);			// start transmission to device
+	Wire.write(0x22);							// send register address ctrl_3
+	Wire.write(0b00001000);						// send value to write
+	Wire.endTransmission();						// end transmission
+
+	Wire.beginTransmission(address);			// start transmission to device
+	Wire.write(0x23);							// send register address ctrl_4
+	switch (scale)
+	{ // Configura o L3G4200 para 200, 500 ou 2000 graus/seg
+	case 250: Wire.write(0b00000000); break;	// send value to write
+	case 500: Wire.write(0b00010000); break;	// send value to write
+	default:  Wire.write(0b00110000); break;	// send value to write
+	}
+	Wire.endTransmission();						// end transmission
+
+	Wire.beginTransmission(address);			// start transmission to device
+	Wire.write(0x24);							// send register address ctrl_5
+	Wire.write(0b00000000);						// send value to write
+	Wire.endTransmission();						// end transmission
+}
+bool Giro::readAll()
+{
+	thisReadT = micros();
+	Wire.beginTransmission(address);
+	state = Wire.endTransmission() == 0;
+	if (state)
+	{
+		if (getTimeLapse() > recalibrateT)
+		{
+			begin();
+#if PRINT
+			Serial.println("Relacibrado G");
+#endif // PRINT
+		}
+		///Faz a leitura de todos os eixos///
+		Wire.beginTransmission(address);
+		Wire.write(0x28 | (1 << 7));				//Xlsb register
+		Wire.endTransmission();
+		Wire.requestFrom(address, (uint8_t)6);
+		if (6 <= Wire.available())
+		{
+			X = Wire.read() | (Wire.read() << 8);
+			Y = Wire.read() | (Wire.read() << 8);
+			Z = Wire.read() | (Wire.read() << 8);
+		}
+		lastWorkT = thisReadT;
+	}
+	lastReadT = thisReadT;
+	return state;
+}
+
+
 ///Coleaao de utilitarios
 void Helpful::begin()
 {
@@ -310,262 +486,16 @@ MediaMovel::operator float()
 }
 
 
-///Magnetometro
-Magn::Magn(float Tzero) :recalibrateT((long)(Tzero * 1000000))
-{
-}
-void Magn::begin()
-{
-	Wire.beginTransmission(HMC5883_Address);
-	Wire.write(0x02);                 // Seleciona o modo
-	Wire.write(0x00);                 // Modo de medicao continuo
-	Wire.endTransmission();
-}
-long Magn::getTimeLapse()
-{
-	return lastReadT - lastWorkT;
-}
-bool Magn::readAll()
-{
-	thisReadT = micros();
-	Wire.beginTransmission(HMC5883_Address);
-	state = Wire.endTransmission() == 0;
-	if (state)
-	{
-		if (getTimeLapse() > recalibrateT)
-		{
-			begin();
-#if PRINT
-			Serial.println("Relacibrado M");
-#endif // PRINT
-		}
-		///Faz a leitura de todos os eixos///
-		Wire.beginTransmission(HMC5883_Address);
-		Wire.write(Mag_Xmsb);
-		Wire.endTransmission();
-		Wire.requestFrom(HMC5883_Address, (uint8_t)6);
-		if (6 <= Wire.available())
-		{
-			X = Wire.read() << 8 | Wire.read(); //X msb
-												//X += Wire.read();    //X lsb
-			Z = Wire.read() << 8 | Wire.read(); //Z msb
-												//Z += Wire.read();    //Z lsb
-			Y = Wire.read() << 8 | Wire.read(); //Y msb
-												//Y += Wire.read();    //Y lsb
-		}
-		lastWorkT = thisReadT;
-	}
-	lastReadT = thisReadT;
-	return state;
-}
-float Magn::getX()
-{
-	return X;
-}
-float Magn::getY()
-{
-	return Y;
-}
-float Magn::getZ()
-{
-	return Z;
-}
-Magn:: operator bool()
-{
-	return readAll();
-}
-
-
-///Giroscopio
-Giro::Giro(int sc, float Tzero) : scale(sc), recalibrateT((long)(Tzero * 1000000))
-{
-
-}
-void Giro::begin()
-{
-	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
-	Wire.write(CTRL_REG1);    // send register address
-	Wire.write(0b00001111);   // send value to write
-	Wire.endTransmission();   // end transmission
-
-	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
-	Wire.write(CTRL_REG2);    // send register address
-	Wire.write(0b00000000);   // send value to write
-	Wire.endTransmission();   // end transmission
-
-	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
-	Wire.write(CTRL_REG3);       // send register address
-	Wire.write(0b00001000);         // send value to write
-	Wire.endTransmission();     // end transmission
-
-	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
-	Wire.write(CTRL_REG4);       // send register address
-	switch (scale)
-	{ // Configura o L3G4200 para 200, 500 ou 2000 graus/seg
-	case 250:
-		Wire.write(0b00000000);         // send value to write
-		break;
-	case 500:
-		Wire.write(0b00010000);         // send value to write
-		break;
-	default:
-		Wire.write(0b00110000);         // send value to write
-		break;
-	}
-	Wire.endTransmission();     // end transmission
-
-	Wire.beginTransmission(L3G4200D_Address); // start transmission to device
-	Wire.write(CTRL_REG5);       // send register address
-	Wire.write(0b00000000);         // send value to write
-	Wire.endTransmission();     // end transmission
-}
-long Giro::getTimeLapse()
-{
-	return lastReadT - lastWorkT;
-}
-bool Giro::readAll()
-{
-	thisReadT = micros();
-	Wire.beginTransmission(L3G4200D_Address);
-	state = Wire.endTransmission() == 0;
-	if (state)
-	{
-		if (getTimeLapse() > recalibrateT)
-		{
-			begin();
-#if PRINT
-			Serial.println("Relacibrado G");
-#endif // PRINT
-		}
-		///Faz a leitura de todos os eixos///
-		Wire.beginTransmission(L3G4200D_Address);
-		Wire.write(Gyro_Xlsb | (1 << 7));
-		Wire.endTransmission();
-		Wire.requestFrom(L3G4200D_Address, (uint8_t)6);
-		if (6 <= Wire.available())
-		{
-			X = Wire.read() | (Wire.read() << 8);
-			Y = Wire.read() | (Wire.read() << 8);
-			Z = Wire.read() | (Wire.read() << 8);
-		}
-		lastWorkT = thisReadT;
-	}
-	lastReadT = thisReadT;
-	return state;
-}
-float Giro::getX()
-{
-	return X;
-}
-float Giro::getY()
-{
-	return Y;
-}
-float Giro::getZ()
-{
-	return Z;
-}
-Giro:: operator bool()
-{
-	return readAll();
-}
-
-
-///Acelerometro
-Acel::Acel(float Tzero) :recalibrateT((long)(Tzero * 1000000))
-{
-}
-void Acel::begin()
-{
-	Wire.beginTransmission(ADXL345_Address);// enable to measute g data
-	Wire.write(Register_2D);
-	Wire.write(8);                    //measuring enable
-	Wire.endTransmission();           // stop transmitting
-
-	Wire.beginTransmission(ADXL345_Address);// enable to measute g data
-	Wire.write(Register_31);
-	Wire.endTransmission();
-	Wire.requestFrom(ADXL345_Address, (uint8_t)1);
-	unsigned long temp = micros();
-	while (!Wire.available())
-	{
-		if (temp + 10 < micros())break;
-	}
-	char B = Wire.read();
-	B &= ~0x0F;
-	B |= 0b11;
-	B |= 8;
-	Wire.beginTransmission(ADXL345_Address);
-	Wire.write(Register_31);
-	Wire.write(B);                    //measuring enable
-	Wire.endTransmission();           // stop transmitting
-}
-long Acel::getTimeLapse()
-{
-	return lastReadT - lastWorkT;
-}
-bool Acel::readAll()
-{
-	thisReadT = micros();
-	Wire.beginTransmission(ADXL345_Address);
-	state = Wire.endTransmission() == 0;
-	///Faz a leitura de todos os eixos///
-	if (state)
-	{
-		if (getTimeLapse() > recalibrateT)
-		{
-			begin();
-#if PRINT
-			Serial.println("Relacibrado A");
-#endif // PRINT
-		}
-		Wire.beginTransmission(ADXL345_Address);
-		Wire.write(Acel_Xlsb);
-		Wire.endTransmission();
-		Wire.requestFrom(ADXL345_Address, (uint8_t)6);
-		if (6 <= Wire.available())
-		{
-			X = Wire.read() | Wire.read() << 8;    //X lsb
-												   //X += Wire.read() << 8;  //X msb
-			Y = Wire.read() | Wire.read() << 8;    //Y lsb
-												   //Y += Wire.read() << 8;  //Y msb
-			Z = Wire.read() | Wire.read() << 8;    //Z lsb
-												   //Z += Wire.read() << 8;  //Z msb
-		}
-		X *= 0.004 * 9.80665F;
-		Y *= 0.004 * 9.80665F;
-		Z *= 0.004 * 9.80665F;
-
-		lastWorkT = thisReadT;
-	}
-	lastReadT = thisReadT;
-	return state;
-}
-float Acel::getX()
-{
-	return X;
-}
-float Acel::getY()
-{
-	return Y;
-}
-float Acel::getZ()
-{
-	return Z;
-}
-Acel:: operator bool()
-{
-	return readAll();
-}
-
+/*
 ///Termometro
-Term::Term(byte a) :A(a)
+Term::Term(byte aPin) :Apin(aPin)
 {
 }
 float Term::read()
 {
-	return (float(analogRead(A)) * 5 / (1023)) / 0.01;
+return (float(analogRead(Apin)) * 5 / (1023)) / 0.01;
 }
+*/
 
 
 ///Rotinas de verificacao de apogeu

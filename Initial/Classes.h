@@ -13,8 +13,6 @@
 
 class Sens
 {
-public:
-	Sens(uint8_t add, long recalT = 0.1);
 protected:
 	const uint8_t address;
 	const long recalibrateT;
@@ -23,6 +21,7 @@ protected:
 	unsigned long lastWorkT = 0;
 	bool state = 0;
 public:
+	Sens(uint8_t add, long recalT = 0.1);
 	virtual void begin() = 0;
 	virtual bool readAll() = 0;
 	long getTimeLapse();
@@ -31,11 +30,6 @@ public:
 
 class Baro :public Sens
 {
-public:
-	Baro(float recalT = 0.1);
-	void begin();
-	bool readAll();
-private:
 	const int OSS = 0;	//Oversampling Setting
 	unsigned int ut = 0;
 	unsigned long up = 0;
@@ -49,6 +43,9 @@ private:
 	float celcius;
 	long pascal;
 public:
+	Baro(float recalT = 0.1);
+	void begin();
+	bool readAll();
 	float getTemperature();
 	long getPressure();
 };
@@ -66,9 +63,34 @@ public:
 	float getZ();
 };
 
+class Acel : public Sens, public TriA
+{
+public:
+	Acel(long recalT = 0.1);
+	void begin();
+	bool readAll();
+};
+
+class Magn :public Sens, public TriA
+{
+public:
+	Magn(long recalT = 0.1);
+	void begin();
+	bool readAll();
+};
+
+class Giro :public Sens, public TriA
+{
+public:
+	Giro(long sc, long recalT = 0.1);
+	void begin();
+	bool readAll();
+private:
+	const long scale;
+};
+
 class Helpful
 {
-private:
 	unsigned long conEach = 0;
 	unsigned long timerEach = 0;
 	unsigned long lapseT = 0;
@@ -99,14 +121,12 @@ public:
 
 class MediaMovel
 {
-public:	//Inicializadores
-	MediaMovel(int n);
-	~MediaMovel();
-private:
 	const unsigned int N;
 	float* Vals = new float[N];
 	float media, max = 0, min, sigma;
 public:
+	MediaMovel(int n);	//Inicializadore
+	~MediaMovel();
 	float addValor(float valor);
 	float getMedia();
 	float getVar();
@@ -115,92 +135,15 @@ public:
 	operator float();
 };
 
-class Magn //HMC5883
-{
-public: //Inicializadores
-	Magn(float Tzero = 0.1);
-private:
-	const long recalibrateT;
-	const uint8_t HMC5883_Address = 0x1E;
-	const int Mag_Xmsb = 0x03;
-	float X, Y, Z;
-	unsigned long thisReadT = 0;
-	unsigned long lastReadT = 0;
-	unsigned long lastWorkT = 0;
-	bool state = 1;
-public:
-	void begin();
-	long getTimeLapse();
-	bool readAll();
-	float getX();
-	float getY();
-	float getZ();
-	operator bool();
-};
-
-class Giro  //L3G4200D
-{
-public: //Inicializadores
-	Giro(int sc, float Tzero = 0.1);
-private:
-	const long scale, recalibrateT;
-	const uint8_t L3G4200D_Address = 0x69;
-	const uint8_t Gyro_Xlsb = 0x28;
-	const uint8_t CTRL_REG1 = 0x20;
-	const uint8_t CTRL_REG2 = 0x21;
-	const uint8_t CTRL_REG3 = 0x22;
-	const uint8_t CTRL_REG4 = 0x23;
-	const uint8_t CTRL_REG5 = 0x24;
-	float X, Y, Z;
-	unsigned long thisReadT = 0;
-	unsigned long lastReadT = 0;
-	unsigned long lastWorkT = 0;
-	bool state = 1;
-public:
-	void begin();
-	long getTimeLapse();
-	bool readAll();
-	float getX();
-	float getY();
-	float getZ();
-	operator bool();
-};
-
-class Acel  //ADXL345
-{
-public:  //Inicializadores
-	Acel(float Tzero = 0.1);
-private:
-	const long recalibrateT;
-	const uint8_t ADXL345_Address = 0x53;
-	const uint8_t Acel_Xlsb = 0x32;
-	const uint8_t Register_ID = 0;
-	const uint8_t Register_2D = 0x2D;
-	const uint8_t Register_31 = 0x31;
-	float X, Y, Z;
-	unsigned long thisReadT = 0;
-	unsigned long lastReadT = 0;
-	unsigned long lastWorkT = 0;
-	bool state = 0;
-public:
-	void begin();
-	long getTimeLapse();
-	bool readAll();
-	float getX();
-	float getY();
-	float getZ();
-	operator bool();
-};
-
+/*
 class Term	//LM35
 {
+const byte Apin;
 public:
-	Term(byte a);
-private:
-	const byte A;
-public:
-	float read();
+Term(byte aPin);
+float read();
 };
+*/
 
 class Apogeu
 {
