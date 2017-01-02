@@ -156,6 +156,21 @@ long Baro::getPressure()
 }
 
 
+///Triaxial
+float TriA::getX()
+{
+	return X;
+}
+float TriA::getY()
+{
+	return Y;
+}
+float TriA::getZ()
+{
+	return Z;
+}
+
+
 ///Coleaao de utilitarios
 void Helpful::begin()
 {
