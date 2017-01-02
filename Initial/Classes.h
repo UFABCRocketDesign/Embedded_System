@@ -7,6 +7,7 @@
 #else
 #include "WProgram.h"
 #endif
+#include <TinyGPS.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
@@ -145,11 +146,56 @@ float read();
 };
 */
 
+class GyGPS : public Sens
+{
+	//#define GpSerial Serial1
+	HardwareSerial GpSerial;
+	TinyGPS gps;							//GPS object declaration
+	const unsigned short GMT;
+	unsigned short sentences = 0;			//GPS variables declaration
+	unsigned short failed = 0;
+	unsigned char satellites = 0;
+	unsigned long precision = 0;
+	unsigned long chars = 0;
+	unsigned long age = 0;
+	float latitude = 0;
+	float longitude = 0;
+	float altitude = 0;
+	float Kph = 0;
+	float mps = 0;
+	int year = 0;
+	byte month = 0;
+	byte day = 0;
+	byte hour = 0;
+	byte minute = 0;
+	byte second = 0;
+public:
+	GyGPS(short gmt = 0, HardwareSerial S = Serial1);
+	Helpful util;						//Declaration of helpful object to GPS
+	unsigned short getFailed();				//Return functions
+	unsigned short getSentences();
+	unsigned char getSatellites();
+	unsigned long getPrecision();
+	unsigned long getChars();
+	unsigned long getAge();
+	float getLatitude();
+	float getLongitude();
+	float getAltitude();
+	float getKph();
+	float getMps();
+	int getYear();
+	byte getMonth();
+	byte getDay();
+	byte getHour(bool gmt = 1);
+	byte getMinute();
+	byte getSecond();
+	void begin();
+	bool readAll();							//GPS function declaration
+	bool isNew();
+};
+
 class Apogeu
 {
-public:
-	Apogeu(unsigned int n, unsigned int r, float s);
-private:
 	const unsigned int N, R, Rl1;
 	const float S;
 	float Rf;
@@ -171,6 +217,7 @@ private:
 	float* Alt = new float[N];
 	float* altMed = new float[R];
 public:
+	Apogeu(unsigned int n, unsigned int r, float s);
 	float addZero(long P, float sealevelP = 101325);
 	float getZero();
 	void resetZero();
@@ -200,10 +247,6 @@ public:
 
 class DuDeploy
 {
-public:
-	DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay);
-
-private:
 	const unsigned int P1, P2;	//Pinos de comando
 	const unsigned int I1, I2;	//Pinos de verificacao
 	const unsigned long Tign;	//Tempo de comando ativo
@@ -222,6 +265,7 @@ private:
 	bool P1seal = 0, P2seal = 0;	//Selo de comando
 	bool emer = 0, P1H_Am = 0, P2H_Am = 0;
 public:
+	DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay);
 	void resetTimer();
 	bool info1();	//Retorna informacao sobre estado do ignitor de acionamento 1
 	bool info2();//Retorna informacao sobre estado do ignitor de acionamento 2

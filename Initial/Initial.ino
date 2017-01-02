@@ -1,7 +1,7 @@
+#include <TinyGPS.h>
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
-#include <TinyGPS.h>
 #include "Classes.h"
 
 /////////////////////////////////////////////////CONFIGURATION/////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 #define GPSmode 1							//Use GPS
 #define LoRamode 1							//Serial mode for transmission on LoRa module
 #define PRINT 1								//Print or not things on Serial
-#define RBF 0								//Revome Before Flight
+#define RBF 1								//Revome Before Flight
 #define BuZZ 1								//Buzzer mode
 
 #define ApoGee BMP085 & 1					//Detection of apogee
@@ -34,7 +34,6 @@
 #define MaxCond ApoGee & PRINT & 0			//Print maximum apogee coefficient detected
 #define PWMapg ApoGee & 1					//Show the apogee coefficient in a LED
 
-#define GMT 0
 #define LoRaDelay 4
 
 #define WIREmode BMP085 || ADXL345 || L3G4200D || HMC5883
@@ -92,32 +91,7 @@ SDCardHelper SDC(53, "Tupa");				//Declaration of object to help SD card file ma
 
 #if GPSmode
 #define GpS GlobalPSystem
-#define GPSutil GPSutilitario
-#define GpSerial Serial1
-struct GyGPS
-{
-	Helpful GPSutil;						//Declaration of helpful object to GPS
-	TinyGPS gps;							//GPS object declaration
-	bool Gy();								//GPS function declaration
-	unsigned short sentences;				//GPS variables declaration
-	unsigned short failed;
-	unsigned char satellites;
-	unsigned long precision;
-	unsigned long chars;
-	unsigned long age;
-	float latitude;
-	float longitude;
-	float altitude = 0;
-	float Kps = 0;
-	float mps = 0;
-	int year = 0;
-	byte month = 0;
-	byte day = 0;
-	byte hour = 0;
-	byte minute = 0;
-	byte second = 0;
-	bool newGps = false;
-} GpS;
+GyGPS GpS(0);
 #endif // GPSmode
 
 #if LoRamode
@@ -130,8 +104,8 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define Serial Serial
 #endif // PRINT
 
-#define util utilitario
-Helpful util;								//Declaration of helpful object to general cases
+#define Gutil utilitario
+Helpful Gutil;								//Declaration of helpful object to general cases
 
 #if RBF
 #if BuZZ
@@ -247,26 +221,26 @@ void setup()
 #endif // SDCard
 
 #if GPSmode
-	GpSerial.begin(9600);
-	if (GpS.Gy())
+	GpS.begin();
+	if (GpS)
 	{
-		if (GpS.GPSutil.oneTime())
+		if (GpS.util.oneTime())
 		{
 #if RBF
 			sysC++;
 #endif // RBF
 #if PRINT
 			Serial.print("GPS ok ");
-			Serial.print(GpS.latitude, 6);
+			Serial.print(GpS.getLatitude(), 6);
 			Serial.print(", ");
-			Serial.print(GpS.longitude, 6);
+			Serial.print(GpS.getLongitude(), 6);
 #endif // PRINT
 
 #if LoRamode
 			LoRa.print("GPS ok ");
-			LoRa.print(GpS.latitude, 6);
+			LoRa.print(GpS.getLatitude(), 6);
 			LoRa.print(", ");
-			LoRa.print(GpS.longitude, 6);
+			LoRa.print(GpS.getLongitude(), 6);
 #endif // LoRamode
 		}
 	}
@@ -461,7 +435,7 @@ void setup()
 
 #endif // PRINT
 
-	util.begin();
+	Gutil.begin();
 
 #if LoRamode
 	LRutil.begin();
@@ -482,7 +456,7 @@ void setup()
 
 void loop()
 {
-	util.counter();
+	Gutil.counter();
 #if Tcom
 	if (APGutil.eachN(100))
 	{
@@ -491,11 +465,11 @@ void loop()
 	else
 	{
 		APGutil.lapse();
-}
+	}
 #endif // Tcom
 
 #if Lcom
-	Serial.print(util.getCount());
+	Serial.print(Gutil.getCount());
 	Serial.print(":\t");
 #endif // Lcom
 
@@ -561,12 +535,12 @@ void loop()
 #endif // PWMapg
 
 #if GPSmode
-	GpS.Gy();
+	GpS.readAll();
 #endif // GPSmode
 
 
 #if PRINT
-	Serial.print(util.sinceBegin(),3);
+	Serial.print(Gutil.sinceBegin(), 3);
 	Serial.print('\t');
 #endif // PRINT
 
@@ -626,9 +600,9 @@ void loop()
 	Serial.print('\t');
 	//Serial.print(apg.getApgTm());
 	//Serial.print('\t');
-//#if Psep
-//	Serial.print('|');
-//#endif // Psep
+	//#if Psep
+	//	Serial.print('|');
+	//#endif // Psep
 	Serial.print(apg.getAlpha());
 	Serial.print('\t');
 	Serial.print(apg.getSigma(), 7);
@@ -645,21 +619,21 @@ void loop()
 #if Psep
 	Serial.print('|');
 #endif // Psep
-	Serial.print(GpS.latitude, 6);
+	Serial.print(GpS.getLatitude(), 6);
 	Serial.print('\t');
-	Serial.print(GpS.longitude, 6);
+	Serial.print(GpS.getLongitude(), 6);
 	Serial.print('\t');
-	Serial.print(GpS.altitude);
+	Serial.print(GpS.getAltitude());
 	Serial.print('\t');
-	Serial.print(GpS.mps, 3);
+	Serial.print(GpS.getMps(), 3);
 	Serial.print('\t');
-	Serial.print(GpS.satellites);
+	Serial.print(GpS.getSatellites());
 	Serial.print('\t');
-	Serial.print(GpS.precision);
+	Serial.print(GpS.getPrecision());
 	Serial.print('\t');
-	Serial.print(GpS.hour);
+	Serial.print(GpS.getHour());
 	Serial.print('\t');
-	Serial.print(GpS.minute);
+	Serial.print(GpS.getMinute());
 	Serial.print('\t');
 #endif // Pgps
 #if Papg
@@ -734,14 +708,14 @@ void loop()
 #endif // BMP085
 
 #if GPSmode
-			if (GpS.newGps)
+			if (GpS.isNew())
 			{
-				SDC.printab(GpS.latitude, 6);//Latitude
-				SDC.printab(GpS.longitude, 6);//Longitude
-				SDC.printab(GpS.altitude);//Altitude
-				SDC.printab(GpS.mps);//Velocidade
-				SDC.printab(GpS.satellites);//Numero de satelites
-				SDC.printab(GpS.precision);//Precisao
+				SDC.printab(GpS.getLatitude(), 6);//Latitude
+				SDC.printab(GpS.getLongitude(), 6);//Longitude
+				SDC.printab(GpS.getAltitude());//Altitude
+				SDC.printab(GpS.getMps());//Velocidade
+				SDC.printab(GpS.getSatellites());//Numero de satelites
+				SDC.printab(GpS.getPrecision());//Precisao
 			}
 			else
 			{
@@ -782,15 +756,15 @@ void loop()
 	if (LRutil.eachT(LoRaDelay))
 	{
 #if GPSmode
-		LoRa.print(GpS.latitude, 6);//Latitude
+		LoRa.print(GpS.getLatitude(), 6);//Latitude
 		LoRa.print('\t');
-		LoRa.print(GpS.longitude, 6);//Longitude
+		LoRa.print(GpS.getLongitude(), 6);//Longitude
 		LoRa.print('\t');
-		LoRa.print(GpS.hour);//Hora
+		LoRa.print(GpS.getHour());//Hora
 		LoRa.print(':');
-		LoRa.print(GpS.minute);//Minuto
+		LoRa.print(GpS.getMinute());//Minuto
 		LoRa.print('\t');
-		LoRa.print(GpS.precision);//Precisao
+		LoRa.print(GpS.getPrecision());//Precisao
 		LoRa.print('\t');
 #endif // GPSmode
 #if ApoGee
@@ -821,14 +795,14 @@ void RemoveBefore()
 	{
 		rbf = digitalRead(RBFpin);
 #if GPSmode
-		if (GpS.Gy()) if (GpS.GPSutil.oneTime()) sysC++;
+		if (GpS) if (GpS.util.oneTime()) sysC++;
 #endif // GPSmode
 
 		if (rbfHelper.eachT(2))
 		{
 			sysC = 0;
 #if GPSmode
-			GpS.GPSutil.oneTimeReset();
+			GpS.util.oneTimeReset();
 #endif // GPSmode
 
 #if SDCard
@@ -859,19 +833,19 @@ void RemoveBefore()
 			Serial.print(" ");
 			Serial.write(0xB0);
 			Serial.print("C\tLat: ");
-			Serial.print(GpS.latitude, 6);
+			Serial.print(GpS.getLatitude(), 6);
 			Serial.print("\tLon: ");
-			Serial.print(GpS.longitude, 6);
+			Serial.print(GpS.getLongitude(), 6);
 			Serial.print("\t");
-			Serial.print(GpS.day);
+			Serial.print(GpS.getDay());
 			Serial.print('/');
-			Serial.print(GpS.month);
+			Serial.print(GpS.getMonth());
 			Serial.print('\t');
-			Serial.print(GpS.hour + GMT);
+			Serial.print(GpS.getHour());
 			Serial.print(':');
-			Serial.print(GpS.minute);
+			Serial.print(GpS.getMinute());
 			Serial.print(':');
-			Serial.print(GpS.second);
+			Serial.print(GpS.getSecond());
 			Serial.println();
 
 #endif // PRINT
@@ -887,26 +861,27 @@ void RemoveBefore()
 			LoRa.print(" ");
 			LoRa.write(0xB0);
 			LoRa.print("C\tLat: ");
-			LoRa.print(GpS.latitude, 6);
+			LoRa.print("C\tLat: ");
+			LoRa.print(GpS.getLatitude(), 6);
 			LoRa.print("\tLon: ");
-			LoRa.print(GpS.longitude, 6);
+			LoRa.print(GpS.getLongitude(), 6);
 			LoRa.print("\t");
-			LoRa.print(GpS.day);
+			LoRa.print(GpS.getDay());
 			LoRa.print('/');
-			LoRa.print(GpS.month);
+			LoRa.print(GpS.getMonth());
 			LoRa.print('\t');
-			LoRa.print(GpS.hour + GMT);
+			LoRa.print(GpS.getHour());
 			LoRa.print(':');
-			LoRa.print(GpS.minute);
+			LoRa.print(GpS.getMinute());
 			LoRa.print(':');
-			LoRa.print(GpS.second);
+			LoRa.print(GpS.getSecond());
 			LoRa.println();
 		}
 #endif // LoRamode
 
 #if BuZZ
 		///////////////////////////////////////
-		if (beeper[0].eachT(holdT*SYSTEM_n*2+1))
+		if (beeper[0].eachT(holdT*SYSTEM_n * 2 + 1))
 		{
 			beeper[0].oneTimeReset();
 			beeper[0].forT(holdT);
@@ -928,34 +903,6 @@ void RemoveBefore()
 #endif // BuZZ
 }
 #endif // RBF
-
-//////////////////////////////////////////////////////GPS//////////////////////////////////////////////////////
-
-#if GPSmode
-bool GyGPS::Gy()
-{ //Gps
-	newGps = false;
-	// Recebe as informa��es do GPS durante um intervalo de tempo relativamente curto e as transmite via comunica��o serial (vis�vel pelo serial monitor)
-	if (GpSerial.available()) while (GpSerial.available())
-	{
-		char c = GpSerial.read();
-		if (gps.encode(c)) newGps = true;
-	}
-	if (newGps)
-	{
-		gps.f_get_position(&latitude, &longitude, &age);
-		satellites = gps.satellites();
-		precision = gps.hdop();
-		altitude = gps.f_altitude();
-		Kps = gps.f_speed_kmph();
-		mps = gps.f_speed_mps();
-
-	}
-	gps.crack_datetime(&year, &month, &day, &hour, &minute, &second);
-	gps.stats(&chars, &sentences, &failed);
-	return newGps;
-}
-#endif // GPSmode
 
 /*
 																													  .
