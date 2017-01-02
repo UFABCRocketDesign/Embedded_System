@@ -11,6 +11,24 @@
 #include <SPI.h>
 #include <SD.h>
 
+class Sens
+{
+public:
+	Sens(uint8_t add, long recalT = 0.1);
+protected:
+	const uint8_t address;
+	const long recalibrateT;
+	unsigned long thisReadT = 0;
+	unsigned long lastReadT = 0;
+	unsigned long lastWorkT = 0;
+	bool state = 0;
+public:
+	virtual void begin() = 0;
+	virtual bool readAll() = 0;
+	long getTimeLapse();
+	operator bool();
+};
+
 class Helpful
 {
 private:
