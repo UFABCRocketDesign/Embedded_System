@@ -930,14 +930,11 @@ void DuDeploy::emergency(bool state)
 
 
 ///Auxiliar para o uso do cartao SD
-SDCardHelper::SDCardHelper(uint8_t csPin, String name, String type, float Tzero) :CS(csPin), Fname0(name), Ftype((type.length() > 3) ? ((String)type[0] + (String)type[1] + (String)type[2]) : (type.length() == 3) ? type : (type.length() == 2) ? type + (String)"0" : (type.length() == 1) ? type + (String)"00" : (String)"txt"), recalibrateT((long)(Tzero * 1000000))
+SDCH::SDCH(uint8_t csPin, String name, String type) :CS(csPin), Fname0(name), Ftype((type.length() == 3) ? type : (String)"txt"), coef(8 - name.length()), nMax(pow(10, (name.length() < 8) ? 8 - name.length() : 0))
 {
-	coef = 8 - Fname0.length();
-	nMax = pow(10, (coef > 0) ? coef : 0);
 	newName();
 }
-
-void SDCardHelper::newName()
+void SDCH::newName()
 {
 	Fname = Fname0;
 	if (coef > 0)
@@ -957,19 +954,9 @@ void SDCardHelper::newName()
 	}
 	Fname += '.' + Ftype;
 }
-
-bool SDCardHelper::begin(bool type)
+bool SDCH::begin()
 {
-#if PRINT
-	Serial.println("SDbegin");
-#endif // PRINT
-	if (!SD.begin(CS))
-	{
-#if PRINT
-		Serial.println("SDFail");
-#endif // PRINT
-		return false;
-	}
+	if (!SD.begin(CS)) return false;
 	else
 	{ //Inicializa o SD
 		for (unsigned long int i = 0; i < nMax; i++)
@@ -977,321 +964,28 @@ bool SDCardHelper::begin(bool type)
 			if (!SD.exists(Fname)) break;
 			else newName();
 		}
-		file = SD.open(Fname, FILE_WRITE);
-		if (file)
-		{
-			//println(Fname);
-			file.close();
-#if PRINT
-			Serial.print(F("done: "));
-			Serial.println(Fname);
-#endif // PRINT
-		}
-#if PRINT
-		else Serial.println("error opening file file");
-#endif // PRINT
+		theFile = SD.open(Fname, FILE_WRITE);
+		if (theFile) theFile.close();
 		return true;
 	}
 }
-
-long SDCardHelper::getTimeLapse()
+bool SDCH::open()
 {
-	return lastReadT - lastWorkT;
+	return theFile = SD.open(Fname, FILE_WRITE);
 }
-
-SDCardHelper::operator bool()
+size_t SDCH::tab()
 {
-	//thisReadT = micros();
-	file = SD.open(Fname, FILE_WRITE);
-	//if (file)
-	//{
-	//	lastWorkT = thisReadT;
-	//}
-	//else
-	//{
-	//	if (getTimeLapse() > recalibrateT)
-	//	{
-	//		if (!begin()) return false;
-	//		file = SD.open(Fname, FILE_WRITE);
-	//		Serial.println("Relacibrado SD");
-	//	}
-	//}
-	//lastReadT = thisReadT;
-	return file;
+	return theFile.write('\t');
 }
-
-void SDCardHelper::close()
+void SDCH::close()
 {
-	file.close();
+	theFile.close();
 }
-
-String SDCardHelper::getFname()
+SDCH::operator bool()
+{
+	return open();
+}
+String SDCH::getFname()
 {
 	return Fname;
 }
-
-size_t SDCardHelper::printNumber(unsigned long n, uint8_t base)
-{
-	char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
-	char *str = &buf[sizeof(buf) - 1];
-
-	*str = '\0';
-
-	// prevent crash if called with base == 1
-	if (base < 2) base = 10;
-
-	do {
-		char c = n % base;
-		n /= base;
-
-		*--str = c < 10 ? c + '0' : c + 'A' - 10;
-	} while (n);
-
-	return file.write(str);
-}
-size_t SDCardHelper::printFloat(double number, uint8_t digits)
-{
-	size_t n = 0;
-
-	if (isnan(number)) return print("nan");
-	if (isinf(number)) return print("inf");
-	if (number > 4294967040.0) return print("ovf");  // constant determined empirically
-	if (number < -4294967040.0) return print("ovf");  // constant determined empirically
-
-													  // Handle negative numbers
-	if (number < 0.0)
-	{
-		n += print('-');
-		number = -number;
-	}
-
-	// Round correctly so that print(1.999, 2) prints as "2.00"
-	double rounding = 0.5;
-	for (uint8_t i = 0; i < digits; ++i)
-		rounding /= 10.0;
-
-	number += rounding;
-
-	// Extract the integer part of the number and print it
-	unsigned long int_part = (unsigned long)number;
-	double remainder = number - (double)int_part;
-	n += print(int_part);
-
-	// Print the decimal point, but only if there are digits beyond
-	if (digits > 0) {
-		n += print(".");
-	}
-
-	// Extract digits from the remainder one at a time
-	while (digits-- > 0)
-	{
-		remainder *= 10.0;
-		int toPrint = int(remainder);
-		n += print(toPrint);
-		remainder -= toPrint;
-	}
-
-	return n;
-}
-
-size_t SDCardHelper::print(const __FlashStringHelper *ifsh)
-{
-	return file.print(ifsh);
-}
-size_t SDCardHelper::print(const String &s)
-{
-	return file.write(s.c_str(), s.length());
-}
-size_t SDCardHelper::print(const char str[])
-{
-	return file.write(str);
-}
-size_t SDCardHelper::print(char c)
-{
-	return file.write(c);
-}
-size_t SDCardHelper::print(unsigned char b, int base)
-{
-	return print((unsigned long)b, base);
-}
-size_t SDCardHelper::print(int n, int base)
-{
-	return print((long)n, base);
-}
-size_t SDCardHelper::print(unsigned int n, int base)
-{
-	return print((unsigned long)n, base);
-}
-size_t SDCardHelper::print(long n, int base)
-{
-	if (base == 0) {
-		return file.write(n);
-	}
-	else if (base == 10) {
-		if (n < 0) {
-			int t = print('-');
-			n = -n;
-			return printNumber(n, 10) + t;
-		}
-		return printNumber(n, 10);
-	}
-	else {
-		return printNumber(n, base);
-	}
-}
-size_t SDCardHelper::print(unsigned long n, int base)
-{
-	if (base == 0) return file.write(n);
-	else return printNumber(n, base);
-}
-size_t SDCardHelper::print(double n, int digits)
-{
-	return printFloat(n, digits);
-}
-size_t SDCardHelper::print(const Printable& x)
-{
-	return file.print(x);
-}
-
-size_t SDCardHelper::println(void)
-{
-	return file.write("\r\n");
-}
-size_t SDCardHelper::println(const __FlashStringHelper *ifsh)
-{
-	size_t n = print(ifsh);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(const String &s)
-{
-	size_t n = print(s);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(const char c[])
-{
-	size_t n = print(c);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(char c)
-{
-	size_t n = print(c);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(unsigned char b, int base)
-{
-	size_t n = print(b, base);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(int num, int base)
-{
-	size_t n = print(num, base);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(unsigned int num, int base)
-{
-	size_t n = print(num, base);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(long num, int base)
-{
-	size_t n = print(num, base);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(unsigned long num, int base)
-{
-	size_t n = print(num, base);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(double num, int digits)
-{
-	size_t n = print(num, digits);
-	n += println();
-	return n;
-}
-size_t SDCardHelper::println(const Printable& x)
-{
-	size_t n = print(x);
-	n += println();
-	return n;
-}
-
-size_t SDCardHelper::printab(void)
-{
-	return file.write("\t");
-}
-size_t SDCardHelper::printab(const __FlashStringHelper *ifsh)
-{
-	size_t n = print(ifsh);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(const String &s)
-{
-	size_t n = print(s);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(const char c[])
-{
-	size_t n = print(c);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(char c)
-{
-	size_t n = print(c);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(unsigned char b, int base)
-{
-	size_t n = print(b, base);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(int num, int base)
-{
-	size_t n = print(num, base);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(unsigned int num, int base)
-{
-	size_t n = print(num, base);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(long num, int base)
-{
-	size_t n = print(num, base);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(unsigned long num, int base)
-{
-	size_t n = print(num, base);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(double num, int digits)
-{
-	size_t n = print(num, digits);
-	n += printab();
-	return n;
-}
-size_t SDCardHelper::printab(const Printable& x)
-{
-	size_t n = print(x);
-	n += printab();
-	return n;
-}
-

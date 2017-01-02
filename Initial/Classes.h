@@ -282,78 +282,26 @@ public:
 	void emergency(bool state = 1);
 };
 
-class SDCardHelper
+class SDCH
 {
-public:
-	SDCardHelper(uint8_t scPin, String name, String type = "txt", float Tzero = 1);
-private:
 	const uint8_t CS;
 	const String Fname0;
 	const String Ftype;
-	const long recalibrateT;
-	unsigned long thisReadT = 0;
-	unsigned long lastReadT = 0;
-	unsigned long lastWorkT = 0;
-	File file;
-	String Fname = "";
-	unsigned int coef;
-	unsigned int number = 0;
-	unsigned long int nMax;
-
+	const uint8_t coef;
+	const unsigned long nMax;
+	unsigned long number = 0;
+	String Fname;
 	void newName();
-
-	size_t printNumber(unsigned long, uint8_t);
-	size_t printFloat(double, uint8_t);
-
 public:
-	bool begin(bool type = 1);
-	long getTimeLapse();
-
-	operator bool();
-
+	SDCH(uint8_t csPin, String name, String type = "txt");
+	File theFile;
+	Helpful util;
+	bool begin();
+	bool open();
+	size_t tab();
 	void close();
-
+	operator bool();
 	String getFname();
-
-	size_t print(const __FlashStringHelper *);
-	size_t print(const String &);
-	size_t print(const char[]);
-	size_t print(char);
-	size_t print(unsigned char, int = DEC);
-	size_t print(int, int = DEC);
-	size_t print(unsigned int, int = DEC);
-	size_t print(long, int = DEC);
-	size_t print(unsigned long, int = DEC);
-	size_t print(double, int = 2);
-	size_t print(const Printable&);
-
-	size_t println(const __FlashStringHelper *);
-	size_t println(const String &s);
-	size_t println(const char[]);
-	size_t println(char);
-	size_t println(unsigned char, int = DEC);
-	size_t println(int, int = DEC);
-	size_t println(unsigned int, int = DEC);
-	size_t println(long, int = DEC);
-	size_t println(unsigned long, int = DEC);
-	size_t println(double, int = 2);
-	size_t println(const Printable&);
-	size_t println(void);
-
-	size_t printab(const __FlashStringHelper *);
-	size_t printab(const String &s);
-	size_t printab(const char[]);
-	size_t printab(char);
-	size_t printab(unsigned char, int = DEC);
-	size_t printab(int, int = DEC);
-	size_t printab(unsigned int, int = DEC);
-	size_t printab(long, int = DEC);
-	size_t printab(unsigned long, int = DEC);
-	size_t printab(double, int = 2);
-	size_t printab(const Printable&);
-	size_t printab(void);
-	//*/
-
 };
 
 #endif
