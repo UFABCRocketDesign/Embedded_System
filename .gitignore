@@ -19,3 +19,4 @@ Initial/Debug/Classes.cpp.o
 *.o
 Initial/Debug/core.a
 *.vcxproj
+*.a

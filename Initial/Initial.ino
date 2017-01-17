@@ -7,10 +7,10 @@
 /////////////////////////////////////////////////CONFIGURATION/////////////////////////////////////////////////
 
 #define GY80 1								//Use GY80 sensor
-#define BMP085 GY80 || 1					//Use BMP085 sensor
-#define ADXL345 GY80 || 0					//Use ADXL345 sensor
-#define L3G4200D GY80 || 0					//Use L3G4200D sensor
-#define HMC5883 GY80 || 0					//Use HMC5883 sensor
+#define BMP085 (GY80) || 1					//Use BMP085 sensor
+#define ADXL345 (GY80) || 0					//Use ADXL345 sensor
+#define L3G4200D (GY80) || 0				//Use L3G4200D sensor
+#define HMC5883 (GY80) || 0					//Use HMC5883 sensor
 #define SDCard 1							//Use SD card
 #define GPSmode 1							//Use GPS
 #define LoRamode 1							//Serial mode for transmission on LoRa module
@@ -18,21 +18,21 @@
 #define RBF 1								//Revome Before Flight
 #define BuZZ 1								//Buzzer mode
 
-#define ApoGee BMP085 & 1					//Detection of apogee
+#define ApoGee (BMP085) && 1				//Detection of apogee
 
-#define Pbmp PRINT & BMP085 & 0				//Print barometer informations
-#define Pacel PRINT & ADXL345 & 1			//Print acelerometer informations
-#define Pgiro PRINT & L3G4200D & 1			//Print gyroscope informations
-#define Pmag PRINT & HMC5883 & 1			//Print magnetometer informations
-#define Papg PRINT & ApoGee & 1				//Print apogee informations
-#define Pgps PRINT & GPSmode & 1			//Print GPS informations
-#define Psep PRINT & 0						//Print visual separator
+#define Pbar (PRINT) && (BMP085) && 1		//Print barometer informations
+#define Pacl (PRINT) && (ADXL345) && 1		//Print acelerometer informations
+#define Pgir (PRINT) && (L3G4200D) && 1		//Print gyroscope informations
+#define Pmag (PRINT) && (HMC5883) && 1		//Print magnetometer informations
+#define Papg (PRINT) && (ApoGee) && 1		//Print apogee informations
+#define Pgps (PRINT) && (GPSmode) && 0		//Print GPS informations
+#define Psep (PRINT) && 1					//Print visual separator
 
-
-#define Tcom PRINT & 0						//Print time counter
-#define Lcom PRINT & 0						//Print loop counter
-#define MaxCond ApoGee & PRINT & 0			//Print maximum apogee coefficient detected
-#define PWMapg ApoGee & 1					//Show the apogee coefficient in a LED
+#define Tcom (PRINT) && 1					//Print time counter
+#define Lcom (PRINT) && 1					//Print loop counter
+#define Ncom (PRINT) && 0					//Print eachN counter
+#define MaxCond (ApoGee) && (PRINT) && 0	//Print maximum apogee coefficient detected
+#define PWMapg (ApoGee) && 1				//Show the apogee coefficient in a LED
 
 #define LoRaDelay 4
 
@@ -45,18 +45,16 @@
 
 #if BMP085
 #define baro Barometer
-#define MM_bmp M_bmp
+#define MM_baro M_baro
 Baro baro;									//Barometer object declaration
-MediaMovel MM_bmp[2]{ (10),(10) };			//Array declaration of the moving average filter objects
+MediaMovel MM_baro[2]{ (10),(10) };			//Array declaration of the moving average filter objects
 #endif // BMP085
 
 #if ApoGee
 #define rec Recover
 #define apg Apogee
-#define APGutil APGutilitario
 Apogeu apg(5, 30, 50);						//Apogee checker object declaration
 DuDeploy rec(8, 10, 6, 5, 5, 15);			//Dual deployment parachute object declaration
-Helpful APGutil;							//Declaration of helpful object to peak detection.
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
 #define p2h 500								//Height to main parachute
 #endif // ApoGee
@@ -261,22 +259,30 @@ void setup()
 	baro.begin();
 	if (baro)
 	{
+#if ApoGee
 		for (int i = 0; i < 100; i++)
 		{
 			if (baro) apg.addZero(baro.getPressure());
 		}
 		//baro.readZero(100);
+#endif // ApoGee
 #if RBF
 		sysC++;
 #endif // RBF
 #if PRINT
 		Serial.print("Baro ok ");
+#if ApoGee
 		Serial.println(apg.getZero());
+#endif // ApoGee
+
 #endif // PRINT
 
 #if LoRamode
 		LoRa.print("Baro ok ");
+#if ApoGee
 		LoRa.println(apg.getZero());
+#endif // ApoGee
+
 #endif // LoRamode
 	}
 	else
@@ -382,19 +388,26 @@ void setup()
 	////////////////RBF directive////////////////
 
 #if PRINT
+#if Lcom
+	Serial.print("loop\t");
+#endif // Lcom
+
+#if Tcom
 	Serial.print("temp\t");
-#if ADXL345
+#endif // Tcom
+
+#if Pacl
 	Serial.print("\tacel\t\t");
-#endif // ADXL345
-#if L3G4200D
+#endif // Pacl
+#if Pgir
 	Serial.print("\tgiro\t\t");
-#endif // L3G4200D
-#if HMC5883
+#endif // Pgir
+#if Pmag
 	Serial.print("\tmag\t\t");
-#endif // HMC5883
-#if BMP085
+#endif // Pmag
+#if Pbar
 	Serial.print("\tbaro\t\t");
-#endif // BMP085
+#endif // Pbar
 #if Papg
 	Serial.print("\t\t\t");
 #endif // Papg
@@ -406,20 +419,27 @@ void setup()
 #endif // GPSmode
 	Serial.println();
 
+#if Lcom
+	Serial.print("\t");
+#endif // Lcom
+
+#if Tcom
 	Serial.print("seg\t");
-#if ADXL345
+#endif // Tcom
+
+#if Pacl
 	Serial.print("X\tY\tZ\t");
-#endif // ADXL345
-#if L3G4200D
+#endif // Pacl
+#if Pgir
 	Serial.print("X\tY\tZ\t");
-#endif // L3G4200D
-#if HMC5883
+#endif // Pgir
+#if Pmag
 	Serial.print("X\tY\tZ\t");
-#endif // HMC5883
-#if BMP085
+#endif // Pmag
+#if Pbar
 	Serial.print((char)0xB0);
 	Serial.print("C\tPascal\tm\t");
-#endif // BMP085
+#endif // Pbar
 #if Papg
 	Serial.print("Max\tAlpha\tSigma\t");
 #endif // Papg
@@ -441,7 +461,6 @@ void setup()
 
 #if ApoGee
 	apg.resetTimer();
-	APGutil.begin();
 	rec.resetTimer();
 #endif // ApoGee
 
@@ -455,27 +474,22 @@ void setup()
 void loop()
 {
 	Gutil.counter();
-#if Tcom
-	if (APGutil.eachN(100))
+#if Ncom
+	if (Gutil.eachN(100))
 	{
-		Serial.println(APGutil.lapse(), 5);
+		Serial.println(Gutil.lapse(), 5);
 	}
 	else
 	{
-		APGutil.lapse();
+		Gutil.lapse();
 	}
 #endif // Tcom
-
-#if Lcom
-	Serial.print(Gutil.getCount());
-	Serial.print(":\t");
-#endif // Lcom
 
 #if BMP085
 	if (baro)
 	{
-		MM_bmp[0].addValor(baro.getTemperature());
-		MM_bmp[1].addValor(baro.getPressure());
+		MM_baro[0].addValor(baro.getTemperature());
+		MM_baro[1].addValor(baro.getPressure());
 	}
 #endif // BMP085
 
@@ -484,6 +498,7 @@ void loop()
 	//apg.addAltitude(baro.getAltitude());
 #endif // ApoGee
 
+#if !SDCard
 #if ADXL345
 	if (acel)
 	{
@@ -507,8 +522,8 @@ void loop()
 		MM_magn[1].addValor(magn.getY());
 		MM_magn[2].addValor(magn.getZ());
 	}
-#endif // HMC5883
-
+#endif // HMC5883  
+#endif // SDCard
 
 #if ApoGee
 	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
@@ -521,11 +536,11 @@ void loop()
 		rec.sealApogee(apg.getApogeu(0.9f));
 		rec.refresh(apg.getAltitude());
 #if MaxCond
-		APGutil.comparer(apg.getSigma());
+		Gutil.comparer(apg.getSigma());
 #endif // MaxCond
 	}
 #if BuZZ
-	else if (APGutil.oneTime()) pinMode(buzzPin, HIGH);
+	else if (Gutil.oneTime()) pinMode(buzzPin, HIGH);
 #endif // BuZZ
 #endif // ApoGee
 #if PWMapg
@@ -536,13 +551,17 @@ void loop()
 	GpS.readAll();
 #endif // GPSmode
 
+#if Lcom
+	Serial.print(Gutil.getCount());
+	Serial.print(":\t");
+#endif // Lcom
 
-#if PRINT
+#if Tcom
 	Serial.print(Gutil.sinceBegin(), 3);
 	Serial.print('\t');
-#endif // PRINT
+#endif // Tcom
 
-#if Pacel	////////////////////////////////////////////////////
+#if Pacl	////////////////////////////////////////////////////
 #if Psep
 	Serial.print('|');
 #endif // Psep
@@ -552,8 +571,8 @@ void loop()
 	Serial.print('\t');
 	Serial.print(MM_acel[2], 3);
 	Serial.print('\t');
-#endif // Pacel
-#if Pgiro	/////////////////////////////////////////////////////
+#endif // Pacl
+#if Pgir	/////////////////////////////////////////////////////
 #if Psep
 	Serial.print('|');
 #endif // Psep
@@ -563,7 +582,7 @@ void loop()
 	Serial.print('\t');
 	Serial.print(MM_giro[2], 1);
 	Serial.print('\t');
-#endif // Pgiro
+#endif // Pgir
 #if Pmag	////////////////////////////////////////////////////
 #if Psep
 	Serial.print('|');
@@ -575,15 +594,15 @@ void loop()
 	Serial.print(MM_magn[2], 1);
 	Serial.print('\t');
 #endif // Pmag
-#if Pbmp	////////////////////////////////////////////////////
+#if Pbar	////////////////////////////////////////////////////
 #if Psep
 	Serial.print('|');
 #endif // Psep
-	Serial.print(MM_bmp[0]);
+	Serial.print(MM_baro[0],1);
 	Serial.print('\t');
-	Serial.print(MM_bmp[1]);
+	Serial.print(MM_baro[1],1);
 	Serial.print('\t');
-#endif // Pbmp 
+#endif // Pbar 
 #if Papg	/////////////////////////////////////////////////////
 	Serial.print(apg.getAltitude());
 	Serial.print('\t');
@@ -610,7 +629,7 @@ void loop()
 #if Psep
 	Serial.print('|');
 #endif // Psep
-	Serial.print(APGutil.getMax(), 5);
+	Serial.print(Gutil.getMax(), 5);
 	Serial.print('\t');
 #endif // MaxCond
 #if Pgps
@@ -654,9 +673,9 @@ void loop()
 	}
 #endif // Papg
 
-#if PRINT	/////////////////////////////////////////////////////
+#if (Pbar) || (Pacl) || (Pgir) || (Pmag) || (Papg) || (Pgps) || (Tcom) || (Lcom)
 	Serial.println();
-#endif // PRINT
+#endif // (Pbar) || (Pacl) || (Pgir) || (Pmag) || (Papg) || (Pgps) || (Tcom) || (Lcom)
 
 #if SDCard
 	if (!SDC.util.mem)
@@ -700,8 +719,11 @@ void loop()
 			for (int i = 0; i < 3; i++) { SDC.theFile.print(MM_magn[i], 1); SDC.tab(); }
 #endif // HMC5883
 #if BMP085
-			for (int i = 0; i < 2; i++) { SDC.theFile.print(MM_bmp[i]); SDC.tab(); }
+			for (int i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]); SDC.tab(); }
+#if ApoGee
 			SDC.theFile.print(apg.getAltitude()); SDC.tab();
+#endif // ApoGee
+
 #endif // BMP085
 
 #if GPSmode
@@ -830,6 +852,8 @@ void RemoveBefore()
 			Serial.print(baro.getTemperature());
 			Serial.print(" ");
 			Serial.write(0xB0);
+
+#if GPSmode
 			Serial.print("C\tLat: ");
 			Serial.print(GpS.getLatitude(), 6);
 			Serial.print("\tLon: ");
@@ -844,6 +868,8 @@ void RemoveBefore()
 			Serial.print(GpS.getMinute());
 			Serial.print(':');
 			Serial.print(GpS.getSecond());
+#endif // GPSmode
+
 			Serial.println();
 
 #endif // PRINT
@@ -858,6 +884,8 @@ void RemoveBefore()
 			LoRa.print(baro.getTemperature());
 			LoRa.print(" ");
 			LoRa.write(0xB0);
+
+#if GPSmode
 			LoRa.print("C\tLat: ");
 			LoRa.print(GpS.getLatitude(), 6);
 			LoRa.print("\tLon: ");
@@ -872,6 +900,8 @@ void RemoveBefore()
 			LoRa.print(GpS.getMinute());
 			LoRa.print(':');
 			LoRa.print(GpS.getSecond());
+#endif // GPSmode
+
 			LoRa.println();
 		}
 #endif // LoRamode

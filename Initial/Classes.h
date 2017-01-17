@@ -253,19 +253,19 @@ class DuDeploy
 	const unsigned long Delay;	//Tempo de atraso dentre comando ( caso altura nao determinada)
 	unsigned long P1T = 0, P2T = 0;	//Momento que o ignitor ligou
 	unsigned long TimeZero = 0;	//Momento zero
-	unsigned long Tmax = 0;	//Tempo máximo para segunranca
+	unsigned long Tmax;	//Tempo máximo para segunranca
 	unsigned long Tnow = 0;	//Tempo atual (com zeragem)
 	float P1H = 0, P2H = 0;	//Altura de comando
 	bool P1S = 0, P2S = 0;
 	bool P1S_A = 0, P2S_A = 0;	//Estado atual do comando
 	bool P1H_A = 0, P2H_A = 0;	//Condicional para comando em altura
 	bool apogee = 0;	//Representante interno do apogeu
-	bool TmaxAux = 0;	//Condicional para verificar tempo de seguranca
+	bool TmaxAux;	//Condicional para verificar tempo de seguranca
 	bool P1T_A = 0, P2T_A = 0;	//Condicional para momento do ignitor
 	bool P1seal = 0, P2seal = 0;	//Selo de comando
 	bool emer = 0, P1H_Am = 0, P2H_Am = 0;
 public:
-	DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay);
+	DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay, float tMax = 0);
 	void resetTimer();
 	bool info1();	//Retorna informacao sobre estado do ignitor de acionamento 1
 	bool info2();//Retorna informacao sobre estado do ignitor de acionamento 2

@@ -24,7 +24,7 @@ void Baro::begin()
 	Wire.write(0XAA);
 	Wire.endTransmission();
 
-	Wire.requestFrom(0xAA, 22);
+	Wire.requestFrom(address, (uint8_t)22);
 	unsigned long temp = micros();
 	while (Wire.available() < 22)
 	{
@@ -172,7 +172,7 @@ float TriA::getZ()
 
 
 ///Acelerometro
-Acel::Acel(long recalT) :Sens(0x1E, recalT)
+Acel::Acel(long recalT) :Sens(0x53, recalT)
 {
 }
 void Acel::begin()
@@ -237,7 +237,7 @@ bool Acel::readAll()
 
 
 ///Magnetometro
-Magn::Magn(long recalT) :Sens(0x53, recalT)
+Magn::Magn(long recalT) :Sens(0x1E, recalT)
 {
 }
 void Magn::begin()
@@ -344,7 +344,7 @@ bool Giro::readAll()
 	}
 	lastReadT = thisReadT;
 	return state;
-} 
+}
 
 ///Coleaao de utilitarios
 void Helpful::begin()
@@ -605,7 +605,7 @@ bool GyGPS::isNew()
 }
 
 ///Rotinas de verificacao de apogeu
-Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r>1) ? r : 2), Rl1((r>1) ? r - 1 : 1), S(s)
+Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s)
 {
 	Rf = 0;
 	for (unsigned int i = 0; i < R; i++) altMed[i] = 0;
@@ -794,7 +794,7 @@ float Apogeu::getMinH()
 
 
 ///Controle de paraquedas
-DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2), Tign((long)(ignT * 1000000.0)), Delay((long)(delay * 1000000.0))
+DuDeploy::DuDeploy(unsigned int paraPin1, unsigned int paraPin2, unsigned int infPin1, unsigned int infPin2, float ignT, float delay, float tMax) : P1(paraPin1), P2(paraPin2), I1(infPin1), I2(infPin2), Tign((unsigned long)(ignT * 1000000.0)), Delay((unsigned long)(delay * 1000000.0)), Tmax((unsigned long)(tMax * 1000000.0)), TmaxAux(tMax == 0 ? 0 : 1)
 {
 }
 void DuDeploy::resetTimer()
@@ -871,7 +871,7 @@ bool DuDeploy::getP2S(bool type)
 }
 bool DuDeploy::getSysState(bool type)
 {
-	return (P1T_A && P2T_A && (P1S || P2S)) || (P2T_A && !P1S && (!P1T_A || P2S)) || (P1T_A && !P2S && (P1S || !P2T_A)) || (!type && !P1S && !P2S && (!P1T_A || !P1T_A));
+	return (P1T_A && P2T_A && (P1S || P2S)) || (P2T_A && !P1S && (!P1T_A || P2S)) || (P1T_A && !P2S && (P1S || !P2T_A)) || (!type && !P1S && !P2S && (!P1T_A || !P2T_A));
 }
 void DuDeploy::refresh(float height)
 {
@@ -887,11 +887,7 @@ void DuDeploy::refresh(float height)
 				P1T_A = 1;
 				P1T = Tnow;
 			}
-			if ((Tnow - P1T < Tign) && P1T_A)
-			{
-				P1S = 1;	//Comando efetivo
-
-			}
+			if ((Tnow - P1T < Tign) && P1T_A) P1S = 1;	//Comando efetivo
 			else P1S = 0;
 
 		}
@@ -965,8 +961,12 @@ bool SDCH::begin()
 			else newName();
 		}
 		theFile = SD.open(Fname, FILE_WRITE);
-		if (theFile) theFile.close();
-		return true;
+		if (theFile)
+		{
+			theFile.close();
+			return true;
+		}
+		else return false;
 	}
 }
 bool SDCH::open()
