@@ -53,7 +53,7 @@ bool Baro::readAll()
 		{
 			begin();
 #if PRINT
-			Serial.println("Relacibrado B");
+			Serial.println(F("Relacibrado B"));
 #endif // PRINT
 		}
 		//Leitura de temperatura
@@ -212,7 +212,7 @@ bool Acel::readAll()
 		{
 			begin();
 #if PRINT
-			Serial.println("Relacibrado A");
+			Serial.println(F("Relacibrado A"));
 #endif // PRINT
 		}
 		Wire.beginTransmission(address);
@@ -258,7 +258,7 @@ bool Magn::readAll()
 		{
 			begin();
 #if PRINT
-			Serial.println("Relacibrado M");
+			Serial.println(F("Relacibrado M"));
 #endif // PRINT
 		}
 		///Faz a leitura de todos os eixos///
@@ -326,7 +326,7 @@ bool Giro::readAll()
 		{
 			begin();
 #if PRINT
-			Serial.println("Relacibrado G");
+			Serial.println(F("Relacibrado G"));
 #endif // PRINT
 		}
 		///Faz a leitura de todos os eixos///
@@ -498,7 +498,7 @@ return (float(analogRead(Apin)) * 5 / (1023)) / 0.01;
 
 
 ///Dados do GPS
-GyGPS::GyGPS(short gmt, HardwareSerial S) :GpSerial(S), GMT(gmt), Sens(NULL)
+GyGPS::GyGPS(HardwareSerial S, short gmt) :GpSerial(S), GMT(gmt), Sens(NULL)
 {
 }
 unsigned short GyGPS::getFailed()
@@ -604,6 +604,7 @@ bool GyGPS::isNew()
 	return state;
 }
 
+
 ///Rotinas de verificacao de apogeu
 Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s)
 {
@@ -705,7 +706,8 @@ bool Apogeu::apgAlpha(bool serial)
 	{
 		if (altMed[i] > altMed[i - 1]) Alpha &= 1;
 		else Alpha &= 0;
-		if (serial) Serial.print(altMed[i] > altMed[i - 1]);
+		if (!Alpha) break;
+		//if (serial) Serial.print(altMed[i] > altMed[i - 1]);
 	}
 	return Alpha;
 }
@@ -728,9 +730,10 @@ float Apogeu::apgSigma(bool serial)
 			int all = j - (R - i);
 			if (all < 0) continue;
 			cond[i - 1] &= (altMed[j] > altMed[all]);
+			if (!cond[i - 1]) break;
 		}
 	}
-	if (serial) for (int i = Rl1 - 1; i >= 0; i--) Serial.print(cond[i]);
+	//if (serial) for (int i = Rl1 - 1; i >= 0; i--) Serial.print(cond[i]);
 	for (unsigned int i = Rl1; i > 0; i--)
 	{
 		Sigma += (float)cond[i - 1] * (float)(i*i) / Rf;

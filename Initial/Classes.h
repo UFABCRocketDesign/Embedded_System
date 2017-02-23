@@ -146,6 +146,7 @@ float read();
 };
 */
 
+
 class GyGPS : public Sens
 {
 	//#define GpSerial Serial1
@@ -170,7 +171,7 @@ class GyGPS : public Sens
 	byte minute = 0;
 	byte second = 0;
 public:
-	GyGPS(short gmt = 0, HardwareSerial S = Serial1);
+	GyGPS(HardwareSerial S, short gmt = 0);
 	Helpful util;						//Declaration of helpful object to GPS
 	unsigned short getFailed();				//Return functions
 	unsigned short getSentences();
