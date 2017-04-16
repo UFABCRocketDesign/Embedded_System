@@ -1,5 +1,7 @@
 // Classes.h
 
+#pragma once
+
 #ifndef _CLASSES_h
 #define _CLASSES_h
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -107,28 +109,64 @@ public:
 	unsigned long counter();
 	unsigned long getCount();
 	unsigned long counterReset();
-	bool eachN(unsigned int N);
-	bool eachT(float T);
-	void forT(float T);
+	bool eachN(const unsigned int &N);
+	bool eachT(const float &T);
+	void forT(const float &T);
 	bool forT();
 	float lapse();
 	float sinceBegin();
 	bool oneTime();
 	void oneTimeReset();
-	void comparer(float n);
+	void comparer(const float &n);
 	float getMax();
 	float getMin();
 };
 
-class MediaMovel
+template <typename type> class RoundArray
+{
+	const size_t Len;
+	type* Vals = new type[Len];
+	size_t pointer = 0;
+public:
+	RoundArray(const unsigned int &len) :Len(len)
+	{
+		for (unsigned int i = 0; i < Len; i++) Vals[i] = 0;
+	}
+	~RoundArray() // Destructor
+	{
+		delete[] Vals;
+	}
+	void push(const type &var)
+	{
+		Vals[pointer] = var;
+		pointer = pointer + 1 == Len ? 0 : pointer + 1;
+	}
+	operator float()
+	{
+		return Vals[pointer];
+	}
+	type &operator[](int index)
+	{
+		return Vals[(Len + pointer - index - 1) % Len];
+	}
+	void operator=(const type &var)
+	{
+		push(var);
+	}
+	size_t length()
+	{
+		return Len;
+	}
+};
+
+class MovingAverage
 {
 	const unsigned int N;
-	float* Vals = new float[N];
-	float media, max = 0, min, sigma;
+	RoundArray<float> Vals;
+	float media = 0, max = 0, min, sigma;
 public:
-	MediaMovel(int n);	//Inicializadore
-	~MediaMovel();
-	float addValor(float valor);
+	MovingAverage(int n);
+	float addValor(const float &valor);
 	float getMedia();
 	float getVar();
 	float getMax();
@@ -137,6 +175,22 @@ public:
 };
 
 /*
+class MediaMovel
+{
+	const unsigned int N;
+	float* Vals = new float[N];
+	float media, max = 0, min, sigma;
+public:
+	MediaMovel(int n);	//Inicializadore
+	~MediaMovel();
+	float addValor(const float &valor);
+	float getMedia();
+	float getVar();
+	float getMax();
+	float getMin();
+	operator float();
+};*/
+
 class Term	//LM35
 {
 const byte Apin;
@@ -144,8 +198,6 @@ public:
 Term(byte aPin);
 float read();
 };
-*/
-
 
 class GyGPS : public Sens
 {
@@ -224,7 +276,7 @@ public:
 	void resetZero();
 	void resetTimer();
 	//float addAltitude(float H);
-	float calcAlt(long P, float sealevelP = 101325);
+	float calcAlt(const long &P, float sealevelP = 101325);
 	void setGamma(bool apgE);
 
 	bool apgAlpha(bool serial = 0);
@@ -306,4 +358,3 @@ public:
 };
 
 #endif
-

@@ -365,12 +365,12 @@ unsigned long Helpful::counterReset()
 	count = 0;
 	return  C;
 }
-bool Helpful::eachN(unsigned int N)
+bool Helpful::eachN(const unsigned int &N)
 {
 	conEach++;
 	return (N == 0) ? false : conEach%N == 0;
 }
-bool Helpful::eachT(float T)
+bool Helpful::eachT(const float &T)
 {
 	if (micros() - timerEach > (unsigned long)(T*1000000.0))
 	{
@@ -379,7 +379,7 @@ bool Helpful::eachT(float T)
 	}
 	return false;
 }
-void Helpful::forT(float T)
+void Helpful::forT(const float &T)
 {
 	endT = micros() + (long)(T*1000000.0);
 	forTstate = 1;
@@ -416,7 +416,7 @@ void Helpful::oneTimeReset()
 {
 	if (one) one = 0;
 }
-void Helpful::comparer(float n)
+void Helpful::comparer(const float &n)
 {
 	maxi = (n > maxi) ? n : maxi;
 	mini = (n < mini) ? n : mini;
@@ -431,6 +431,45 @@ float Helpful::getMin()
 }
 
 
+MovingAverage::MovingAverage(int n) : N(n), Vals(n)
+{
+}
+float MovingAverage::addValor(const float & valor)
+{
+	media *= N;
+	media -= Vals;
+	media += valor;
+	media /= N;
+	Vals = valor;
+	max = (media > max) ? media : max;
+	min = (media < min) ? media : min;
+	return media;
+}
+float MovingAverage::getMedia()
+{
+	return media;
+}
+float MovingAverage::getVar()
+{
+	sigma = 0;
+	for (unsigned int i = 0; i < N; i++) sigma += pow(Vals[i] - media, 2.f);
+	sigma = pow(sigma / (N - 1), .5f);
+	return sigma;
+}
+float MovingAverage::getMax()
+{
+	return max;
+}
+float MovingAverage::getMin()
+{
+	return min;
+}
+MovingAverage::operator float()
+{
+	return media;
+}
+
+/*
 ///Filtro de media movel
 MediaMovel::MediaMovel(int n) : N(n)
 {
@@ -440,7 +479,7 @@ MediaMovel::~MediaMovel()
 {
 	delete[] Vals;
 }
-float MediaMovel::addValor(float valor)
+float MediaMovel::addValor(const float &valor)
 {
 	for (unsigned int i = N - 1; i > 0; i--)
 	{
@@ -483,9 +522,9 @@ MediaMovel::operator float()
 {
 	return media;
 }
+*/
 
 
-/*
 ///Termometro
 Term::Term(byte aPin) :Apin(aPin)
 {
@@ -494,7 +533,6 @@ float Term::read()
 {
 return (float(analogRead(Apin)) * 5 / (1023)) / 0.01;
 }
-*/
 
 
 ///Dados do GPS
@@ -668,7 +706,7 @@ void Apogeu::resetTimer()
 //	maxH = (altMed[0] > maxH) ? altMed[0] : maxH;
 //	return altMed[0];
 //}
-float Apogeu::calcAlt(long P, float sealevelP)
+float Apogeu::calcAlt(const long &P, float sealevelP)
 {
 	for (int i = N - 1; i > 0; i--)
 	{

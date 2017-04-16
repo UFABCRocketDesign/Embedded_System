@@ -20,3 +20,4 @@ Initial/Debug/Classes.cpp.o
 Initial/Debug/core.a
 *.vcxproj
 *.a
+*.idb
