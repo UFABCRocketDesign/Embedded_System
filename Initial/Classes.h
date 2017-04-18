@@ -171,6 +171,7 @@ public:
 	float getVar();
 	float getMax();
 	float getMin();
+	float operator=(const float &valor);
 	operator float();
 };
 
@@ -190,6 +191,18 @@ public:
 	float getMin();
 	operator float();
 };*/
+
+class SerialFilter
+{
+	const int N;
+	MovingAverage **MM = new MovingAverage*[N];
+public:
+	SerialFilter(int n, int v);
+	SerialFilter(int n, int V[]);
+	float operator=(const float &in);
+	operator float();
+};
+
 
 class Term	//LM35
 {

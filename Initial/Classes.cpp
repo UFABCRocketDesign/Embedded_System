@@ -464,6 +464,10 @@ float MovingAverage::getMin()
 {
 	return min;
 }
+float MovingAverage::operator=(const float & valor)
+{
+	return addValor(valor);
+}
 MovingAverage::operator float()
 {
 	return media;
@@ -524,6 +528,24 @@ MediaMovel::operator float()
 }
 */
 
+SerialFilter::SerialFilter(int n, int v) : N(n)
+{
+	for (int i = 0; i < N; i++) MM[i] = new MovingAverage(v);
+}
+SerialFilter::SerialFilter(int n, int V[]) : N(n)
+{
+	for (int i = 0; i < N; i++) MM[i] = new MovingAverage(V[i]);
+}
+float SerialFilter::operator=(const float &in)
+{
+	(*MM[N - 1]) = in;
+	for (int i = N - 1; i > 0; i--) (*MM[i - 1]) = ((*MM[i]).getMedia());
+	return (*MM[0]).getMedia();
+}
+SerialFilter::operator float()
+{
+	return (*MM[0]);
+}
 
 ///Termometro
 Term::Term(byte aPin) :Apin(aPin)
@@ -1030,3 +1052,4 @@ String SDCH::getFname()
 {
 	return Fname;
 }
+
