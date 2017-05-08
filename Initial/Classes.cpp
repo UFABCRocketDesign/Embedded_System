@@ -553,7 +553,7 @@ Term::Term(byte aPin) :Apin(aPin)
 }
 float Term::read()
 {
-return (float(analogRead(Apin)) * 5 / (1023)) / 0.01;
+	return (float(analogRead(Apin)) * 5 / (1023)) / 0.01;
 }
 
 
@@ -666,11 +666,11 @@ bool GyGPS::isNew()
 
 
 ///Rotinas de verificacao de apogeu
-Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s)
+Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Alt(N,5)
 {
 	Rf = 0;
 	for (unsigned int i = 0; i < R; i++) altMed[i] = 0;
-	for (unsigned int i = 0; i < N;i++) Alt[i] = 0;
+	//for (unsigned int i = 0; i < N;i++) Alt[i] = 0;
 	for (int i = Rl1; i > 0; i--)
 	{
 		Rf += (float)(i*i);
@@ -730,21 +730,22 @@ void Apogeu::resetTimer()
 //}
 float Apogeu::calcAlt(const long &P, float sealevelP)
 {
-	for (int i = N - 1; i > 0; i--)
-	{
-		Alt[i] = Alt[i - 1];
-	}
-	Alt[0] = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577) - base;
-	float Sum = 0;
-	for (uint8_t i = 0; i < N; i++)
-	{
-		Sum += Alt[i];
-	}
+	//for (int i = N - 1; i > 0; i--)
+	//{
+	//	Alt[i] = Alt[i - 1];
+	//}
+	//Alt[0] = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577) - base;
+	//float Sum = 0;
+	//for (uint8_t i = 0; i < N; i++)
+	//{
+	//	Sum += Alt[i];
+	//}
 	for (uint8_t i = Rl1; i > 0; i--)
 	{
 		altMed[i] = altMed[i - 1];
 	}
-	altMed[0] = Sum / N;
+	//altMed[0] = Sum / N;
+	altMed[0] = Alt = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577) - base;
 	if (altMed[0] > apgPt)
 	{
 		apgPt = altMed[0];

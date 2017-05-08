@@ -203,7 +203,6 @@ public:
 	operator float();
 };
 
-
 class Term	//LM35
 {
 const byte Apin;
@@ -280,8 +279,11 @@ class Apogeu
 	long TimeZero = 0;
 	bool apg_A = 0;
 	bool* cond = new bool[Rl1];
-	float* Alt = new float[N];
+	//float* Alt = new float[N];
 	float* altMed = new float[R];
+	
+	//MovingAverage Alt;
+	SerialFilter Alt;
 public:
 	Apogeu(unsigned int n, unsigned int r, float s);
 	float addZero(long P, float sealevelP = 101325);
