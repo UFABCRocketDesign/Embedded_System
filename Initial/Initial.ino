@@ -13,8 +13,8 @@
 #define ADXL345 (GY80) || 0					//Use ADXL345 sensor
 #define L3G4200D (GY80) || 0				//Use L3G4200D sensor
 #define HMC5883 (GY80) || 0					//Use HMC5883 sensor
-#define SDCard 0							//Use SD card
-#define GPSmode 1							//Use GPS
+#define SDCard 1							//Use SD card
+#define GPSmode 0							//Use GPS
 #define LoRamode 0							//Serial mode for transmission on LoRa module
 
 #define ApoGee (BMP085) && 1				//Detection of apogee
@@ -101,7 +101,7 @@ MovingAverage MM_magn[3]{ (10),(10),(10) };	//Array declaration of the moving av
 
 #if SDCard
 #define SDC SecureDigitalCard
-SDCH SDC(10, "Test");				//Declaration of object to help SD card file management
+SDCH SDC(53, "Test");				//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
@@ -125,18 +125,20 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 Helpful Gutil;								//Declaration of helpful object to general cases
 
 #if RBF
-#if BuZZ
-#define holdT .05
-#endif // BuZZ
-
 #define rbfHelper ReBeFlight
 #define RBFpin 7							//Pin that the RBF system is connected
-unsigned short sysC = 0;
 #endif // RBF
 
+#if (RBF) || (WUF)
+	unsigned short sysC = 0;
+#endif // (RBF) || (WUF)
+
+
 #if BuZZ
-#define buzzPin 5							//Pin that the buzzer is connected
+#define buzzPin 2							//Pin that the buzzer is connected
 #define buzzCmd HIGH						//Buzzer is on in high state
+#define holdT .1
+Helpful beeper;
 #endif // BuZZ
 
 #if PWMapg
@@ -191,7 +193,7 @@ void setup()
 #if LoRamode
 		LoRa.print(F("SD start OK "));
 		LoRa.println(SDC.getFname());
-#endif // LoRamod
+#endif // LoRamode
 		SDC.theFile.print(F("temp\t"));
 #if ADXL345
 		SDC.theFile.print(F("\tacel\t\t"));
@@ -987,9 +989,9 @@ void loop()
 		LoRa.print(apg.getSigma());
 		LoRa.print('\t');
 #endif // ApoGee
-#if !GPSmode && !ApoGee
+#if !(GPSmode) && !(ApoGee)
 		LoRa.print(LRutil.getCount());
-#endif // !GPSmode && !ApoGee
+#endif //  !(GPSmode) && !(ApoGee)
 		LoRa.println();
 	}
 #endif // LoRamode
@@ -1001,24 +1003,18 @@ void loop()
 void RemoveBefore()
 {
 	bool rbf = 0;
-	bool bzz = 0;
 	Helpful rbfHelper;
-	Helpful beeper[SYSTEM_n * 2 + 1];
-	for (short i = 0; i < SYSTEM_n * 2 + 1; i++) beeper[i].oneTime();
 	do
 	{
 		rbf = digitalRead(RBFpin);
 #if GPSmode
-		if (GpS) if (GpS.util.oneTime()) sysC++;
+		if (GpS) GpS.util.forT(2);
+		if (GpS.util.forT()) sysC++;
 #endif // GPSmode
 
 		if (rbfHelper.oneTime())
 		{
 			sysC = 0;
-#if GPSmode
-			GpS.util.oneTimeReset();
-#endif // GPSmode
-
 #if SDCard
 			if (SDC)
 			{
@@ -1109,20 +1105,22 @@ void RemoveBefore()
 
 #if BuZZ
 		///////////////////////////////////////
-		if (beeper[0].eachT(holdT*SYSTEM_n * 2 + 1))
+		if (beeper.eachT(holdT*SYSTEM_n * 2 + 1) || beeper.oneTime())
 		{
-			beeper[0].oneTimeReset();
-			beeper[0].forT(holdT);
-			digitalWrite(buzzPin, bzz = buzzCmd);
+			beeper.mem = buzzCmd;
+			beeper.counterReset();
+			beeper.forT(holdT);
 		}
-		for (short i = 0; i < sysC * 2; i++) if (!beeper[i].forT()) if (beeper[i].oneTime())
+		if (beeper.getCount() < (sysC+1) * 2) if (!beeper.forT())
 		{
-			digitalWrite(buzzPin, bzz = !bzz);
-			beeper[i + 1].oneTimeReset();
-			beeper[i + 1].forT(holdT);
+			digitalWrite(buzzPin, beeper.mem);
+			beeper.mem = !beeper.mem;
+			beeper.counter();
+			beeper.forT(holdT);
 		}
-		if (!beeper[sysC * 2].forT()) if (beeper[sysC * 2].oneTime())digitalWrite(buzzPin, bzz = !bzz);
+
 		///////////////////////////////////////
+
 #endif // BuZZ
 
 	} while (!rbf);
@@ -1139,6 +1137,7 @@ void WaitUntil(float minHeight)
 {
 	do
 	{
+		sysC = 0;
 		Gutil.counter();
 #if Ncom
 		if (Gutil.eachN(100))
@@ -1161,6 +1160,7 @@ void WaitUntil(float minHeight)
 		{
 			MM_baro[0].addValor(baro.getTemperature());
 			MM_baro[1].addValor(baro.getPressure());
+			sysC++;
 		}
 #endif // BMP085
 
@@ -1176,6 +1176,7 @@ void WaitUntil(float minHeight)
 			MM_acel[0].addValor(acel.getX());
 			MM_acel[1].addValor(acel.getY());
 			MM_acel[2].addValor(acel.getZ());
+			sysC++;
 		}
 #endif // ADXL345
 #if L3G4200D
@@ -1184,6 +1185,7 @@ void WaitUntil(float minHeight)
 			MM_giro[0].addValor(giro.getX());
 			MM_giro[1].addValor(giro.getY());
 			MM_giro[2].addValor(giro.getZ());
+			sysC++;
 		}
 #endif // L3G4200D
 #if HMC5883
@@ -1192,6 +1194,7 @@ void WaitUntil(float minHeight)
 			MM_magn[0].addValor(magn.getX());
 			MM_magn[1].addValor(magn.getY());
 			MM_magn[2].addValor(magn.getZ());
+			sysC++;
 		}
 #endif // HMC5883  
 #endif // !SDCard
@@ -1208,7 +1211,8 @@ void WaitUntil(float minHeight)
 #endif // PWMapg
 
 #if GPSmode
-		GpS.readAll();
+		if (GpS) GpS.util.forT(2);
+		if (GpS.util.forT()) sysC++;
 #endif // GPSmode
 
 #if Lcom
@@ -1370,6 +1374,7 @@ void WaitUntil(float minHeight)
 					MM_acel[0].addValor(acel.getX());
 					MM_acel[1].addValor(acel.getY());
 					MM_acel[2].addValor(acel.getZ());
+					sysC++;
 				}
 #endif // ADXL345
 #if L3G4200D
@@ -1378,6 +1383,7 @@ void WaitUntil(float minHeight)
 					MM_giro[0].addValor(giro.getX());
 					MM_giro[1].addValor(giro.getY());
 					MM_giro[2].addValor(giro.getZ());
+					sysC++;
 				}
 #endif //L3G4200D
 #if HMC5883
@@ -1386,6 +1392,7 @@ void WaitUntil(float minHeight)
 					MM_magn[0].addValor(magn.getX());
 					MM_magn[1].addValor(magn.getY());
 					MM_magn[2].addValor(magn.getZ());
+					sysC++;
 				}
 #endif // HMC5883
 
@@ -1431,6 +1438,7 @@ void WaitUntil(float minHeight)
 
 				SDC.theFile.println();
 				SDC.close();
+				sysC++;
 			}
 			else SDC.util.mem = 1;
 		}
@@ -1465,6 +1473,23 @@ void WaitUntil(float minHeight)
 			LoRa.println();
 		}
 #endif // LoRamode
+
+#if BuZZ
+		if (beeper.eachT(holdT*SYSTEM_n * 2 + 1) || beeper.oneTime())
+		{
+			beeper.mem = buzzCmd;
+			beeper.counterReset();
+			beeper.forT(holdT);
+		}
+		if (beeper.getCount() < (sysC+1) * 2) if (!beeper.forT())
+		{
+			digitalWrite(buzzPin, beeper.mem);
+			beeper.mem = !beeper.mem;
+			beeper.counter();
+			beeper.forT(holdT);
+		}
+#endif // BuZZ
+
 	}
 	while (abs(apg.getAltitude())<minHeight);
 }
