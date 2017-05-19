@@ -1000,47 +1000,7 @@ void loop()
 #endif // SDCard
 
 #if LoRamode
-	LRutil.counter();
-	if (LRutil.eachT(LoRaDelay))
-	{
-		LoRa->print(LRutil.sinceBegin());
-		LoRa->print('\t');
-		LoRa->print(LRutil.getCount());
-		LoRa->print('\t');
-#if GPSmode
-		LoRa->print(GpS.getLatitude(), 6);//Latitude
-		LoRa->print('\t');
-		LoRa->print(GpS.getLongitude(), 6);//Longitude
-		LoRa->print('\t');
-		LoRa->print(GpS.getHour());//Hora
-		LoRa->print(':');
-		LoRa->print(GpS.getMinute());//Minuto
-		LoRa->print('\t');
-		LoRa->print(GpS.getPrecision());//Precisao
-		LoRa->print('\t');
-#endif // GPSmode
-#if ApoGee
-		LoRa->print(apg.getAltitude());
-		LoRa->print('\t');
-		LoRa->print(apg.getSigma());
-		LoRa->print('\t');
-#endif // ApoGee
-#if ApoGee
-		if (Gutil.mem)
-		{
-			LoRa->print(F("Apogeu: altitude - "));
-			LoRa->print(apg.getApgPt());
-			LoRa->print(F(" m, tempo - "));
-			LoRa->print(apg.getApgTm());
-			LoRa->print(F(" s"));
-			LoRa->print('\t');
-			if (rec.getP1S(0)) LoRa->print(F("Acionamento 1\t"));
-			if (rec.getP2S(0)) LoRa->print(F("Acionamento 2\t"));
-		}
-#endif // ApoGee
-
-		LoRa->println();
-	}
+	LoRaSend();
 #endif // LoRamode
 
 #if (BuZZ) && !(WUF) && !(RBF) && !(ApoGee)
@@ -1126,38 +1086,7 @@ inline void RemoveBefore()
 		}
 		else if (rbfHelper.eachT(2)) rbfHelper.oneTimeReset();
 #if LoRamode
-		if (LRutil.eachT(LoRaDelay))
-		{
-			LoRa->print(sysC);
-			LoRa->print(F(" parts of "));
-			LoRa->print(SYSTEM_n);
-			LoRa->print(F(" working, waiting...\t"));
-#if BMP085
-			LoRa->print(baro.getTemperature());
-			LoRa->print(' ');
-			LoRa->write(0xB0);
-#endif // BMP085
-
-
-#if GPSmode
-			LoRa->print(F("C\tLat: "));
-			LoRa->print(GpS.getLatitude(), 6);
-			LoRa->print(F("\tLon: "));
-			LoRa->print(GpS.getLongitude(), 6);
-			LoRa->print(F("\t"));
-			LoRa->print(GpS.getDay());
-			LoRa->print('/');
-			LoRa->print(GpS.getMonth());
-			LoRa->print('\t');
-			LoRa->print(GpS.getHour());
-			LoRa->print(':');
-			LoRa->print(GpS.getMinute());
-			LoRa->print(':');
-			LoRa->print(GpS.getSecond());
-#endif // GPSmode
-
-			LoRa->println();
-		}
+		LoRaSend();
 #endif // LoRamode
 
 #if BuZZ
@@ -1506,33 +1435,7 @@ inline void WaitUntil(float minHeight)
 #endif // SDCard
 
 #if LoRamode
-		LRutil.counter();
-		if (LRutil.eachT(LoRaDelay))
-		{
-			LoRa->print(LRutil.sinceBegin());
-			LoRa->print('\t');
-			LoRa->print(LRutil.getCount());
-			LoRa->print('\t');
-#if GPSmode
-			LoRa->print(GpS.getLatitude(), 6);//Latitude
-			LoRa->print('\t');
-			LoRa->print(GpS.getLongitude(), 6);//Longitude
-			LoRa->print('\t');
-			LoRa->print(GpS.getHour());//Hora
-			LoRa->print(':');
-			LoRa->print(GpS.getMinute());//Minuto
-			LoRa->print('\t');
-			LoRa->print(GpS.getPrecision());//Precisao
-			LoRa->print('\t');
-#endif // GPSmode
-#if ApoGee
-			LoRa->print(apg.getAltitude());
-			LoRa->print('\t');
-			LoRa->print(apg.getSigma(),3);
-			LoRa->print('\t');
-#endif // ApoGee
-			LoRa->println();
-		}
+		LoRaSend();
 #endif // LoRamode
 
 #if ApoGee
@@ -1576,6 +1479,53 @@ inline void beep()
 	beeper.counterReset();
 }
 #endif // BuZZ
+
+#if LoRamode
+void LoRaSend()
+{
+	LRutil.counter();
+	if (LRutil.eachT(LoRaDelay))
+	{
+		LoRa->print(LRutil.sinceBegin());
+		LoRa->print('\t');
+		LoRa->print(LRutil.getCount());
+		LoRa->print('\t');
+#if GPSmode
+		LoRa->print(GpS.getLatitude(), 6);//Latitude
+		LoRa->print('\t');
+		LoRa->print(GpS.getLongitude(), 6);//Longitude
+		LoRa->print('\t');
+		LoRa->print(GpS.getHour());//Hora
+		LoRa->print(':');
+		LoRa->print(GpS.getMinute());//Minuto
+		LoRa->print('\t');
+		LoRa->print(GpS.getPrecision());//Precisao
+		LoRa->print('\t');
+#endif // GPSmode
+#if ApoGee
+		LoRa->print(apg.getAltitude());
+		LoRa->print('\t');
+		LoRa->print(apg.getSigma(), 3);
+		LoRa->print('\t');
+#endif // ApoGee
+#if ApoGee
+		if (Gutil.mem)
+		{
+			LoRa->print(F("Apogeu: altitude - "));
+			LoRa->print(apg.getApgPt());
+			LoRa->print(F(" m, tempo - "));
+			LoRa->print(apg.getApgTm());
+			LoRa->print(F(" s"));
+			LoRa->print('\t');
+			if (rec.getP1S(0)) LoRa->print(F("Acionamento 1\t"));
+			if (rec.getP2S(0)) LoRa->print(F("Acionamento 2\t"));
+		}
+#endif // ApoGee
+		LoRa->println();
+	}
+}
+#endif // LoRamode
+
 
 
 /*
