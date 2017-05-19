@@ -18,7 +18,7 @@
 #define LoRamode 1							//Serial mode for transmission on LoRa module
 
 #define ApoGee (BMP085) && 1				//Detection of apogee
-#define PRINT 0								//Print or not things on Serial
+#define PRINT 1								//Print or not things on Serial
 #define RBF 0								//Revome Before Flight
 #define WUF (ApoGee) && 1					//Wait Until Flight
 #define BuZZ 0								//Buzzer mode
@@ -643,21 +643,6 @@ void setup()
 void loop()
 {
 	Gutil.counter();
-#if Ncom
-	if (Gutil.eachN(100))
-	{
-		Serial.print(Gutil.getCount());
-		Serial.print('\t');
-		float T = Gutil.lapse();
-		Serial.print(T, 5);
-		Serial.print('\t');
-		Serial.println(1 / T, 5);
-	}
-	else
-	{
-		Gutil.lapse();
-	}
-#endif // Tcom
 
 #if BMP085
 	if (baro)
@@ -726,182 +711,9 @@ void loop()
 	GpS.readAll();
 #endif // GPSmode
 
-#if Lcom
-	Serial.print(Gutil.getCount());
-	Serial.print(F(":\t"));
-#endif // Lcom
-
-#if Tcom
-	Serial.print(Gutil.sinceBegin(), 3);
-	Serial.print('\t');
-#endif // Tcom
-
-	////////////////////////////////////////////////////
-#if (Psep) && ((PaclX) || (PaclY) || (PaclZ))
-	Serial.print('|');
-#endif // (Psep) && ((PaclX) || (PaclY) || (PaclZ))
-#if PaclX
-	Serial.print(MM_acel[0], 3);
-	Serial.print('\t');
-#endif // PaclX
-
-#if PaclY
-	Serial.print(MM_acel[1], 3);
-	Serial.print('\t');
-#endif // PaclY
-
-#if PaclZ
-	Serial.print(MM_acel[2], 3);
-	Serial.print('\t');
-#endif // PaclZ
-
-	/////////////////////////////////////////////////////
-#if (Psep) && ((PgirX) || (PgirY) || (PgirZ))
-	Serial.print('|');
-#endif // (Psep) && ((PgirX) || (PgirY) || (PgirZ))
-#if PgirX
-	Serial.print(MM_giro[0], 1);
-	Serial.print('\t');
-#endif // PgirX
-
-#if PgirY
-	Serial.print(MM_giro[1], 1);
-	Serial.print('\t');
-#endif // PgirY
-
-#if PgirZ
-	Serial.print(MM_giro[2], 1);
-	Serial.print('\t');
-#endif // PgirZ
-
-	////////////////////////////////////////////////////
-#if (Psep) && ((PmagX) || (PmagY) || (PmagZ))
-	Serial.print('|');
-#endif // (Psep) && ((PmagX) || (PmagY) || (PmagZ))
-#if PmagX
-	Serial.print(MM_magn[0], 1);
-	Serial.print('\t');
-#endif // PmagX
-#if PmagY
-	Serial.print(MM_magn[1], 1);
-	Serial.print('\t');
-#endif // PmagY
-#if PmagZ
-	Serial.print(MM_magn[2], 1);
-	Serial.print('\t');
-#endif // PmagZ
-
-	////////////////////////////////////////////////////
-#if (Psep) && ((PbarT) || (PbarP))
-	Serial.print('|');
-#endif // (Psep) && ((PbarT) || (PbarP))
-#if PbarT
-	Serial.print(MM_baro[0], 1);
-	Serial.print('\t');
-#endif // PbarT
-#if PbarP
-	Serial.print(MM_baro[1], 1);
-	Serial.print('\t');
-#endif // PbarP
-
-	/////////////////////////////////////////////////////
-#if (Psep) && (PapgH)
-	Serial.print('|');
-#endif // (Psep) && (PapgH)
-#if PapgH
-	Serial.print(apg.getAltitude());
-	Serial.print('\t');
-#endif // PapgH
-
-#if (Psep) && (PapgP)
-	Serial.print('|');
-#endif // (Psep) && (PapgP)
-#if PapgP
-	Serial.print(apg.getApgPt());
-	Serial.print('\t');
-	Serial.print(apg.getApgTm());
-	Serial.print('\t');
-#endif // PapgP
-
-#if (Psep) && ((PapgA) || (PapgS))
-	Serial.print('|');
-#endif // Psep
-#if PapgA
-	Serial.print(apg.getAlpha());
-	Serial.print('\t');
-#endif // PapgA
-#if PapgS
-	Serial.print(apg.getSigma(), 7);
-	Serial.print('\t');
-#endif // PapgS
-
-
-	/////////////////////////////////////////////////////
-#if (Psep) && (PapgM)
-	Serial.print('|');
-#endif // (Psep) && (PapgM)
-#if PapgM
-	Serial.print(Gutil.getMax(), 5);
-	Serial.print('\t');
-#endif // PapgM
-
-
-
-#if Pgps
-#if Psep
-	Serial.print('|');
-#endif // Psep
-	Serial.print(GpS.getLatitude(), 6);
-	Serial.print('\t');
-	Serial.print(GpS.getLongitude(), 6);
-	Serial.print('\t');
-	Serial.print(GpS.getAltitude());
-	Serial.print('\t');
-	Serial.print(GpS.getMps(), 3);
-	Serial.print('\t');
-	Serial.print(GpS.getSatellites());
-	Serial.print('\t');
-	Serial.print(GpS.getPrecision());
-	Serial.print('\t');
-	Serial.print(GpS.getChars());
-	Serial.print('\t');
-	Serial.print(GpS.getYear());
-	Serial.print('/');
-	Serial.print(GpS.getMonth());
-	Serial.print('/');
-	Serial.print(GpS.getDay());
-	Serial.print('\t');
-	Serial.print(GpS.getHour());
-	Serial.print(':');
-	Serial.print(GpS.getMinute());
-	Serial.print(':');
-	Serial.print(GpS.getSecond());
-	Serial.print('\t');
-	Serial.print(GpS.getKph());
-	Serial.print('\t');
-	Serial.print(GpS.getMps());
-	Serial.print('\t');
-#endif // Pgps
-#if PapgW
-	if (apg.getApogeu(0.9, 0))
-	{
-		Serial.print(F("Apogeu: altitude - "));
-		Serial.print(apg.getApgPt());
-		Serial.print(F(" m, tempo - "));
-		Serial.print(apg.getApgTm());
-		Serial.print(F(" s\t"));
-	}
-	if (rec.getSysState())
-	{
-		if (rec.getP1S(0)) Serial.print(F("Acionamento 1\t"));
-		if (rec.getP2S(0)) Serial.print(F("Acionamento 2\t"));
-	}
-#endif // PapgW
-
-
-#if (PbarT) || (PbarP) || (PaclX) || (PaclY) || (PaclZ) || (PgirX) || (PgirY) || (PgirZ) || (PmagX) || (PmagY) || (PmagZ) || (PapgW) || (PapgH) || (PapgP) || (PapgA) || (PapgS) || (PapgM) || (Pgps) || (Psep) || (Tcom) || (Lcom)
-	Serial.println();
-#endif // (PbarT) || (PbarP) || (PaclX) || (PaclY) || (PaclZ) || (PgirX) || (PgirY) || (PgirZ) || (PmagX) || (PmagY) || (PmagZ) || (PapgW) || (PapgH) || (PapgP) || (PapgA) || (PapgS) || (PapgM) || (Pgps) || (Psep) || (Tcom) || (Lcom)
+#if PRINT
+	SerialSend();
+#endif // PRINT
 
 
 #if SDCard
@@ -1114,21 +926,6 @@ inline void WaitUntil(float minHeight)
 	{
 		sysC = 0;
 		Gutil.counter();
-#if Ncom
-		if (Gutil.eachN(100))
-		{
-			Serial.print(Gutil.getCount());
-			Serial.print('\t');
-			float T = Gutil.lapse();
-			Serial.print(T, 5);
-			Serial.print('\t');
-			Serial.println(1 / T, 5);
-		}
-		else
-		{
-			Gutil.lapse();
-		}
-#endif // Tcom
 
 #if BMP085
 		if (baro)
@@ -1190,166 +987,9 @@ inline void WaitUntil(float minHeight)
 		if (GpS.util.forT()) sysC++;
 #endif // GPSmode
 
-#if Lcom
-		Serial.print(Gutil.getCount());
-		Serial.print(F(":\t"));
-#endif // Lcom
-
-#if Tcom
-		Serial.print(Gutil.sinceBegin(), 3);
-		Serial.print('\t');
-#endif // Tcom
-
-		////////////////////////////////////////////////////
-#if (Psep) && ((PaclX) || (PaclY) || (PaclZ))
-		Serial.print('|');
-#endif // (Psep) && ((PaclX) || (PaclY) || (PaclZ))
-#if PaclX
-		Serial.print(MM_acel[0], 3);
-		Serial.print('\t');
-#endif // PaclX
-
-#if PaclY
-		Serial.print(MM_acel[1], 3);
-		Serial.print('\t');
-#endif // PaclY
-
-#if PaclZ
-		Serial.print(MM_acel[2], 3);
-		Serial.print('\t');
-#endif // PaclZ
-
-		/////////////////////////////////////////////////////
-#if (Psep) && ((PgirX) || (PgirY) || (PgirZ))
-		Serial.print('|');
-#endif // (Psep) && ((PgirX) || (PgirY) || (PgirZ))
-#if PgirX
-		Serial.print(MM_giro[0], 1);
-		Serial.print('\t');
-#endif // PgirX
-
-#if PgirY
-		Serial.print(MM_giro[1], 1);
-		Serial.print('\t');
-#endif // PgirY
-
-#if PgirZ
-		Serial.print(MM_giro[2], 1);
-		Serial.print('\t');
-#endif // PgirZ
-
-		////////////////////////////////////////////////////
-#if (Psep) && ((PmagX) || (PmagY) || (PmagZ))
-		Serial.print('|');
-#endif // (Psep) && ((PmagX) || (PmagY) || (PmagZ))
-#if PmagX
-		Serial.print(MM_magn[0], 1);
-		Serial.print('\t');
-#endif // PmagX
-#if PmagY
-		Serial.print(MM_magn[1], 1);
-		Serial.print('\t');
-#endif // PmagY
-#if PmagZ
-		Serial.print(MM_magn[2], 1);
-		Serial.print('\t');
-#endif // PmagZ
-
-		////////////////////////////////////////////////////
-#if (Psep) && ((PbarT) || (PbarP))
-		Serial.print('|');
-#endif // (Psep) && ((PbarT) || (PbarP))
-#if PbarT
-		Serial.print(MM_baro[0], 1);
-		Serial.print('\t');
-#endif // PbarT
-#if PbarP
-		Serial.print(MM_baro[1], 1);
-		Serial.print('\t');
-#endif // PbarP
-
-		/////////////////////////////////////////////////////
-#if (Psep) && (PapgH)
-		Serial.print('|');
-#endif // (Psep) && (PapgH)
-#if PapgH
-		Serial.print(apg.getAltitude());
-		Serial.print('\t');
-#endif // PapgH
-
-#if (Psep) && (PapgP)
-		Serial.print('|');
-#endif // (Psep) && (PapgP)
-#if PapgP
-		Serial.print(apg.getApgPt());
-		Serial.print('\t');
-		Serial.print(apg.getApgTm());
-		Serial.print('\t');
-#endif // PapgP
-
-#if (Psep) && ((PapgA) || (PapgS))
-		Serial.print('|');
-#endif // Psep
-#if PapgA
-		Serial.print(apg.getAlpha());
-		Serial.print('\t');
-#endif // PapgA
-#if PapgS
-		Serial.print(apg.getSigma(), 7);
-		Serial.print('\t');
-#endif // PapgS
-
-
-		/////////////////////////////////////////////////////
-#if (Psep) && (PapgM)
-		Serial.print('|');
-#endif // (Psep) && (PapgM)
-#if PapgM
-		Serial.print(Gutil.getMax(), 5);
-		Serial.print('\t');
-#endif // PapgM
-
-
-
-#if Pgps
-#if Psep
-		Serial.print('|');
-#endif // Psep
-		Serial.print(GpS.getLatitude(), 6);
-		Serial.print('\t');
-		Serial.print(GpS.getLongitude(), 6);
-		Serial.print('\t');
-		Serial.print(GpS.getAltitude());
-		Serial.print('\t');
-		Serial.print(GpS.getMps(), 3);
-		Serial.print('\t');
-		Serial.print(GpS.getSatellites());
-		Serial.print('\t');
-		Serial.print(GpS.getPrecision());
-		Serial.print('\t');
-		Serial.print(GpS.getChars());
-		Serial.print('\t');
-		Serial.print(GpS.getYear());
-		Serial.print('/');
-		Serial.print(GpS.getMonth());
-		Serial.print('/');
-		Serial.print(GpS.getDay());
-		Serial.print('\t');
-		Serial.print(GpS.getHour());
-		Serial.print(':');
-		Serial.print(GpS.getMinute());
-		Serial.print(':');
-		Serial.print(GpS.getSecond());
-		Serial.print('\t');
-		Serial.print(GpS.getKph());
-		Serial.print('\t');
-		Serial.print(GpS.getMps());
-		Serial.print('\t');
-#endif // Pgps
-
-#if (PbarT) || (PbarP) || (PaclX) || (PaclY) || (PaclZ) || (PgirX) || (PgirY) || (PgirZ) || (PmagX) || (PmagY) || (PmagZ) || (PapgW) || (PapgH) || (PapgP) || (PapgA) || (PapgS) || (PapgM) || (Pgps) || (Psep) || (Tcom) || (Lcom)
-		Serial.println();
-#endif // (PbarT) || (PbarP) || (PaclX) || (PaclY) || (PaclZ) || (PgirX) || (PgirY) || (PgirZ) || (PmagX) || (PmagY) || (PmagZ) || (PapgW) || (PapgH) || (PapgP) || (PapgA) || (PapgS) || (PapgM) || (Pgps) || (Psep) || (Tcom) || (Lcom)
+#if PRINT
+		SerialSend();
+#endif // PRINT
 
 
 #if SDCard
@@ -1455,6 +1095,211 @@ inline void WaitUntil(float minHeight)
 }
 #endif // WUF
 
+//////////////////////////////////////////////////////SPT//////////////////////////////////////////////////////
+
+#if PRINT
+void SerialSend()
+{
+
+#if Ncom
+	if (Gutil.eachN(100))
+	{
+		Serial.print(Gutil.getCount());
+		Serial.print('\t');
+		float T = Gutil.lapse();
+		Serial.print(T, 5);
+		Serial.print('\t');
+		Serial.println(1 / T, 5);
+	}
+	else
+	{
+		Gutil.lapse();
+	}
+#endif // Ncom
+
+#if Lcom
+	Serial.print(Gutil.getCount());
+	Serial.print(F(":\t"));
+#endif // Lcom
+
+#if Tcom
+	Serial.print(Gutil.sinceBegin(), 3);
+	Serial.print('\t');
+#endif // Tcom
+
+	////////////////////////////////////////////////////
+#if (Psep) && ((PaclX) || (PaclY) || (PaclZ))
+	Serial.print('|');
+#endif // (Psep) && ((PaclX) || (PaclY) || (PaclZ))
+#if PaclX
+	Serial.print(MM_acel[0], 3);
+	Serial.print('\t');
+#endif // PaclX
+
+#if PaclY
+	Serial.print(MM_acel[1], 3);
+	Serial.print('\t');
+#endif // PaclY
+
+#if PaclZ
+	Serial.print(MM_acel[2], 3);
+	Serial.print('\t');
+#endif // PaclZ
+
+	/////////////////////////////////////////////////////
+#if (Psep) && ((PgirX) || (PgirY) || (PgirZ))
+	Serial.print('|');
+#endif // (Psep) && ((PgirX) || (PgirY) || (PgirZ))
+#if PgirX
+	Serial.print(MM_giro[0], 1);
+	Serial.print('\t');
+#endif // PgirX
+
+#if PgirY
+	Serial.print(MM_giro[1], 1);
+	Serial.print('\t');
+#endif // PgirY
+
+#if PgirZ
+	Serial.print(MM_giro[2], 1);
+	Serial.print('\t');
+#endif // PgirZ
+
+	////////////////////////////////////////////////////
+#if (Psep) && ((PmagX) || (PmagY) || (PmagZ))
+	Serial.print('|');
+#endif // (Psep) && ((PmagX) || (PmagY) || (PmagZ))
+#if PmagX
+	Serial.print(MM_magn[0], 1);
+	Serial.print('\t');
+#endif // PmagX
+#if PmagY
+	Serial.print(MM_magn[1], 1);
+	Serial.print('\t');
+#endif // PmagY
+#if PmagZ
+	Serial.print(MM_magn[2], 1);
+	Serial.print('\t');
+#endif // PmagZ
+
+	////////////////////////////////////////////////////
+#if (Psep) && ((PbarT) || (PbarP))
+	Serial.print('|');
+#endif // (Psep) && ((PbarT) || (PbarP))
+#if PbarT
+	Serial.print(MM_baro[0], 1);
+	Serial.print('\t');
+#endif // PbarT
+#if PbarP
+	Serial.print(MM_baro[1], 1);
+	Serial.print('\t');
+#endif // PbarP
+
+	/////////////////////////////////////////////////////
+#if (Psep) && (PapgH)
+	Serial.print('|');
+#endif // (Psep) && (PapgH)
+#if PapgH
+	Serial.print(apg.getAltitude());
+	Serial.print('\t');
+#endif // PapgH
+
+#if (Psep) && (PapgP)
+	Serial.print('|');
+#endif // (Psep) && (PapgP)
+#if PapgP
+	Serial.print(apg.getApgPt());
+	Serial.print('\t');
+	Serial.print(apg.getApgTm());
+	Serial.print('\t');
+#endif // PapgP
+
+#if (Psep) && ((PapgA) || (PapgS))
+	Serial.print('|');
+#endif // Psep
+#if PapgA
+	Serial.print(apg.getAlpha());
+	Serial.print('\t');
+#endif // PapgA
+#if PapgS
+	Serial.print(apg.getSigma(), 7);
+	Serial.print('\t');
+#endif // PapgS
+
+
+	/////////////////////////////////////////////////////
+#if (Psep) && (PapgM)
+	Serial.print('|');
+#endif // (Psep) && (PapgM)
+#if PapgM
+	Serial.print(Gutil.getMax(), 5);
+	Serial.print('\t');
+#endif // PapgM
+
+
+
+#if Pgps
+#if Psep
+	Serial.print('|');
+#endif // Psep
+	Serial.print(GpS.getLatitude(), 6);
+	Serial.print('\t');
+	Serial.print(GpS.getLongitude(), 6);
+	Serial.print('\t');
+	Serial.print(GpS.getAltitude());
+	Serial.print('\t');
+	Serial.print(GpS.getMps(), 3);
+	Serial.print('\t');
+	Serial.print(GpS.getSatellites());
+	Serial.print('\t');
+	Serial.print(GpS.getPrecision());
+	Serial.print('\t');
+	Serial.print(GpS.getChars());
+	Serial.print('\t');
+	Serial.print(GpS.getYear());
+	Serial.print('/');
+	Serial.print(GpS.getMonth());
+	Serial.print('/');
+	Serial.print(GpS.getDay());
+	Serial.print('\t');
+	Serial.print(GpS.getHour());
+	Serial.print(':');
+	Serial.print(GpS.getMinute());
+	Serial.print(':');
+	Serial.print(GpS.getSecond());
+	Serial.print('\t');
+	Serial.print(GpS.getKph());
+	Serial.print('\t');
+	Serial.print(GpS.getMps());
+	Serial.print('\t');
+#endif // Pgps
+#if PapgW
+	if (apg.getApogeu(0.9, 0))
+	{
+		Serial.print(F("Apogeu: altitude - "));
+		Serial.print(apg.getApgPt());
+		Serial.print(F(" m, tempo - "));
+		Serial.print(apg.getApgTm());
+		Serial.print(F(" s\t"));
+	}
+	if (rec.getSysState())
+	{
+		if (rec.getP1S(0)) Serial.print(F("Acionamento 1\t"));
+		if (rec.getP2S(0)) Serial.print(F("Acionamento 2\t"));
+	}
+#endif // PapgW
+
+
+#if (PbarT) || (PbarP) || (PaclX) || (PaclY) || (PaclZ) || (PgirX) || (PgirY) || (PgirZ) || (PmagX) || (PmagY) || (PmagZ) || (PapgW) || (PapgH) || (PapgP) || (PapgA) || (PapgS) || (PapgM) || (Pgps) || (Psep) || (Tcom) || (Lcom)
+	Serial.println();
+#endif // (PbarT) || (PbarP) || (PaclX) || (PaclY) || (PaclZ) || (PgirX) || (PgirY) || (PgirZ) || (PmagX) || (PmagY) || (PmagZ) || (PapgW) || (PapgH) || (PapgP) || (PapgA) || (PapgS) || (PapgM) || (Pgps) || (Psep) || (Tcom) || (Lcom)
+
+}
+#endif // PRINT
+
+
+//////////////////////////////////////////////////////BZZ//////////////////////////////////////////////////////
+
 #if BuZZ
 inline void beep(int N)
 {
@@ -1479,6 +1324,8 @@ inline void beep()
 	beeper.counterReset();
 }
 #endif // BuZZ
+
+//////////////////////////////////////////////////////LRM//////////////////////////////////////////////////////
 
 #if LoRamode
 void LoRaSend()
@@ -1525,7 +1372,6 @@ void LoRaSend()
 	}
 }
 #endif // LoRamode
-
 
 
 /*
