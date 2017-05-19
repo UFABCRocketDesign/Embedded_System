@@ -536,11 +536,19 @@ SerialFilter::SerialFilter(int n, int V[]) : N(n)
 {
 	for (int i = 0; i < N; i++) MM[i] = new MovingAverage(V[i]);
 }
-float SerialFilter::operator=(const float &in)
+float SerialFilter::addValor(const float & valor)
 {
-	(*MM[N - 1]) = in;
+	(*MM[N - 1]) = valor;
 	for (int i = N - 1; i > 0; i--) (*MM[i - 1]) = ((*MM[i]).getMedia());
 	return (*MM[0]).getMedia();
+}
+float SerialFilter::getMedia()
+{
+	return(*MM[0]);
+}
+float SerialFilter::operator=(const float &valor)
+{
+	return addValor(valor);
 }
 SerialFilter::operator float()
 {
@@ -558,7 +566,7 @@ float Term::read()
 
 
 ///Dados do GPS
-GyGPS::GyGPS(HardwareSerial S, short gmt) :GpSerial(S), GMT(gmt), Sens(NULL)
+GyGPS::GyGPS(HardwareSerial &S, short gmt) :GpSerial(&S), GMT(gmt), Sens(NULL)
 {
 }
 unsigned short GyGPS::getFailed()
@@ -631,16 +639,15 @@ byte GyGPS::getSecond()
 }
 void GyGPS::begin()
 {
-	GpSerial.begin(9600);
+	GpSerial->begin(9600);
 }
 bool GyGPS::readAll()
 {
 	thisReadT = micros();
 	state = false;
-	// Recebe as informacoes do GPS durante um intervalo de tempo relativamente curto e as transmite via comunicacao serial (visivel pelo serial monitor)
-	if (GpSerial.available()) while (GpSerial.available())
+	if (GpSerial->available()) while (GpSerial->available())
 	{
-		char c = GpSerial.read();
+		char c = GpSerial->read();
 		state = gps.encode(c);
 	}
 	if (state)

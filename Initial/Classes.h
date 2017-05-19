@@ -199,7 +199,9 @@ class SerialFilter
 public:
 	SerialFilter(int n, int v);
 	SerialFilter(int n, int V[]);
-	float operator=(const float &in);
+	float addValor(const float &valor);
+	float getMedia();
+	float operator=(const float &valor);
 	operator float();
 };
 
@@ -214,7 +216,7 @@ float read();
 class GyGPS : public Sens
 {
 	//#define GpSerial Serial1
-	HardwareSerial GpSerial;
+	HardwareSerial* GpSerial;
 	TinyGPS gps;							//GPS object declaration
 	const unsigned short GMT;
 	unsigned short sentences = 0;			//GPS variables declaration
@@ -235,7 +237,7 @@ class GyGPS : public Sens
 	byte minute = 0;
 	byte second = 0;
 public:
-	GyGPS(HardwareSerial S, short gmt = 0);
+	GyGPS(HardwareSerial &S, short gmt = 0);
 	Helpful util;						//Declaration of helpful object to GPS
 	unsigned short getFailed();				//Return functions
 	unsigned short getSentences();
