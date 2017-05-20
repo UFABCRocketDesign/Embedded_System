@@ -8,13 +8,13 @@
 
 #define BaudRate 250000
 
-#define GY80 1								//Use GY80 sensor
-#define BMP085 (GY80) || 0					//Use BMP085 sensor
+#define GY80 0								//Use GY80 sensor
+#define BMP085 (GY80) || 1					//Use BMP085 sensor
 #define ADXL345 (GY80) || 0					//Use ADXL345 sensor
 #define L3G4200D (GY80) || 0				//Use L3G4200D sensor
 #define HMC5883 (GY80) || 0					//Use HMC5883 sensor
-#define SDCard 1							//Use SD card
-#define GPSmode 1							//Use GPS
+#define SDCard 0							//Use SD card
+#define GPSmode 0							//Use GPS
 #define LoRamode 1							//Serial mode for transmission on LoRa module
 
 #define ApoGee (BMP085) && 1				//Detection of apogee
@@ -616,6 +616,8 @@ void setup()
 	WaitUntil(10);
 #endif // WUF
 
+	Serial.println("Saiu");
+
 	////////////////WUF directive////////////////
 
 	Gutil.begin();
@@ -627,9 +629,6 @@ void setup()
 #if ApoGee
 	apg.resetTimer();
 	rec.resetTimer();
-//#if !(RBF) && (BuZZ)
-//	if (!rec.info1()) { digitalWrite(buzzPin, !buzzCmd); Serial.println(F("IGN")); }
-//#endif // !(RBF) && (BuZZ)
 
 #endif // ApoGee
 
@@ -654,10 +653,8 @@ void loop()
 
 #if ApoGee
 	apg.calcAlt(baro.getPressure());
-	//apg.addAltitude(baro.getAltitude());
 #endif // ApoGee
 
-#if !SDCard
 #if ADXL345
 	if (acel)
 	{
@@ -681,8 +678,7 @@ void loop()
 		MM_magn[1].addValor(magn.getY());
 		MM_magn[2].addValor(magn.getZ());
 	}
-#endif // HMC5883  
-#endif // !SDCard
+#endif // HMC5883
 
 #if ApoGee
 	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
@@ -695,9 +691,7 @@ void loop()
 #if PapgM
 		Gutil.comparer(apg.getSigma());
 #endif // PapgM
-#if SDCard
 		if (rec.getApogee()) Gutil.mem = 1;
-#endif // SDCard
 	}
 #if BuZZ
 	else beep(SYSTEM_n);
@@ -715,100 +709,8 @@ void loop()
 	SerialSend();
 #endif // PRINT
 
-
 #if SDCard
-	if (!SDC.util.mem)
-	{
-		if (SDC)
-		{
-#if ADXL345
-			if (acel)
-			{
-				MM_acel[0].addValor(acel.getX());
-				MM_acel[1].addValor(acel.getY());
-				MM_acel[2].addValor(acel.getZ());
-			}
-#endif // ADXL345
-#if L3G4200D
-			if (giro)
-			{
-				MM_giro[0].addValor(giro.getX());
-				MM_giro[1].addValor(giro.getY());
-				MM_giro[2].addValor(giro.getZ());
-			}
-#endif //L3G4200D
-#if HMC5883
-			if (magn)
-			{
-				MM_magn[0].addValor(magn.getX());
-				MM_magn[1].addValor(magn.getY());
-				MM_magn[2].addValor(magn.getZ());
-			}
-#endif // HMC5883
-
-			SDC.theFile.print(SDC.util.sinceBegin(), 3); SDC.tab();
-
-#if ADXL345
-			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_acel[i], 3);	SDC.tab(); }
-#endif // ADXL345
-#if L3G4200D
-			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_giro[i], 1);	SDC.tab(); }
-#endif // L3G4200D
-#if HMC5883
-			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_magn[i], 1);	SDC.tab(); }
-#endif // HMC5883
-#if BMP085
-			for (char i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]);		SDC.tab(); }
-#if ApoGee
-			SDC.theFile.print(apg.getAltitude()); SDC.tab();
-#endif // ApoGee
-
-#endif // BMP085
-
-#if GPSmode
-			if (GpS.isNew())
-			{
-				SDC.theFile.print(GpS.getLatitude(), 6);	SDC.tab(); //Latitude
-				SDC.theFile.print(GpS.getLongitude(), 6);	SDC.tab(); //Longitude
-				SDC.theFile.print(GpS.getAltitude());		SDC.tab(); //Altitude
-				SDC.theFile.print(GpS.getMps());			SDC.tab(); //Velocidade
-				SDC.theFile.print(GpS.getSatellites());		SDC.tab(); //Numero de satelites
-				SDC.theFile.print(GpS.getPrecision());		SDC.tab(); //Precisao
-			}
-			else
-			{
-				SDC.tab();
-				SDC.tab();
-				SDC.tab();
-				SDC.tab();
-				SDC.tab();
-				SDC.tab();
-			}
-#endif // GPSmode
-
-#if ApoGee
-			//if (apg.getApogeu(0.9, 0))
-			if (Gutil.mem)
-			{
-				if (SDC.util.oneTime())
-				{
-					SDC.theFile.print(F("Apogeu: altitude - "));
-					SDC.theFile.print(apg.getApgPt());
-					SDC.theFile.print(F(" m, tempo - "));
-					SDC.theFile.print(apg.getApgTm());
-					SDC.theFile.print(F(" s"));
-					SDC.tab();
-				}
-				if (rec.getP1S(0)) SDC.theFile.print(F("Acionamento 1\t"));
-				if (rec.getP2S(0)) SDC.theFile.print(F("Acionamento 2\t"));
-			}
-#endif // ApoGee
-			SDC.theFile.println();
-			SDC.close();
-		}
-		else SDC.util.mem = 1;
-	}
-	else if (SDC.util.eachT(15)) if (SDC.begin()) SDC.util.mem = 0;
+	SDSend();
 #endif // SDCard
 
 #if LoRamode
@@ -818,8 +720,6 @@ void loop()
 #if (BuZZ) && !(WUF) && !(RBF) && !(ApoGee)
 	beep(1);
 #endif // (BuZZ) && !(WUF) && !(RBF) && !(ApoGee)
-
-
 }
 
 //////////////////////////////////////////////////////RBF//////////////////////////////////////////////////////
@@ -941,7 +841,6 @@ inline void WaitUntil(float minHeight)
 		//apg.addAltitude(baro.getAltitude());
 #endif // ApoGee
 
-#if !SDCard
 #if ADXL345
 		if (acel)
 		{
@@ -969,7 +868,6 @@ inline void WaitUntil(float minHeight)
 			sysC++;
 		}
 #endif // HMC5883  
-#endif // !SDCard
 
 #if ApoGee
 		apg.apgSigma();
@@ -993,85 +891,7 @@ inline void WaitUntil(float minHeight)
 
 
 #if SDCard
-		if (!SDC.util.mem)
-		{
-			if (SDC)
-			{
-#if ADXL345
-				if (acel)
-				{
-					MM_acel[0].addValor(acel.getX());
-					MM_acel[1].addValor(acel.getY());
-					MM_acel[2].addValor(acel.getZ());
-					sysC++;
-				}
-#endif // ADXL345
-#if L3G4200D
-				if (giro)
-				{
-					MM_giro[0].addValor(giro.getX());
-					MM_giro[1].addValor(giro.getY());
-					MM_giro[2].addValor(giro.getZ());
-					sysC++;
-				}
-#endif //L3G4200D
-#if HMC5883
-				if (magn)
-				{
-					MM_magn[0].addValor(magn.getX());
-					MM_magn[1].addValor(magn.getY());
-					MM_magn[2].addValor(magn.getZ());
-					sysC++;
-				}
-#endif // HMC5883
-
-				SDC.theFile.print(SDC.util.sinceBegin(), 3); SDC.tab();
-
-#if ADXL345
-				for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_acel[i], 3);	SDC.tab(); }
-#endif // ADXL345
-#if L3G4200D
-				for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_giro[i], 1);	SDC.tab(); }
-#endif // L3G4200D
-#if HMC5883
-				for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_magn[i], 1);	SDC.tab(); }
-#endif // HMC5883
-#if BMP085
-				for (char i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]);		SDC.tab(); }
-#if ApoGee
-				SDC.theFile.print(apg.getAltitude()); SDC.tab();
-#endif // ApoGee
-
-#endif // BMP085
-
-#if GPSmode
-				if (GpS.isNew())
-				{
-					SDC.theFile.print(GpS.getLatitude(), 6);	SDC.tab(); //Latitude
-					SDC.theFile.print(GpS.getLongitude(), 6);	SDC.tab(); //Longitude
-					SDC.theFile.print(GpS.getAltitude());		SDC.tab(); //Altitude
-					SDC.theFile.print(GpS.getMps());			SDC.tab(); //Velocidade
-					SDC.theFile.print(GpS.getSatellites());		SDC.tab(); //Numero de satelites
-					SDC.theFile.print(GpS.getPrecision());		SDC.tab(); //Precisao
-				}
-				else
-				{
-					SDC.tab();
-					SDC.tab();
-					SDC.tab();
-					SDC.tab();
-					SDC.tab();
-					SDC.tab();
-				}
-#endif // GPSmode
-
-				SDC.theFile.println();
-				SDC.close();
-				sysC++;
-			}
-			else SDC.util.mem = 1;
-		}
-		else if (SDC.util.eachT(15)) if (SDC.begin()) SDC.util.mem = 0;
+		if (SDSend()) sysC++;
 #endif // SDCard
 
 #if LoRamode
@@ -1088,7 +908,7 @@ inline void WaitUntil(float minHeight)
 #endif // BuZZ
 
 	}
-	while (abs(apg.getAltitude())<minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
+	while (abs(apg.getAltitude()) < minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
 #if BuZZ
 	beep();
 #endif // BuZZ
@@ -1274,7 +1094,7 @@ void SerialSend()
 	Serial.print('\t');
 #endif // Pgps
 #if PapgW
-	if (apg.getApogeu(0.9, 0))
+	if (Gutil.mem)
 	{
 		Serial.print(F("Apogeu: altitude - "));
 		Serial.print(apg.getApgPt());
@@ -1296,6 +1116,81 @@ void SerialSend()
 
 }
 #endif // PRINT
+
+//////////////////////////////////////////////////////SDC//////////////////////////////////////////////////////
+
+#if SDCard
+bool SDSend()
+{
+	if (!SDC.util.mem)
+	{
+		if (SDC)
+		{
+			SDC.theFile.print(SDC.util.sinceBegin(), 3); SDC.tab();
+#if ADXL345
+			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_acel[i], 3);	SDC.tab(); }
+#endif // ADXL345
+#if L3G4200D
+			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_giro[i], 1);	SDC.tab(); }
+#endif // L3G4200D
+#if HMC5883
+			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_magn[i], 1);	SDC.tab(); }
+#endif // HMC5883
+#if BMP085
+			for (char i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]);		SDC.tab(); }
+#if ApoGee
+			SDC.theFile.print(apg.getAltitude()); SDC.tab();
+#endif // ApoGee
+
+#endif // BMP085
+
+#if GPSmode
+			if (GpS.isNew())
+			{
+				SDC.theFile.print(GpS.getLatitude(), 6);	SDC.tab(); //Latitude
+				SDC.theFile.print(GpS.getLongitude(), 6);	SDC.tab(); //Longitude
+				SDC.theFile.print(GpS.getAltitude());		SDC.tab(); //Altitude
+				SDC.theFile.print(GpS.getMps());			SDC.tab(); //Velocidade
+				SDC.theFile.print(GpS.getSatellites());		SDC.tab(); //Numero de satelites
+				SDC.theFile.print(GpS.getPrecision());		SDC.tab(); //Precisao
+			}
+			else
+			{
+				SDC.tab();
+				SDC.tab();
+				SDC.tab();
+				SDC.tab();
+				SDC.tab();
+				SDC.tab();
+			}
+#endif // GPSmode
+
+#if ApoGee
+			//if (apg.getApogeu(0.9, 0))
+			if (Gutil.mem)
+			{
+				if (SDC.util.oneTime())
+				{
+					SDC.theFile.print(F("Apogeu: altitude - "));
+					SDC.theFile.print(apg.getApgPt());
+					SDC.theFile.print(F(" m, tempo - "));
+					SDC.theFile.print(apg.getApgTm());
+					SDC.theFile.print(F(" s"));
+					SDC.tab();
+				}
+				if (rec.getP1S(0)) SDC.theFile.print(F("Acionamento 1\t"));
+				if (rec.getP2S(0)) SDC.theFile.print(F("Acionamento 2\t"));
+			}
+#endif // ApoGee
+			SDC.theFile.println();
+			SDC.close();
+		}
+		else SDC.util.mem = 1;
+	}
+	else if (SDC.util.eachT(15)) if (SDC.begin()) SDC.util.mem = 0;
+	return !SDC.util.mem;
+}
+#endif // SDCard
 
 
 //////////////////////////////////////////////////////BZZ//////////////////////////////////////////////////////
@@ -1330,12 +1225,11 @@ inline void beep()
 #if LoRamode
 void LoRaSend()
 {
-	LRutil.counter();
 	if (LRutil.eachT(LoRaDelay))
 	{
+		LoRa->print(LRutil.counter());
+		LoRa->print(F(":\t"));
 		LoRa->print(LRutil.sinceBegin());
-		LoRa->print('\t');
-		LoRa->print(LRutil.getCount());
 		LoRa->print('\t');
 #if GPSmode
 		LoRa->print(GpS.getLatitude(), 6);//Latitude
@@ -1364,12 +1258,13 @@ void LoRaSend()
 			LoRa->print(apg.getApgTm());
 			LoRa->print(F(" s"));
 			LoRa->print('\t');
-			if (rec.getP1S(0)) LoRa->print(F("Acionamento 1\t"));
-			if (rec.getP2S(0)) LoRa->print(F("Acionamento 2\t"));
 		}
 #endif // ApoGee
-		LoRa->println();
+		LRutil.oneTimeReset();
 	}
+	if (rec.getP1S(0)) LoRa->print(F("Acionamento 1\t"));
+	if (rec.getP2S(0)) LoRa->print(F("Acionamento 2\t"));
+	if (LRutil.oneTime()) LoRa->println();
 }
 #endif // LoRamode
 
