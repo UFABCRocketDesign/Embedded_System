@@ -8,17 +8,17 @@
 
 #define BaudRate 250000
 
-#define GY80 0								//Use GY80 sensor
+#define GY80 1								//Use GY80 sensor
 #define BMP085 (GY80) || 1					//Use BMP085 sensor
 #define ADXL345 (GY80) || 0					//Use ADXL345 sensor
 #define L3G4200D (GY80) || 0				//Use L3G4200D sensor
 #define HMC5883 (GY80) || 0					//Use HMC5883 sensor
-#define SDCard 0							//Use SD card
-#define GPSmode 0							//Use GPS
+#define SDCard 1							//Use SD card
+#define GPSmode 1							//Use GPS
 #define LoRamode 1							//Serial mode for transmission on LoRa module
 
 #define ApoGee (BMP085) && 1				//Detection of apogee
-#define PRINT 1								//Print or not things on Serial
+#define PRINT 0								//Print or not things on Serial
 #define RBF 0								//Revome Before Flight
 #define WUF (ApoGee) && 1					//Wait Until Flight
 #define BuZZ 0								//Buzzer mode
@@ -47,11 +47,12 @@
 #define PapgM (PRINT) && (ApoGee) && 0		//Print apogee sigma max
 
 #define Pgps (PRINT) && (GPSmode) && 1		//Print GPS informations
-#define Psep (PRINT) && 0					//Print visual separator
+#define Psep (PRINT) && 1					//Print visual separator
 
-#define Tcom (PRINT) && 0					//Print time counter
+#define Tcom (PRINT) && 1					//Print time counter
 #define Lcom (PRINT) && 1					//Print loop counter
 #define Ncom (PRINT) && 0					//Print eachN counter
+#define Ps_n (PRINT) && 1					//Print SYSTEM_n
 
 #define PWMapg (ApoGee) && 1				//Show the apogee coefficient in a LED
 
@@ -142,7 +143,7 @@ Helpful beeper;
 #endif // BuZZ
 
 #if PWMapg
-#define PWMout 6							//Pin that the LED who shows apogee state is connected
+#define PWMout 13							//Pin that the LED who shows apogee state is connected
 #endif // PWMapg
 
 /////////////////////////////////////////////////////SETUP/////////////////////////////////////////////////////
@@ -168,7 +169,12 @@ void setup()
 
 #if PRINT
 	Serial.begin(BaudRate);
+	Serial.println();
+#if Ps_n
+	Serial.print(F("System number: "));
 	Serial.println(SYSTEM_n);
+#endif // Ps_n
+
 #endif // Serial
 
 #if LoRamode
@@ -616,8 +622,6 @@ void setup()
 	WaitUntil(10);
 #endif // WUF
 
-	Serial.println("Saiu");
-
 	////////////////WUF directive////////////////
 
 	Gutil.begin();
@@ -641,46 +645,12 @@ void setup()
 
 void loop()
 {
+	sysC = 0;
 	Gutil.counter();
-
-#if BMP085
-	if (baro)
-	{
-		MM_baro[0].addValor(baro.getTemperature());
-		MM_baro[1].addValor(baro.getPressure());
-	}
-#endif // BMP085
+	readEverything();
 
 #if ApoGee
 	apg.calcAlt(baro.getPressure());
-#endif // ApoGee
-
-#if ADXL345
-	if (acel)
-	{
-		MM_acel[0].addValor(acel.getX());
-		MM_acel[1].addValor(acel.getY());
-		MM_acel[2].addValor(acel.getZ());
-	}
-#endif // ADXL345
-#if L3G4200D
-	if (giro)
-	{
-		MM_giro[0].addValor(giro.getX());
-		MM_giro[1].addValor(giro.getY());
-		MM_giro[2].addValor(giro.getZ());
-	}
-#endif // L3G4200D
-#if HMC5883
-	if (magn)
-	{
-		MM_magn[0].addValor(magn.getX());
-		MM_magn[1].addValor(magn.getY());
-		MM_magn[2].addValor(magn.getZ());
-	}
-#endif // HMC5883
-
-#if ApoGee
 	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
 	if (rec.getSysState(0))
 	{
@@ -700,10 +670,6 @@ void loop()
 #if PWMapg
 	analogWrite(PWMout, (char)(apg.getSigma() * 255));
 #endif // PWMapg
-
-#if GPSmode
-	GpS.readAll();
-#endif // GPSmode
 
 #if PRINT
 	SerialSend();
@@ -826,50 +792,10 @@ inline void WaitUntil(float minHeight)
 	{
 		sysC = 0;
 		Gutil.counter();
-
-#if BMP085
-		if (baro)
-		{
-			MM_baro[0].addValor(baro.getTemperature());
-			MM_baro[1].addValor(baro.getPressure());
-			sysC++;
-		}
-#endif // BMP085
+		readEverything();
 
 #if ApoGee
 		apg.calcAlt(baro.getPressure());
-		//apg.addAltitude(baro.getAltitude());
-#endif // ApoGee
-
-#if ADXL345
-		if (acel)
-		{
-			MM_acel[0].addValor(acel.getX());
-			MM_acel[1].addValor(acel.getY());
-			MM_acel[2].addValor(acel.getZ());
-			sysC++;
-		}
-#endif // ADXL345
-#if L3G4200D
-		if (giro)
-		{
-			MM_giro[0].addValor(giro.getX());
-			MM_giro[1].addValor(giro.getY());
-			MM_giro[2].addValor(giro.getZ());
-			sysC++;
-		}
-#endif // L3G4200D
-#if HMC5883
-		if (magn)
-		{
-			MM_magn[0].addValor(magn.getX());
-			MM_magn[1].addValor(magn.getY());
-			MM_magn[2].addValor(magn.getZ());
-			sysC++;
-		}
-#endif // HMC5883  
-
-#if ApoGee
 		apg.apgSigma();
 		apg.apgAlpha();
 #if PapgM
@@ -880,28 +806,17 @@ inline void WaitUntil(float minHeight)
 		analogWrite(PWMout, (char)(apg.getSigma() * 255));
 #endif // PWMapg
 
-#if GPSmode
-		if (GpS) GpS.util.forT(2);
-		if (GpS.util.forT()) sysC++;
-#endif // GPSmode
-
 #if PRINT
 		SerialSend();
 #endif // PRINT
 
-
 #if SDCard
-		if (SDSend()) sysC++;
+		SDSend();
 #endif // SDCard
 
 #if LoRamode
 		LoRaSend();
 #endif // LoRamode
-
-#if ApoGee
-		if (!rec.info1()) sysC++;
-		if (!rec.info2()) sysC++;
-#endif // ApoGee
 
 #if BuZZ
 		beep(sysC);
@@ -1184,6 +1099,7 @@ bool SDSend()
 #endif // ApoGee
 			SDC.theFile.println();
 			SDC.close();
+			sysC++;
 		}
 		else SDC.util.mem = 1;
 	}
@@ -1268,6 +1184,54 @@ void LoRaSend()
 }
 #endif // LoRamode
 
+//////////////////////////////////////////////////////RET//////////////////////////////////////////////////////
+
+void readEverything()
+{
+	#if BMP085
+		if (baro)
+		{
+			MM_baro[0] = baro.getTemperature();
+			MM_baro[1] = baro.getPressure();
+			sysC++;
+		}
+#endif // BMP085
+#if ADXL345
+		if (acel)
+		{
+			MM_acel[0] = acel.getX();
+			MM_acel[1] = acel.getY();
+			MM_acel[2] = acel.getZ();
+			sysC++;
+		}
+#endif // ADXL345
+#if L3G4200D
+		if (giro)
+		{
+			MM_giro[0] = giro.getX();
+			MM_giro[1] = giro.getY();
+			MM_giro[2] = giro.getZ();
+			sysC++;
+		}
+#endif // L3G4200D
+#if HMC5883
+		if (magn)
+		{
+			MM_magn[0] = magn.getX();
+			MM_magn[1] = magn.getY();
+			MM_magn[2] = magn.getZ();
+			sysC++;
+		}
+#endif // HMC5883  
+#if GPSmode
+		if (GpS) GpS.util.forT(2);
+		if (GpS.util.forT()) sysC++;
+#endif // GPSmode
+#if ApoGee
+		if (!rec.info1()) sysC++;
+		if (!rec.info2()) sysC++;
+#endif // ApoGee
+}
 
 /*
                                                                           I8$$$????$?????????$??????$$?8+                                                                           
