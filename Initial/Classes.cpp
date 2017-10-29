@@ -673,15 +673,9 @@ bool GyGPS::isNew()
 
 
 ///Rotinas de verificacao de apogeu
-Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Alt(N,5)
+Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Alt(N, 5), Rf(Rl1 * (Rl1 + 1) * (2 * Rl1 + 1) / 6)
 {
-	Rf = 0;
-	for (unsigned int i = 0; i < R; i++) altMed[i] = 0;
-	//for (unsigned int i = 0; i < N;i++) Alt[i] = 0;
-	for (int i = Rl1; i > 0; i--)
-	{
-		Rf += (float)(i*i);
-	}
+	//for (int i = Rl1; i > 0; i--) Rf += (float)(i*i);
 }
 float Apogeu::addZero(long P, float sealevelP)
 {
@@ -896,6 +890,11 @@ void DuDeploy::setTmax(float Time)
 	Tmax = (unsigned long)(Time * 1000000);
 	TmaxAux = true;
 }
+void DuDeploy::setTdelay(float Time)
+{
+	TdelayAux = true;
+	Tdelay = (unsigned long)(Time * 1000000);
+}
 void DuDeploy::setP1height(float H)
 {
 	P1H = H;
@@ -908,7 +907,11 @@ void DuDeploy::setP2height(float H)
 }
 void DuDeploy::sealApogee(bool apg)
 {
-	if (!apogee) apogee = apg;
+	if (!apogee)
+	{
+		Tseal = micros() - TimeZero;
+		apogee = apg;
+	}
 }
 bool DuDeploy::getApogee()
 {
@@ -947,13 +950,32 @@ bool DuDeploy::getSysState(bool type)
 void DuDeploy::refresh(float height)
 {
 	Tnow = micros() - TimeZero;
-	if (TmaxAux && Tnow > Tmax && !apogee) apogee = true;	//Caso o tempo maximo seja exigido e tenha sido ultrapassado
+	if (TmaxAux && Tnow > Tmax && !apogee) sealApogee(true);	//Caso o tempo maximo seja exigido e tenha sido ultrapassado
 	if (apogee && getSysState(0))	//Se o apogeu foi dado
 	{
-		if (!P1H_A || (P1H_A && height <= P1H) || P1seal)	//Caso altura seja exigida, sera verificada
+		if (TdelayAux)	//Somente caso o uso do atraso seja definido
+		{
+			if (!P1seal && !P1M_A)	//Salva somente uma vez
+			{
+				if (!P1H_A || (P1H_A && height <= P1H))	//Condicional base P1
+				{
+					P1M = Tnow;	//Momento de condicional verdadeira
+					P1M_A = true;
+				}
+			}
+			if (!P2seal && !P2M_A) //Salva somente uma vez
+			{
+				if ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H))	//Condicional base P2
+				{
+					P2M = Tnow;	//Momento de condicional verdadeira
+					P2M_A = true;
+				}
+			}
+		}
+		if (P1seal || (!P1H_A || (P1H_A && height <= P1H)) && !TdelayAux || TdelayAux && Tnow > P1M + Tdelay)	//Caso altura seja exigida, sera verificada
 		{
 			if (!P1seal) P1seal = 1;
-			if (!P1T_A)	//Salvar tempo de P1 somente uma vez
+			if (!P1T_A)	//Salvar tempo do acionamento de P1 somente uma vez
 			{
 				P1T_A = 1;
 				P1T = Tnow;
@@ -962,10 +984,10 @@ void DuDeploy::refresh(float height)
 			else P1S = 0;
 
 		}
-		if ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H) || P2seal)	//Verifica tempo de atraso ou altura exigida
+		if (P2seal || ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H)) && !TdelayAux || TdelayAux && Tnow > P2M + Tdelay)	//Verifica tempo de atraso ou altura exigida
 		{
 			if (!P2seal) P2seal = 1;
-			if (!P2T_A)	//Salva tempo de P2 somente uma vez
+			if (!P2T_A)	//Salva tempo do acionamento de P2 somente uma vez
 			{
 				P2T_A = 1;
 				P2T = Tnow;
@@ -985,7 +1007,7 @@ void DuDeploy::emergency(bool state)
 		P2H_Am = P2H_A;
 		P1H_A = false;
 		P2H_A = false;
-		apogee = true;
+		sealApogee(true);
 	}
 	if (!state && emer)
 	{

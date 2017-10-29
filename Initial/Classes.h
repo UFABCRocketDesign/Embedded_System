@@ -125,12 +125,11 @@ public:
 template <typename type> class RoundArray
 {
 	const size_t Len;
-	type* Vals = new type[Len];
+	type* Vals = new type[Len]();
 	size_t pointer = 0;
 public:
 	RoundArray(const unsigned int &len) :Len(len)
 	{
-		for (unsigned int i = 0; i < Len; i++) Vals[i] = 0;
 	}
 	~RoundArray() // Destructor
 	{
@@ -207,10 +206,10 @@ public:
 
 class Term	//LM35
 {
-const byte Apin;
+	const byte Apin;
 public:
-Term(byte aPin);
-float read();
+	Term(byte aPin);
+	float read();
 };
 
 class GyGPS : public Sens
@@ -265,7 +264,7 @@ class Apogeu
 {
 	const unsigned int N, R, Rl1;
 	const float S;
-	float Rf;
+	const float Rf;
 	float base = 0;
 	int baseIndex = 0;
 
@@ -280,10 +279,10 @@ class Apogeu
 	float minH = 0;
 	long TimeZero = 0;
 	bool apg_A = 0;
-	bool* cond = new bool[Rl1];
+	bool* cond = new bool[Rl1]();
 	//float* Alt = new float[N];
-	float* altMed = new float[R];
-	
+	float* altMed = new float[R]();
+
 	//MovingAverage Alt;
 	SerialFilter Alt;
 public:
@@ -324,13 +323,18 @@ class DuDeploy
 	unsigned long P1T = 0, P2T = 0;	//Momento que o ignitor ligou
 	unsigned long TimeZero = 0;	//Momento zero
 	unsigned long Tmax;	//Tempo máximo para segunranca
+	unsigned long Tseal;	//Tempo onde o selo aconteceu
+	unsigned long Tdelay;	//Tempo de atraso configurado
+	unsigned long P1M, P2M;	//Tempo onde a condicional do paraquedas foi atingida
 	unsigned long Tnow = 0;	//Tempo atual (com zeragem)
 	float P1H = 0, P2H = 0;	//Altura de comando
-	bool P1S = 0, P2S = 0;
+	bool P1S = 0, P2S = 0;	//Estado do acionamento
 	bool P1S_A = 0, P2S_A = 0;	//Estado atual do comando
 	bool P1H_A = 0, P2H_A = 0;	//Condicional para comando em altura
 	bool apogee = 0;	//Representante interno do apogeu
 	bool TmaxAux;	//Condicional para verificar tempo de seguranca
+	bool TdelayAux = 0;	//Condicional para verificar modo de atraso
+	bool P1M_A = 0, P2M_A = 0;	//Condicional do paraquedas foi atingida
 	bool P1T_A = 0, P2T_A = 0;	//Condicional para momento do ignitor
 	bool P1seal = 0, P2seal = 0;	//Selo de comando
 	bool emer = 0, P1H_Am = 0, P2H_Am = 0;
@@ -341,6 +345,7 @@ public:
 	bool info2();//Retorna informacao sobre estado do ignitor de acionamento 2
 	bool begin();
 	void setTmax(float Time);
+	void setTdelay(float Time);
 	void setP1height(float H);
 	void setP2height(float H);
 	void sealApogee(bool apg);
