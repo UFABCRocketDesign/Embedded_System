@@ -16,16 +16,16 @@
 #define L3G4200D (GY80 || 0)				//Use L3G4200D sensor
 #define HMC5883 (GY80 || 0)					//Use HMC5883 sensor
 #define SDCard (1)							//Use SD card
-#define GPSmode (1)							//Use GPS
-#define LoRamode (1)						//Serial mode for transmission on LoRa module
+#define GPSmode (0)							//Use GPS
+#define LoRamode (0)						//Serial mode for transmission on LoRa module
 
 #define ApoGee (BMP085 && 1)				//Detection of apogee
-#define PRINT (1)							//Print or not things on Serial
+#define PRINT (0)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
-#define WUF (ApoGee && 0)					//Wait Until Flight
+#define WUF (ApoGee && 1)					//Wait Until Flight
 #define BuZZ (1)							//Buzzer mode
 #define RGB (1)								//RGB LED board
-#define DELAYED (ApoGee && 1)				//Redundance mode
+#define DELAYED (ApoGee && 0)				//Redundance mode
 
 #define PbarT (PRINT && BMP085 && 1)		//Print barometer temperature data
 #define PbarP (PRINT && BMP085 && 1)		//Print barometer pressure data
@@ -45,10 +45,10 @@
 #define PapgW (PRINT && ApoGee && 1)		//Print apogee information when detected
 #define PapgH (PRINT && ApoGee && 1)		//Print altimeter data
 #define PapgB (PRINT && ApoGee && 1)		//Print altimeter base
-#define PapgP (PRINT && ApoGee && 0)		//Print apogee information
-#define PapgA (PRINT && ApoGee && 0)		//Print apogee alpha
-#define PapgS (PRINT && ApoGee && 0)		//Print apogee sigma
-#define PapgM (PRINT && ApoGee && 0)		//Print apogee sigma max
+#define PapgP (PRINT && ApoGee && 1)		//Print apogee information
+#define PapgA (PRINT && ApoGee && 1)		//Print apogee alpha
+#define PapgS (PRINT && ApoGee && 1)		//Print apogee sigma
+#define PapgM (PRINT && ApoGee && 1)		//Print apogee sigma max
 
 #define Pgps (PRINT && GPSmode && 1)		//Print GPS informations
 #define Psep (PRINT && 1)					//Print visual separator
@@ -82,13 +82,20 @@ MovingAverage MM_baro[2]{ (5),(5) };		//Array declaration of the moving average 
 Apogeu apg(5, 30, 50);						//Apogee checker object declaration
 DuDeploy rec(A8, A9, 4, 3, 5, 15);			//Dual deployment parachute object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
-#define p2h 10								//Height to main parachute
+#define p2h 500								//Height to main parachute
 #endif // ApoGee
 
 #if DELAYED
-#define sysDelay 5
+#define sysDelay 3
+#ifdef p2h
+#undef p2h
+#define p2h 400								//Height to main parachute on redundance mode
+#endif // p2h
 #endif // DELAYED
 
+#if WUF
+#define WUFheigh 50
+#endif // WUF
 
 #if ADXL345
 #define acel Accelerometer
@@ -113,7 +120,7 @@ MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving avera
 
 #if SDCard
 #define SDC SecureDigitalCard
-SDCH SDC(53, "Test");						//Declaration of object to help SD card file management
+SDCH SDC(53, "Horus");						//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
@@ -135,11 +142,6 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 
 #define Gutil utilitario
 Helpful Gutil;								//Declaration of helpful object to general cases
-
-#if WUF
-#define WUFheigh 5
-#endif // WUF
-
 
 #if RBF
 #define rbfHelper ReBeFlight
@@ -200,6 +202,10 @@ void setup()
 #if DELAYED
 	rec.setTdelay(sysDelay);
 #endif // DELAYED
+
+#if ApoGee
+	rec.setP2height(p2h);
+#endif // ApoGee
 
 
 #if BuZZ
@@ -292,10 +298,6 @@ void setup()
 #endif // LoRamode
 	}
 #endif // BMP085
-
-#if ApoGee
-	rec.setP2height(p2h);
-#endif // ApoGee
 
 #if ADXL345
 	acel.begin();

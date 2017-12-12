@@ -955,7 +955,7 @@ void DuDeploy::refresh(float height)
 	{
 		if (TdelayAux)	//Somente caso o uso do atraso seja definido
 		{
-			if (!P1seal && !P1M_A)	//Salva somente uma vez
+			if (!P1M_A)	//Salva somente uma vez
 			{
 				if (!P1H_A || (P1H_A && height <= P1H))	//Condicional base P1
 				{
@@ -963,14 +963,14 @@ void DuDeploy::refresh(float height)
 					P1M_A = true;
 				}
 			}
-			if (!P2seal && !P2M_A) //Salva somente uma vez
+			/*if (!P2M_A) //Salva somente uma vez
 			{
 				if ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H))	//Condicional base P2
 				{
 					P2M = Tnow;	//Momento de condicional verdadeira
 					P2M_A = true;
 				}
-			}
+			}*/
 		}
 		if (P1seal || (!P1H_A || (P1H_A && height <= P1H)) && !TdelayAux || TdelayAux && Tnow > P1M + Tdelay)	//Caso altura seja exigida, sera verificada
 		{
@@ -984,7 +984,7 @@ void DuDeploy::refresh(float height)
 			else P1S = 0;
 
 		}
-		if (P2seal || ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H)) && !TdelayAux || TdelayAux && Tnow > P2M + Tdelay)	//Verifica tempo de atraso ou altura exigida
+		if (P2seal || ((!P2H_A && Tnow > P1T + Delay) || (P2H_A && height <= P2H)) /* && !TdelayAux || TdelayAux && Tnow > P2M + Tdelay*/)	//Verifica tempo de atraso ou altura exigida
 		{
 			if (!P2seal) P2seal = 1;
 			if (!P2T_A)	//Salva tempo do acionamento de P2 somente uma vez
