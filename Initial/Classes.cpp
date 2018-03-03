@@ -566,7 +566,7 @@ float Term::read()
 
 
 ///Dados do GPS
-GyGPS::GyGPS(HardwareSerial &S, short gmt) :GpSerial(&S), GMT(gmt), Sens(NULL)
+GyGPS::GyGPS(HardwareSerial S, short gmt) :GpSerial(S), GMT(gmt), Sens(NULL)
 {
 }
 unsigned short GyGPS::getFailed()
@@ -639,15 +639,15 @@ byte GyGPS::getSecond()
 }
 void GyGPS::begin()
 {
-	GpSerial->begin(9600);
+	GpSerial.begin(9600);
 }
 bool GyGPS::readAll()
 {
 	thisReadT = micros();
 	state = false;
-	if (GpSerial->available()) while (GpSerial->available())
+	if (GpSerial.available()) while (GpSerial.available())
 	{
-		char c = GpSerial->read();
+		char c = GpSerial.read();
 		state = gps.encode(c);
 	}
 	if (state)

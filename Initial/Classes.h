@@ -215,7 +215,7 @@ public:
 class GyGPS : public Sens
 {
 	//#define GpSerial Serial1
-	HardwareSerial* GpSerial;
+	HardwareSerial &GpSerial;
 	TinyGPS gps;							//GPS object declaration
 	const unsigned short GMT;
 	unsigned short sentences = 0;			//GPS variables declaration
@@ -236,7 +236,7 @@ class GyGPS : public Sens
 	byte minute = 0;
 	byte second = 0;
 public:
-	GyGPS(HardwareSerial &S, short gmt = 0);
+	GyGPS(HardwareSerial S, short gmt = 0);
 	Helpful util;						//Declaration of helpful object to GPS
 	unsigned short getFailed();				//Return functions
 	unsigned short getSentences();

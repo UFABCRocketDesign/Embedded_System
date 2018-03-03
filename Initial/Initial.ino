@@ -60,6 +60,7 @@
 
 #define PWMapg (ApoGee && 1)				//Show the apogee coefficient in a LED
 
+#define COMmode (PRINT || LoRamode)
 #define WIREmode (BMP085 || ADXL345 || L3G4200D || HMC5883)
 #define SYSTEM_n (char(SDCard)+char(BMP085)+char(ADXL345)+char(L3G4200D)+char(HMC5883)+char(GPSmode)+char(ApoGee)*2)
 
@@ -132,7 +133,7 @@ GyGPS GpS(Serial1, 0);
 #define LoRaDelay 2.5
 #define LoRa LongRange
 #define LRutil LRutilitario
-HardwareSerial *LoRa = &Serial3;
+HardwareSerial &LoRa(Serial3);
 Helpful LRutil;								//Declaration of helpful object to telemetry system
 #endif // LoRamode
 
@@ -171,6 +172,12 @@ Helpful beeper;
 #define rgbCmd HIGH
 #endif // RGB
 
+#if COMmode
+template <typename T> void transmit(T message);
+template <typename T> void transmitln(T message);
+template <typename T, typename R> void transmit(T message, R value);
+template <typename T, typename R> void transmitln(T message, R value);
+#endif // COMmode
 
 #pragma endregion
 
@@ -224,7 +231,7 @@ void setup()
 #endif // Serial
 
 #if LoRamode
-	LoRa->begin(9600);
+	LoRa.begin(9600);
 #endif // LoRamode
 
 #if GPSmode
@@ -233,29 +240,19 @@ void setup()
 	{
 		if (GpS.util.oneTime())
 		{
-#if PRINT
-			Serial.print(F("GPS ok "));
-			Serial.print(GpS.getLatitude(), 6);
-			Serial.print(F(", "));
-			Serial.print(GpS.getLongitude(), 6);
-#endif // PRINT
-
-#if LoRamode
-			LoRa->print(F("GPS ok "));
-			LoRa->print(GpS.getLatitude(), 6);
-			LoRa->print(F(", "));
-			LoRa->print(GpS.getLongitude(), 6);
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+			transmit(F("GPS ok "));
+			transmit(GpS.getLatitude(), 6);
+			transmit(F(", "));
+			transmit(GpS.getLongitude(), 6);
+#endif // (PRINT) || (LoRamode)
 		}
 	}
 	else
 	{
-#if PRINT
-		Serial.println(F("GPS err, waiting signal"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("GPS err, waiting signal"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("GPS err, waiting signal"));
+#endif // (PRINT) || (LoRamode)
 	}
 #endif // GPSmode
 
@@ -270,32 +267,27 @@ void setup()
 #if ApoGee
 		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
 #endif // ApoGee
-#if PRINT
-		Serial.print(F("Baro ok "));
+#if (PRINT) || (LoRamode)
+		transmit(F("Baro ok "));
+#endif // (PRINT) || (LoRamode)
+
 #if PapgB
 		Serial.println(apg.getZero());
 #else
 		Serial.println();
-#endif // PaphB
 #endif // PRINT
 
-#if LoRamode
-		LoRa->print(F("Baro ok "));
-#if ApoGee
-		LoRa->println(apg.getZero());
+#if LoRamode && ApoGee
+		LoRa.println(apg.getZero());
 #else
-		LoRa->println();
-#endif // ApoGee
-#endif // LoRamode
+		LoRa.println();
+#endif // LoRamode && ApoGee
 	}
 	else
 	{
-#if PRINT
-		Serial.println(F("Baro err"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Baro err"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Baro err"));
+#endif // (PRINT) || (LoRamode)
 	}
 #endif // BMP085
 
@@ -303,23 +295,15 @@ void setup()
 	acel.begin();
 	if (acel)
 	{
-#if PRINT
-		Serial.println(F("Acel ok"));
-#endif // PRINT
-
-#if LoRamode
-		LoRa->println(F("Acel ok"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Acel ok"));
+#endif // (PRINT) || (LoRamode)
 	}
 	else
 	{
-#if PRINT
-		Serial.println(F("Acel err"));
-#endif // PRINT
-
-#if LoRamode
-		LoRa->println(F("Acel err"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Acel err"));
+#endif // (PRINT) || (LoRamode)
 	}
 #endif // ADXL345
 
@@ -327,21 +311,15 @@ void setup()
 	giro.begin();
 	if (giro)
 	{
-#if PRINT
-		Serial.println(F("Giro ok"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Giro ok"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Giro ok"));
+#endif // (PRINT) || (LoRamode)
 	}
 	else
 	{
-#if PRINT
-		Serial.println(F("Giro err"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Giro err"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Giro err"));
+#endif // (PRINT) || (LoRamode)
 	}
 #endif // L3G4200D
 
@@ -349,60 +327,42 @@ void setup()
 	magn.begin();
 	if (magn)
 	{
-#if PRINT
-		Serial.println(F("Magn ok"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Magn ok"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Magn ok"));
+#endif // (PRINT) || (LoRamode)
 	}
 	else
 	{
-#if PRINT
-		Serial.println(F("Magn err"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Magn err"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Magn err"));
+#endif // (PRINT) || (LoRamode)
 	}
 #endif // HMC5883
 
 #if ApoGee
 	if (!rec.info1())
 	{
-#if PRINT
-		Serial.println(F("Ign1 ok"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Ign1 ok"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Ign1 ok"));
+#endif // (PRINT) || (LoRamode)
 	}
 	else
 	{
-#if PRINT
-		Serial.println(F("Ign1 err"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Ign1 err"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Ign1 err"));
+#endif // (PRINT) || (LoRamode)
 	}
 	if (!rec.info2())
 	{
-#if PRINT
-		Serial.println(F("Ign2 ok"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Ign2 ok"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Ign2 ok"));
+#endif // (PRINT) || (LoRamode)
 	}
 	else
 	{
-#if PRINT
-		Serial.println(F("Ign2 err"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("Ign2 err"));
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmitln(F("Ign2 err"));
+#endif // (PRINT) || (LoRamode)
 	}
 #endif // ApoGee
 
@@ -411,14 +371,10 @@ void setup()
 	SDC.begin();
 	if (SDC)
 	{
-#if PRINT
-		Serial.print(F("SD start OK "));
-		Serial.println(SDC.getFname());
-#endif // PRINT
-#if LoRamode
-		LoRa->print(F("SD start OK "));
-		LoRa->println(SDC.getFname());
-#endif // LoRamode
+#if (PRINT) || (LoRamode)
+		transmit(F("SD start OK "));
+		transmitln(SDC.getFname());
+#endif // (PRINT) || (LoRamode)
 
 		//////////////////File Header//////////////////
 
@@ -430,50 +386,51 @@ void setup()
 
 		///////////////////////////////////////////////
 
-		SDC.theFile.print(F("temp\t"));
+		SDC.theFile.println(F(
+			"temp\t"
 #if ADXL345
-		SDC.theFile.print(F("\tacel\t\t"));
+			"\tacel\t\t"
 #endif // ADXL345
 #if L3G4200D
-		SDC.theFile.print(F("\tgiro\t\t"));
+			"\tgiro\t\t"
 #endif // L3G4200D
 #if HMC5883
-		SDC.theFile.print(F("\tmag\t\t"));
+			"\tmag\t\t"
 #endif // HMC5883
 #if BMP085
-		SDC.theFile.print(F("\tbaro\t\t"));
+			"\tbaro\t\t"
 #endif // BMP085
 #if ApoGee
-		SDC.theFile.print('\t');
+			"\t"
 #endif // ApoGee
 #if GPSmode
-		SDC.theFile.print(F("\t\t\tGPS\t\t\t"));
+			"\t\t\tGPS\t\t\t"
 #endif // GPSmode
-		SDC.theFile.println();
+		));
 
 		///////////////////////////////////////////////
 
-		SDC.theFile.print(F("seg\t"));
+		SDC.theFile.println(F(
+			"seg\t"
 #if ADXL345
-		SDC.theFile.print(F("X\tY\tZ\t"));
+			"X\tY\tZ\t"
 #endif // ADXL345
 #if L3G4200D
-		SDC.theFile.print(F("X\tY\tZ\t"));
+			"X\tY\tZ\t"
 #endif // L3G4200D
 #if HMC5883
-		SDC.theFile.print(F("X\tY\tZ\t"));
+			"X\tY\tZ\t"
 #endif // HMC5883
 #if BMP085
-		SDC.theFile.print((char)0xB0);
-		SDC.theFile.print(F("C\tPascal\t"));
+			"C\tPascal\t"
 #endif // BMP085
 #if ApoGee
-		SDC.theFile.print(F("m\t"));
+			"m\t"
 #endif // ApoGee
 #if GPSmode
-		SDC.theFile.print(F("Latitude\tLongitude\tAltutude (m)\tspeed\tSat\tPrec\t"));
+			"Latitude\tLongitude\tAltutude (m)\tspeed\tSat\tPrec\t"
 #endif // GPSmode
-		SDC.theFile.println();
+		));
 
 		///////////////////////////////////////////////
 
@@ -481,12 +438,10 @@ void setup()
 	}
 	else
 	{
-#if PRINT
-		Serial.println(F("SD err"));
-#endif // PRINT
-#if LoRamode
-		LoRa->println(F("SD err"));
-#endif // LoRamode
+
+#if (PRINT) || (LoRamode)
+		transmitln(F("SD err"));
+#endif // (PRINT) || (LoRamode)
 	}
 #endif // SDCard
 
@@ -498,163 +453,166 @@ void setup()
 
 	////////////////RBF directive////////////////
 
+
+#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+	Serial.println(F(
+#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
 #if Lcom
-	Serial.print(F("loop\t"));
+	"loop\t"
 #endif // Lcom
 
 #if Tcom
-	Serial.print(F("temp\t"));
+	"temp\t"
 #endif // Tcom
 
 
 #if PaclX || PaclY || PaclZ
-	Serial.print(F("acel"));
+	"acel"
 #endif // PaclX || PaclY || PaclZ
 #if PaclX
-	Serial.print('\t');
+	"\t"
 #endif // PaclX
 #if PaclY
-	Serial.print('\t');
+	"\t"
 #endif // PaclY
 #if PaclZ
-	Serial.print('\t');
+	"\t"
 #endif // PaclZ
 
 
 #if PgirX || PgirX || PgirX
-	Serial.print(F("giro"));
+	"giro"
 #endif // PgirX || PgirX || PgirX
 #if PgirX
-	Serial.print('\t');
+	"\t"
 #endif // PgirX
 #if PgirY
-	Serial.print('\t');
+	"\t"
 #endif // PgirY
 #if PgirZ
-	Serial.print('\t');
+	"\t"
 #endif // PgirZ
 
 
 #if PmagX || PmagY || PmagZ
-	Serial.print(F("mag"));
+	"mag"
 #endif // PmagX || PmagY || PmagZ
 #if PmagX
-	Serial.print('\t');
+	"\t"
 #endif // PmagX
 #if PmagY
-	Serial.print('\t');
+	"\t"
 #endif // PmagY
 #if PmagZ
-	Serial.print('\t');
+	"\t"
 #endif // PmagZ
 
 
 #if PbarT || PbarP
-	Serial.print(F("baro"));
+	"baro"
 #endif // PbarT || PbarP
 #if PbarT
-	Serial.print('\t');
+	"\t"
 #endif // PbarT
 #if PbarP
-	Serial.print('\t');
+	"\t"
 #endif // PbarP
 
 #if PapgH
-	Serial.print('\t');
+	"\t"
 #endif // PapgH
 #if PapgP
-	Serial.print(F("\t\t"));
+	"\t\t"
 #endif // PapgP
 #if PapgA
-	Serial.print('\t');
+	"\t"
 #endif // PapgA
 #if PapgS
-	Serial.print('\t');
+	"\t"
 #endif // PapgS
 #if PapgM
-	Serial.print('\t');
+	"\t"
 #endif // PapgM
 
 #if GPSmode
-	Serial.print(F("\t\t\tGPS\t\t\t"));
+	"\t\t\tGPS\t\t\t"
 #endif // GPSmode
 
 #if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
-	Serial.println();
+	));
+	Serial.println(F(
 #endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
-
 #if Lcom
-	Serial.print('\t');
+	"\t"
 #endif // Lcom
 
 #if Tcom
-	Serial.print(F("s\t"));
+	"s\t"
 #endif // Tcom
 
 
 #if PaclX
-	Serial.print(F("X\t"));
+	"X\t"
 #endif // PaclX
 #if PaclY
-	Serial.print(F("Y\t"));
+	"Y\t"
 #endif // PaclY
 #if PaclZ
-	Serial.print(F("Z\t"));
+	"Z\t"
 #endif // PaclZ
 
 
 #if PgirX
-	Serial.print(F("X\t"));
+	"X\t"
 #endif // PgirX
 #if PgirY
-	Serial.print(F("Y\t"));
+	"Y\t"
 #endif // PgirY
 #if PgirZ
-	Serial.print(F("Z\t"));
+	"Z\t"
 #endif // PgirZ
 
 
 #if PmagX
-	Serial.print(F("X\t"));
+	"X\t"
 #endif // PmagX
 #if PmagY
-	Serial.print(F("Y\t"));
+	"Y\t"
 #endif // PmagY
 #if PmagZ
-	Serial.print(F("Z\t"));
+	"Z\t"
 #endif // PmagZ
 
 
 #if PbarT
-	Serial.print((char)0xB0);
-	Serial.print(F("C\t"));
+	"C\t"
 #endif // PbarT
 #if PbarP
-	Serial.print(F("Pascal\t"));
+	"Pascal\t"
 #endif // PbarP
 
 #if PapgH
-	Serial.print(F("m\t"));
+	"m\t"
 #endif // PapgH
 #if PapgP
-	Serial.print("Max h\tMax t\t");
+	"Max h\tMax t\t"
 #endif // PapgP
 #if PapgA
-	Serial.print(F("Alpha\t"));
+	"Alpha\t"
 #endif // PapgA
 #if PapgS
-	Serial.print(F("Sigma\t"));
+	"Sigma\t"
 #endif // PapgS
 #if PapgM
-	Serial.print(F("Max S\t"));
+	"Max S\t"
 #endif // PapgM
 
 #if GPSmode
-	Serial.print(F("Latitude\tLongitude\tAltitude\tSpeed (m/s)\tSat\tPrec\t"));
+	"Latitude\tLongitude\tAltitude\tSpeed (m/s)\tSat\tPrec\t"
 #endif // GPSmode
 
 #if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
-	Serial.println();
+	));
 #endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
 
 
@@ -1059,16 +1017,16 @@ inline void SDSend()
 		{
 			SDC.theFile.print(SDC.util.sinceBegin(), 3); SDC.tab();
 #if ADXL345
-			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_acel[i], 3);	SDC.tab(); }
+			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_acel[i], 3);	SDC.tab(); }
 #endif // ADXL345
 #if L3G4200D
-			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_giro[i], 1);	SDC.tab(); }
+			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_giro[i], 1);	SDC.tab(); }
 #endif // L3G4200D
 #if HMC5883
-			for (char i = 0; i < 3; i++) { SDC.theFile.print(MM_magn[i], 1);	SDC.tab(); }
+			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_magn[i], 1);	SDC.tab(); }
 #endif // HMC5883
 #if BMP085
-			for (char i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]);		SDC.tab(); }
+			for (short i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]);		SDC.tab(); }
 #if ApoGee
 			SDC.theFile.print(apg.getAltitude()); SDC.tab();
 #endif // ApoGee
@@ -1129,7 +1087,7 @@ inline void SDSend()
 //////////////////////////////////////////////////////BZZ//////////////////////////////////////////////////////
 
 #if BuZZ
-inline void beep(int N)
+inline void beep(unsigned int N)
 {
 	if (beeper.eachT(holdT*SYSTEM_n * 4) || beeper.oneTime())
 	{
@@ -1160,49 +1118,94 @@ inline void LoRaSend()
 {
 	if (LRutil.eachT(LoRaDelay))
 	{
-		LoRa->print(LRutil.counter());
-		LoRa->print(F(":\t"));
-		LoRa->print(LRutil.sinceBegin());
-		LoRa->print('\t');
+		LoRa.print(LRutil.counter());
+		LoRa.print(F(":\t"));
+		LoRa.print(LRutil.sinceBegin());
+		LoRa.print('\t');
 #if GPSmode
-		LoRa->print(GpS.getLatitude(), 6);//Latitude
-		LoRa->print('\t');
-		LoRa->print(GpS.getLongitude(), 6);//Longitude
-		LoRa->print('\t');
-		LoRa->print(GpS.getHour());//Hora
-		LoRa->print(':');
-		LoRa->print(GpS.getMinute());//Minuto
-		LoRa->print('\t');
-		LoRa->print(GpS.getPrecision());//Precisao
-		LoRa->print('\t');
+		LoRa.print(GpS.getLatitude(), 6);//Latitude
+		LoRa.print('\t');
+		LoRa.print(GpS.getLongitude(), 6);//Longitude
+		LoRa.print('\t');
+		LoRa.print(GpS.getHour());//Hora
+		LoRa.print(':');
+		LoRa.print(GpS.getMinute());//Minuto
+		LoRa.print('\t');
+		LoRa.print(GpS.getPrecision());//Precisao
+		LoRa.print('\t');
 #endif // GPSmode
 #if ApoGee
-		LoRa->print(apg.getAltitude());
-		LoRa->print('\t');
-		LoRa->print(apg.getSigma(), 3);
-		LoRa->print('\t');
+		LoRa.print(apg.getAltitude());
+		LoRa.print('\t');
+		LoRa.print(apg.getSigma(), 3);
+		LoRa.print('\t');
 #endif // ApoGee
 #if ApoGee
 		if (Gutil.mem)
 		{
-			LoRa->print(F("Apogeu: altitude - "));
-			LoRa->print(apg.getApgPt());
-			LoRa->print(F(" m, tempo - "));
-			LoRa->print(apg.getApgTm());
-			LoRa->print(F(" s"));
-			LoRa->print('\t');
+			LoRa.print(F("Apogeu: altitude - "));
+			LoRa.print(apg.getApgPt());
+			LoRa.print(F(" m, tempo - "));
+			LoRa.print(apg.getApgTm());
+			LoRa.print(F(" s"));
+			LoRa.print('\t');
 		}
 #endif // ApoGee
 		LRutil.oneTimeReset();
 	}
 #if ApoGee
-	if (rec.getP1S(0)) LoRa->print(F("Acionamento 1\t"));
-	if (rec.getP2S(0)) LoRa->print(F("Acionamento 2\t"));
+	if (rec.getP1S(0)) LoRa.print(F("Acionamento 1\t"));
+	if (rec.getP2S(0)) LoRa.print(F("Acionamento 2\t"));
 #endif // ApoGee
 
-	if (LRutil.oneTime()) LoRa->println();
+	if (LRutil.oneTime()) LoRa.println();
 }
 #endif // LoRamode
+
+//////////////////////////////////////////////////////COM//////////////////////////////////////////////////////
+
+#if COMmode
+template <typename T> void transmit(T message)
+{
+#if PRINT
+	Serial.print(message);
+#endif // PRINT
+#if LoRamode
+	LoRa.print(message);
+#endif // LoRamode
+}
+
+template <typename T> void transmitln(T message)
+{
+#if PRINT
+	Serial.println(message);
+#endif // PRINT
+#if LoRamode
+	LoRa.println(message);
+#endif // LoRamode
+}
+
+template <typename T, typename R> void transmit(T message, R value)
+{
+#if PRINT
+	Serial.print(message, value);
+#endif // PRINT
+#if LoRamode
+	LoRa.print(message, value);
+#endif // LoRamode
+}
+
+template <typename T, typename R> void transmitln(T message, R value)
+{
+#if PRINT
+	Serial.println(message, value);
+#endif // PRINT
+#if LoRamode
+	LoRa.println(message, value);
+#endif // LoRamode
+}
+
+#endif // COMmode
 
 //////////////////////////////////////////////////////RET//////////////////////////////////////////////////////
 
