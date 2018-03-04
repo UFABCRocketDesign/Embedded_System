@@ -236,7 +236,7 @@ class GyGPS : public Sens
 	byte minute = 0;
 	byte second = 0;
 public:
-	GyGPS(HardwareSerial S, short gmt = 0);
+	GyGPS(HardwareSerial &S, short gmt = 0);
 	Helpful util;						//Declaration of helpful object to GPS
 	unsigned short getFailed();				//Return functions
 	unsigned short getSentences();
@@ -322,7 +322,7 @@ class DuDeploy
 	const unsigned long Delay;	//Tempo de atraso dentre comando ( caso altura nao determinada)
 	unsigned long P1T = 0, P2T = 0;	//Momento que o ignitor ligou
 	unsigned long TimeZero = 0;	//Momento zero
-	unsigned long Tmax;	//Tempo máximo para segunranca
+	unsigned long Tmax;	//Tempo mï¿½ximo para segunranca
 	unsigned long Tseal;	//Tempo onde o selo aconteceu
 	unsigned long Tdelay;	//Tempo de atraso configurado
 	unsigned long P1M, P2M;	//Tempo onde a condicional do paraquedas foi atingida
@@ -377,6 +377,40 @@ public:
 	void close();
 	operator bool();
 	String getFname();
+};
+
+class ComProtocol
+{
+public:
+	enum information
+	{
+		none,
+		apgDeteced,	//Apogee Detected
+		apgHeightV, //Apogee height registered value
+		apgMomentV, //Apogee moment registered value
+		FirstDNorm,	//First Deploy Normal
+		SecndDNorm,	//Second Deploy Normal
+		FirstDBack,	//First Deploy Backup
+		SecndDBack,	//Seconf Deploy Backup
+		WUFDrctvOf,	//Run out of WUF directive
+		SystemBoot	//When System turn on
+	};
+	ComProtocol(HardwareSerial &S, unsigned long baud);
+protected:
+	HardwareSerial &Com;
+	const unsigned long baudRate;
+	information lastInfo = none;
+	long lastInteger = 0;
+	float lastFloating = 0.0f;
+	bool successful = false;
+public:
+	void begin();
+	void inform(information info);
+	void informInteger(information info, long rawData = 0);
+	void informFloating(information info, float rawData = 0.0f);
+	information understand();
+	long receiveInteger();
+	float receiveFloating();
 };
 
 #endif

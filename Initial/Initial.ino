@@ -18,6 +18,7 @@
 #define SDCard (1)							//Use SD card
 #define GPSmode (0)							//Use GPS
 #define LoRamode (0)						//Serial mode for transmission on LoRa module
+#define TalkingBoard (1)					//When two boards are connected for redundancy system
 
 #define ApoGee (BMP085 && 1)				//Detection of apogee
 #define PRINT (0)							//Print or not things on Serial
@@ -25,7 +26,7 @@
 #define WUF (ApoGee && 1)					//Wait Until Flight
 #define BuZZ (1)							//Buzzer mode
 #define RGB (1)								//RGB LED board
-#define DELAYED (ApoGee && 0)				//Redundance mode
+#define DELAYED (ApoGee && 0)				//Redundancy mode
 
 #define PbarT (PRINT && BMP085 && 1)		//Print barometer temperature data
 #define PbarP (PRINT && BMP085 && 1)		//Print barometer pressure data
@@ -136,6 +137,11 @@ GyGPS GpS(Serial1, 0);
 HardwareSerial &LoRa(Serial3);
 Helpful LRutil;								//Declaration of helpful object to telemetry system
 #endif // LoRamode
+
+#if TalkingBoard
+#define Talk Talking
+ComProtocol Talk(Serial2, 9600);			//Declaration of communication protocol object
+#endif // TalkingBoard
 
 #if PRINT
 #define Serial Serial
@@ -277,11 +283,13 @@ void setup()
 		Serial.println();
 #endif // PRINT
 
-#if LoRamode && ApoGee
+#if LoRamode
+#if ApoGee
 		LoRa.println(apg.getZero());
-#else
+#endif // ApoGee
 		LoRa.println();
-#endif // LoRamode && ApoGee
+#endif // LoRamode
+
 	}
 	else
 	{
