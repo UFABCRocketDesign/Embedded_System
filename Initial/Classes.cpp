@@ -1017,6 +1017,94 @@ void DuDeploy::emergency(bool state)
 	emer = state;
 }
 
+///Controle de avionamento unitário
+MonoDeploy::MonoDeploy(unsigned int commandPin, unsigned int infoPin): cPin(commandPin), iPin(infoPin)
+{
+}
+void MonoDeploy::resetTimer()
+{
+	TimeZero = micros();
+}
+void MonoDeploy::sealApogee(bool apg)
+{
+	if (!apogee)
+	{
+		Tseal = micros() - TimeZero;
+		apogee = apg;
+	}
+}
+bool MonoDeploy::getApogee()
+{
+	return apogee;
+}
+void MonoDeploy::setHeight(float H)
+{
+	height = H;
+}
+void MonoDeploy::setHeightCmd(float H)
+{
+	useH = true;
+	cmdHeight = H;
+
+}
+void MonoDeploy::setDelayCmd(float T)
+{
+	useT = true;
+	cmdDelay = (unsigned long)(T * 1000000.0f);
+}
+void MonoDeploy::setTmax(float T)
+{
+	useM = true;
+	Tmax = (unsigned long)(T * 1000000.0f);
+}
+bool MonoDeploy::begin()
+{
+	pinMode(cPin, OUTPUT);
+	digitalWrite(cPin, sPin);
+	pinMode(iPin, INPUT_PULLUP);
+	return info();
+}
+bool MonoDeploy::info()
+{
+	return digitalRead(iPin);
+}
+bool MonoDeploy::getState()
+{
+	return !cmdSeal || sPin == command;
+}
+void MonoDeploy::refresh()
+{
+	Tnow = micros();
+	if (useM && Tnow >= TimeZero + Tmax && !getApogee()) sealApogee(true);
+	if (getApogee())
+	{
+		if (useH)
+		{
+			if (height <= cmdHeight)
+			{
+				useH_A = true;
+				Theight = Tnow;
+			}
+		}
+		if (useT)
+		{
+			useT_A = (useH) ? (Tnow >= Theight + cmdDelay) : (Tnow >= Tseal + cmdDelay);
+		}
+		bool triggers = (!useH && !useT) || (useH && !useT && useH_A) || (!useH && useT && useT_A) || (useH && useT && useH_A && useT_A);
+		if (cmdSeal || triggers)
+		{
+			if (!cmdSeal)
+			{
+				cmdSeal = true;
+				Tcmd = Tnow;
+			}
+			if ((Tnow - Tcmd < Tign) && cmdSeal) sPin = command;
+			else sPin = !command;
+		}
+	}
+	digitalWrite(cPin, sPin);
+}
+
 
 ///Auxiliar para o uso do cartao SD
 SDCH::SDCH(uint8_t csPin, String name, String type) :CS(csPin), Fname0(name), Ftype((type.length() == 3) ? type : (String)"txt"), coef(8 - name.length()), nMax(pow(10, (name.length() < 8) ? 8 - name.length() : 0))
@@ -1083,6 +1171,7 @@ String SDCH::getFname()
 	return Fname;
 }
 
+/*
 ComProtocol::ComProtocol(HardwareSerial &S, unsigned long baud) : Com(S), baudRate(baud)
 {
 }
@@ -1207,3 +1296,4 @@ float ComProtocol::receiveFloating()
 {
 	return lastFloating;
 }
+*/

@@ -319,10 +319,10 @@ class DuDeploy
 	const unsigned int P1, P2;	//Pinos de comando
 	const unsigned int I1, I2;	//Pinos de verificacao
 	const unsigned long Tign;	//Tempo de comando ativo
-	const unsigned long Delay;	//Tempo de atraso dentre comando ( caso altura nao determinada)
+	const unsigned long Delay;	//Tempo de atraso dentre comando (caso altura nao determinada)
 	unsigned long P1T = 0, P2T = 0;	//Momento que o ignitor ligou
 	unsigned long TimeZero = 0;	//Momento zero
-	unsigned long Tmax;	//Tempo m�ximo para segunranca
+	unsigned long Tmax;	//Tempo maximo para segunranca
 	unsigned long Tseal;	//Tempo onde o selo aconteceu
 	unsigned long Tdelay;	//Tempo de atraso configurado
 	unsigned long P1M, P2M;	//Tempo onde a condicional do paraquedas foi atingida
@@ -357,6 +357,47 @@ public:
 	void emergency(bool state = 1);
 };
 
+class MonoDeploy
+{
+	static const unsigned long Tign;	//Active time
+	static const bool command = HIGH;	//Active state
+	static bool apogee;
+	static unsigned long TimeZero;	//Zero reference for timer
+	static unsigned long Tseal;	//Seal momment time
+	static float height;
+	
+	const unsigned int cPin;	//Command pin
+	const unsigned int iPin;	//Info pin
+	unsigned long Tnow;
+	unsigned long Tcmd;
+	unsigned long Theight;
+	unsigned long Tmax;
+	float cmdHeight;
+	float cmdDelay;
+	bool useH = false;	//Command height based
+	bool useT = false;	//Command time based
+	bool useM = false;
+	bool useH_A = false;
+	bool useT_A = false;
+	bool cmdSeal = false;	//
+	bool sPin = !command;	//Output sate
+public:
+	MonoDeploy(unsigned int commandPin, unsigned int infoPin);
+
+	static void resetTimer();
+	static void sealApogee(bool apg);
+	static bool getApogee();
+	void setHeight(float H);
+	
+	void setHeightCmd(float H);
+	void setDelayCmd(float T);
+	void setTmax(float T);
+	bool begin();
+	bool info();
+	bool getState();
+	void refresh();
+};
+
 class SDCH
 {
 	const uint8_t CS;
@@ -378,7 +419,7 @@ public:
 	operator bool();
 	String getFname();
 };
-
+/*
 class ComProtocol
 {
 public:
@@ -412,5 +453,5 @@ public:
 	long receiveInteger();
 	float receiveFloating();
 };
-
+*/
 #endif
