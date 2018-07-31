@@ -8,25 +8,25 @@
 
 #pragma region Configurations
 
-#define BaudRate 115200
+#define BaudRate 2000000
 
-#define GY80 (0)							//Use GY80 sensor
+#define GY80 (1)							//Use GY80 sensor
 #define BMP085 (GY80 || 1)					//Use BMP085 sensor
 #define ADXL345 (GY80 || 0)					//Use ADXL345 sensor
 #define L3G4200D (GY80 || 0)				//Use L3G4200D sensor
 #define HMC5883 (GY80 || 0)					//Use HMC5883 sensor
 #define SDCard (1)							//Use SD card
-#define GPSmode (0)							//Use GPS
-#define LoRamode (0)						//Serial mode for transmission on LoRa module
-#define TalkingBoard (1)					//When two boards are connected for redundancy system
+#define GPSmode (1)							//Use GPS
+#define LoRamode (1)						//Serial mode for transmission on LoRa module
+#define TalkingBoard (0)					//When two boards are connected for redundancy system
 
 #define ApoGee (BMP085 && 1)				//Detection of apogee
-#define PRINT (0)							//Print or not things on Serial
+#define PRINT (1)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
 #define BuZZ (1)							//Buzzer mode
 #define RGB (1)								//RGB LED board
-#define DELAYED (ApoGee && 0)				//Redundancy mode
+#define DELAYED (ApoGee && 1)				//Redundancy mode
 
 #define PbarT (PRINT && BMP085 && 1)		//Print barometer temperature data
 #define PbarP (PRINT && BMP085 && 1)		//Print barometer pressure data
@@ -49,7 +49,7 @@
 #define PapgP (PRINT && ApoGee && 1)		//Print apogee information
 #define PapgA (PRINT && ApoGee && 1)		//Print apogee alpha
 #define PapgS (PRINT && ApoGee && 1)		//Print apogee sigma
-#define PapgM (PRINT && ApoGee && 1)		//Print apogee sigma max
+#define PapgM (PRINT && ApoGee && 0)		//Print apogee sigma max
 
 #define Pgps (PRINT && GPSmode && 1)		//Print GPS informations
 #define Psep (PRINT && 1)					//Print visual separator
@@ -63,7 +63,7 @@
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (BMP085 || ADXL345 || L3G4200D || HMC5883)
-#define SYSTEM_n (char(SDCard)+char(BMP085)+char(ADXL345)+char(L3G4200D)+char(HMC5883)+char(GPSmode)+char(ApoGee)*2)
+#define SYSTEM_n (char(SDCard)+char(BMP085)+char(ADXL345)+char(L3G4200D)+char(HMC5883)+char(GPSmode)+char(ApoGee)*2+char(DELAYED)*2)
 
 #pragma endregion
 
@@ -79,20 +79,26 @@ MovingAverage MM_baro[2]{ (5),(5) };		//Array declaration of the moving average 
 #endif // BMP085
 
 #if ApoGee
-#define rec Recover
 #define apg Apogee
 Apogeu apg(5, 30, 50);						//Apogee checker object declaration
-DuDeploy rec(A8, A9, 4, 3, 5, 15);			//Dual deployment parachute object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
-#define p2h 500								//Height to main parachute
+#define p2h 350								//Height to main parachute
+#define rec_mainN MainNormal
+#define rec_drogN DrogueNormal
+MonoDeploy rec_mainN(0, 0);
+MonoDeploy rec_drogN(0, 0);
+#if DELAYED
+#define rec_mainB MainBackup
+#define rec_drogB DrogueBackup
+MonoDeploy rec_mainB(0, 0);
+MonoDeploy rec_drogB(0, 0);
+#endif // DELAYED
+
 #endif // ApoGee
 
 #if DELAYED
-#define sysDelay 3
-#ifdef p2h
-#undef p2h
-#define p2h 400								//Height to main parachute on redundance mode
-#endif // p2h
+#define sysDelay 1
+#define p2h_D 300								//Height to main parachute on redundance mode
 #endif // DELAYED
 
 #if WUF
@@ -209,16 +215,17 @@ void setup()
 #endif // RGB
 
 #if ApoGee
-	rec.begin();
+	rec_mainN.begin();
+	rec_drogN.begin();
+	rec_mainN.setHeightCmd(p2h);
 #endif // ApoGee
 
 #if DELAYED
-	rec.setTdelay(sysDelay);
+	rec_mainB.begin();
+	rec_drogB.begin();
+	rec_mainB.setHeightCmd(p2h_D);
+	rec_drogB.setDelayCmd(sysDelay);
 #endif // DELAYED
-
-#if ApoGee
-	rec.setP2height(p2h);
-#endif // ApoGee
 
 
 #if BuZZ
@@ -347,32 +354,15 @@ void setup()
 	}
 #endif // HMC5883
 
-#if ApoGee
-	if (!rec.info1())
-	{
-#if COMmode
-		transmitln(F("Ign1 ok"));
-#endif // COMmode
-	}
-	else
-	{
-#if COMmode
-		transmitln(F("Ign1 err"));
-#endif // COMmode
-	}
-	if (!rec.info2())
-	{
-#if COMmode
-		transmitln(F("Ign2 ok"));
-#endif // COMmode
-	}
-	else
-	{
-#if COMmode
-		transmitln(F("Ign2 err"));
-#endif // COMmode
-	}
-#endif // ApoGee
+#if ApoGee && COMmode
+	transmitln(rec_mainN.info() ? F("IgnMainN ok") : F("IgnMainN err"));
+	transmitln(rec_drogN.info() ? F("IgnDrogN ok") : F("IgnDrogN err"));
+#if DELAYED
+	transmitln(rec_mainB.info() ? F("IgnMainB ok") : F("IgnMainB err"));
+	transmitln(rec_drogB.info() ? F("IgnDrogB ok") : F("IgnDrogB err"));
+#endif // DELAYED
+
+#endif // ApoGee && COMmode
 
 
 #if SDCard
@@ -647,7 +637,7 @@ void setup()
 
 #if ApoGee
 	apg.resetTimer();
-	rec.resetTimer();
+	MonoDeploy::resetTimer();
 #endif // ApoGee
 }
 
@@ -664,20 +654,32 @@ void loop()
 
 #if ApoGee
 	apg.calcAlt(baro.getPressure());
-	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
-	if (rec.getSysState(0))
+	//rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
+	if (
+		rec_mainN.getGlobalState() || rec_drogN.getGlobalState()
+#if DELAYED
+		|| rec_mainB.getGlobalState() || rec_drogB.getGlobalState()
+#endif // DELAYED
+		)
 	{
 		apg.apgSigma();
 		apg.apgAlpha();
-		rec.sealApogee(apg.getApogeu(0.9f));
-		rec.refresh(apg.getAltitude());
+		MonoDeploy::sealApogee(apg.getApogeu(0.9f));
+		MonoDeploy::putHeight(apg.getAltitude());
+		rec_mainN.refresh();
+		rec_drogN.refresh();
+#if DELAYED
+		rec_mainB.refresh();
+		rec_drogB.refresh();
+#endif // DELAYED
+
 #if PapgM
 		Gutil.comparer(apg.getSigma());
 #endif // PapgM
-		if (rec.getApogee()) Gutil.mem = 1;
+		if (MonoDeploy::getApogee()) Gutil.mem = 1;
 	}
 #if BuZZ
-	else beep(SYSTEM_n);
+	else beep(SYSTEM_n); //rec
 #endif // BuZZ
 #endif // ApoGee
 #if PWMapg
@@ -1011,10 +1013,19 @@ inline void SerialSend()
 		Serial.print(apg.getApgTm());
 		Serial.print(F(" s\t"));
 	}
-	if (rec.getSysState())
+	if (
+		rec_mainN.getGlobalState() || rec_drogN.getGlobalState()
+#if DELAYED
+		|| rec_mainB.getGlobalState() || rec_drogB.getGlobalState()
+#endif // DELAYED
+		)
 	{
-		if (rec.getP1S(0)) transmit(F("Act 1\t"));
-		if (rec.getP2S(0)) transmit(F("Act 2\t"));
+		if (rec_mainN.getState(0)) LoRa.print(F("Act MainN\t"));
+		if (rec_drogN.getState(0)) LoRa.print(F("Act DrogueN\t"));
+#if DELAYED
+		if (rec_mainB.getState(0)) LoRa.print(F("Act MainB\t"));
+		if (rec_drogB.getState(0)) LoRa.print(F("Act DrogueB\t"));
+#endif // DELAYED
 	}
 #endif // PapgW
 
@@ -1086,8 +1097,16 @@ inline void SDSend()
 					SDC.theFile.print(F(" s"));
 					SDC.tab();
 				}
-				if (rec.getP1S(0)) SDC.theFile.print(F("Act 1\t"));
-				if (rec.getP2S(0)) SDC.theFile.print(F("Act 2\t"));
+
+				if ( rec_mainN.getState(0) ) SDC.theFile.print(F("Act MainN\t"));
+				if ( rec_drogN.getState(0) ) SDC.theFile.print(F("Act DrogueN\t"));
+#if DELAYED
+				if (rec_mainB.getState(0)) SDC.theFile.print(F("Act MainB\t"));
+				if (rec_drogB.getState(0)) SDC.theFile.print(F("Act DrogueB\t"));
+#endif // DELAYED
+
+
+
 			}
 #endif // ApoGee
 			SDC.theFile.println();
@@ -1174,11 +1193,14 @@ inline void LoRaSend()
 		//LRutil.oneTimeReset();
 	}
 #if ApoGee
-	if (rec.getP1S(0)) LoRa.print(F("Act 1\t"));
-	if (rec.getP2S(0)) LoRa.print(F("Act 2\t"));
+	if (rec_mainN.getState(0)) LoRa.print(F("Act MainN\t"));
+	if (rec_drogN.getState(0)) LoRa.print(F("Act DrogueN\t"));
+#if DELAYED
+	if (rec_mainB.getState(0)) LoRa.print(F("Act MainB\t"));
+	if (rec_drogB.getState(0)) LoRa.print(F("Act DrogueB\t"))
+#endif // DELAYED
+		;
 #endif // ApoGee
-
-	//if (LRutil.oneTime()) LoRa.println();
 }
 #endif // LoRamode
 
@@ -1286,8 +1308,14 @@ inline void readEverything()
 
 #endif // GPSmode
 #if ApoGee && (RBF || WUF)
-	if (!rec.info1()) sysC++;
-	if (!rec.info2()) sysC++;
+	if (rec_mainN.info()) sysC++;
+	if (rec_drogN.info()) sysC++;
+
+#if DELAYED
+	if (rec_mainB.info()) sysC++;
+	if (rec_drogB.info()) sysC++;
+#endif // DELAYED
+
 #endif // ApoGee && (RBF || WUF)
 }
 

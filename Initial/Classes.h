@@ -359,7 +359,7 @@ public:
 
 class MonoDeploy
 {
-	static const unsigned long Tign;	//Active time
+	static const unsigned long Tign = ((unsigned long)(12 * 1000000.0));	//Active time
 	static const bool command = HIGH;	//Active state
 	static bool apogee;
 	static unsigned long TimeZero;	//Zero reference for timer
@@ -380,6 +380,9 @@ class MonoDeploy
 	bool useH_A = false;
 	bool useT_A = false;
 	bool cmdSeal = false;	//
+	bool stateAux = false;
+	bool globalState = true;
+	bool globalStateAux = false;
 	bool sPin = !command;	//Output sate
 public:
 	MonoDeploy(unsigned int commandPin, unsigned int infoPin);
@@ -387,14 +390,15 @@ public:
 	static void resetTimer();
 	static void sealApogee(bool apg);
 	static bool getApogee();
-	void setHeight(float H);
+	static void putHeight(float H);
 	
 	void setHeightCmd(float H);
 	void setDelayCmd(float T);
 	void setTmax(float T);
 	bool begin();
 	bool info();
-	bool getState();
+	bool getState(bool type = 1);
+	bool getGlobalState();
 	void refresh();
 };
 

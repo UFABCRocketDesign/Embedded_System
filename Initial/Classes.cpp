@@ -1017,7 +1017,11 @@ void DuDeploy::emergency(bool state)
 	emer = state;
 }
 
-///Controle de avionamento unitário
+///Controle de acionamento unitï¿½rio
+bool MonoDeploy::apogee = false;
+unsigned long MonoDeploy::TimeZero = 0;
+unsigned long MonoDeploy::Tseal = 0;
+float MonoDeploy::height = 0;
 MonoDeploy::MonoDeploy(unsigned int commandPin, unsigned int infoPin): cPin(commandPin), iPin(infoPin)
 {
 }
@@ -1037,7 +1041,7 @@ bool MonoDeploy::getApogee()
 {
 	return apogee;
 }
-void MonoDeploy::setHeight(float H)
+void MonoDeploy::putHeight(float H)
 {
 	height = H;
 }
@@ -1068,9 +1072,19 @@ bool MonoDeploy::info()
 {
 	return digitalRead(iPin);
 }
-bool MonoDeploy::getState()
+bool MonoDeploy::getState(bool type)
 {
-	return !cmdSeal || sPin == command;
+	if (type) return sPin == command;
+	else if (!stateAux && sPin == command)
+	{
+		stateAux = true;
+		return true;
+	}
+	else return false;
+}
+bool MonoDeploy::getGlobalState()
+{
+	return globalState;
 }
 void MonoDeploy::refresh()
 {
@@ -1078,7 +1092,7 @@ void MonoDeploy::refresh()
 	if (useM && Tnow >= TimeZero + Tmax && !getApogee()) sealApogee(true);
 	if (getApogee())
 	{
-		if (useH)
+		if (useH && !useH_A)
 		{
 			if (height <= cmdHeight)
 			{
@@ -1088,7 +1102,7 @@ void MonoDeploy::refresh()
 		}
 		if (useT)
 		{
-			useT_A = (useH) ? (Tnow >= Theight + cmdDelay) : (Tnow >= Tseal + cmdDelay);
+			useT_A = (useH) ? (Tnow >= Theight + cmdDelay && useH_A) : (Tnow >= Tseal + cmdDelay);
 		}
 		bool triggers = (!useH && !useT) || (useH && !useT && useH_A) || (!useH && useT && useT_A) || (useH && useT && useH_A && useT_A);
 		if (cmdSeal || triggers)
@@ -1103,6 +1117,8 @@ void MonoDeploy::refresh()
 		}
 	}
 	digitalWrite(cPin, sPin);
+	if (!globalStateAux && sPin == command)	globalStateAux = true;
+	else if (globalStateAux && sPin != command)	globalState = false;
 }
 
 
