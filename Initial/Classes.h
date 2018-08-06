@@ -359,7 +359,7 @@ public:
 
 class MonoDeploy
 {
-	static const unsigned long Tign = ((unsigned long)(12 * 1000000.0));	//Active time
+	static const unsigned long Tign = ((unsigned long)(5 * 1000000.0));	//Active time
 	static const bool command = HIGH;	//Active state
 	static bool apogee;
 	static unsigned long TimeZero;	//Zero reference for timer

@@ -25,7 +25,7 @@
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
 #define BuZZ (1)							//Buzzer mode
-#define RGB (1)								//RGB LED board
+#define RGB (0)								//RGB LED board
 #define DELAYED (ApoGee && 1)				//Redundancy mode
 
 #define PbarT (PRINT && BMP085 && 1)		//Print barometer temperature data
@@ -83,23 +83,91 @@ MovingAverage MM_baro[2]{ (5),(5) };		//Array declaration of the moving average 
 Apogeu apg(5, 30, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
 #define p2h 350								//Height to main parachute
-#define rec_mainN MainNormal
-#define rec_drogN DrogueNormal
-MonoDeploy rec_mainN(0, 0);
-MonoDeploy rec_drogN(0, 0);
+#define mainN MainNormal
+#define drogN DrogueNormal
+
 #if DELAYED
-#define rec_mainB MainBackup
-#define rec_drogB DrogueBackup
-MonoDeploy rec_mainB(0, 0);
-MonoDeploy rec_drogB(0, 0);
+#define sysDelay 1.5
+#define p2h_D 300							//Height to main parachute on redundance mode
+#define mainB MainBackup
+#define drogB DrogueBackup
+#endif // DELAYED
+
+#define pins_drogN (36, A14) /*ign1*/
+#define pins_drogB (A7, A8)  /*ign2*/
+#define pins_mainN (46, A2)  /*ign3*/
+#define pins_mainB (A1, A0)	 /*ign4*/
+
+struct Recovery
+{
+	static MonoDeploy mainN;
+	static MonoDeploy drogN;
+
+#if DELAYED
+	static MonoDeploy mainB;
+	static MonoDeploy drogB;
+#endif // DELAYED
+	static bool begin()
+	{
+		bool aux = true;
+		aux &= mainN.begin();
+		aux &= drogN.begin();
+
+#if DELAYED
+		aux &= mainB.begin();
+		aux &= drogB.begin();
+#endif // DELAYED
+
+
+		return aux;
+	}
+	static bool getGlobalState()
+	{
+		bool aux = false;
+		aux |= mainN.getGlobalState();
+		aux |= drogN.getGlobalState();
+#if DELAYED
+		aux |= mainB.getGlobalState();
+		aux |= drogB.getGlobalState();
+#endif // DELAYED
+		return aux;
+	}
+	static void refresh()
+	{
+		mainN.refresh();
+		drogN.refresh();
+#if DELAYED
+		mainB.refresh();
+		drogB.refresh();
+#endif // DELAYED
+	}
+	static void resetTimer()
+	{
+		MonoDeploy::resetTimer();
+	}
+	static void sealApogee(bool apg)
+	{
+		MonoDeploy::sealApogee(apg);
+	}
+	static int putHeight(float H)
+	{
+		MonoDeploy::putHeight(H);
+	}
+	static bool getApogee()
+	{
+		return MonoDeploy::getApogee();
+	}
+} rec;
+
+MonoDeploy Recovery::mainN pins_mainN;
+MonoDeploy Recovery::drogN pins_drogN;
+
+#if DELAYED
+MonoDeploy Recovery::mainB pins_mainB;
+MonoDeploy Recovery::drogB pins_drogB;
 #endif // DELAYED
 
 #endif // ApoGee
-
-#if DELAYED
-#define sysDelay 1
-#define p2h_D 300								//Height to main parachute on redundance mode
-#endif // DELAYED
 
 #if WUF
 #define WUFheigh 50
@@ -167,7 +235,7 @@ unsigned short sysC = 0;
 
 
 #if BuZZ
-#define buzzPin 2							//Pin that the buzzer is connected
+#define buzzPin 6							//Pin that the buzzer is connected
 #define buzzCmd LOW							//Buzzer is on in high state
 #define holdT .075
 Helpful beeper;
@@ -215,16 +283,13 @@ void setup()
 #endif // RGB
 
 #if ApoGee
-	rec_mainN.begin();
-	rec_drogN.begin();
-	rec_mainN.setHeightCmd(p2h);
+	rec.begin();
+	rec.mainN.setHeightCmd(p2h);
 #endif // ApoGee
 
 #if DELAYED
-	rec_mainB.begin();
-	rec_drogB.begin();
-	rec_mainB.setHeightCmd(p2h_D);
-	rec_drogB.setDelayCmd(sysDelay);
+	rec.mainB.setHeightCmd(p2h_D);
+	rec.drogB.setDelayCmd(sysDelay);
 #endif // DELAYED
 
 
@@ -355,11 +420,11 @@ void setup()
 #endif // HMC5883
 
 #if ApoGee && COMmode
-	transmitln(rec_mainN.info() ? F("IgnMainN ok") : F("IgnMainN err"));
-	transmitln(rec_drogN.info() ? F("IgnDrogN ok") : F("IgnDrogN err"));
+	transmitln(rec.mainN.info() ? F("IgnMainN ok") : F("IgnMainN err"));
+	transmitln(rec.drogN.info() ? F("IgnDrogN ok") : F("IgnDrogN err"));
 #if DELAYED
-	transmitln(rec_mainB.info() ? F("IgnMainB ok") : F("IgnMainB err"));
-	transmitln(rec_drogB.info() ? F("IgnDrogB ok") : F("IgnDrogB err"));
+	transmitln(rec.mainB.info() ? F("IgnMainB ok") : F("IgnMainB err"));
+	transmitln(rec.drogB.info() ? F("IgnDrogB ok") : F("IgnDrogB err"));
 #endif // DELAYED
 
 #endif // ApoGee && COMmode
@@ -637,7 +702,7 @@ void setup()
 
 #if ApoGee
 	apg.resetTimer();
-	MonoDeploy::resetTimer();
+	rec.resetTimer();
 #endif // ApoGee
 }
 
@@ -655,28 +720,17 @@ void loop()
 #if ApoGee
 	apg.calcAlt(baro.getPressure());
 	//rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
-	if (
-		rec_mainN.getGlobalState() || rec_drogN.getGlobalState()
-#if DELAYED
-		|| rec_mainB.getGlobalState() || rec_drogB.getGlobalState()
-#endif // DELAYED
-		)
+	if (rec.getGlobalState())
 	{
 		apg.apgSigma();
 		apg.apgAlpha();
-		MonoDeploy::sealApogee(apg.getApogeu(0.9f));
-		MonoDeploy::putHeight(apg.getAltitude());
-		rec_mainN.refresh();
-		rec_drogN.refresh();
-#if DELAYED
-		rec_mainB.refresh();
-		rec_drogB.refresh();
-#endif // DELAYED
-
+		rec.sealApogee(apg.getApogeu(0.9f));
+		rec.putHeight(apg.getAltitude());
+		rec.refresh();
 #if PapgM
 		Gutil.comparer(apg.getSigma());
 #endif // PapgM
-		if (MonoDeploy::getApogee()) Gutil.mem = 1;
+		if (rec.getApogee()) Gutil.mem = 1;
 	}
 #if BuZZ
 	else beep(SYSTEM_n); //rec
@@ -1013,20 +1067,18 @@ inline void SerialSend()
 		Serial.print(apg.getApgTm());
 		Serial.print(F(" s\t"));
 	}
-	if (
-		rec_mainN.getGlobalState() || rec_drogN.getGlobalState()
-#if DELAYED
-		|| rec_mainB.getGlobalState() || rec_drogB.getGlobalState()
-#endif // DELAYED
-		)
+#if COMmode
+	if (rec.getGlobalState())
 	{
-		if (rec_mainN.getState(0)) LoRa.print(F("Act MainN\t"));
-		if (rec_drogN.getState(0)) LoRa.print(F("Act DrogueN\t"));
+		if (rec.mainN.getState(0)) transmit(F("Act MainN\t"));
+		if (rec.drogN.getState(0)) transmit(F("Act DrogueN\t"));
 #if DELAYED
-		if (rec_mainB.getState(0)) LoRa.print(F("Act MainB\t"));
-		if (rec_drogB.getState(0)) LoRa.print(F("Act DrogueB\t"));
+		if (rec.mainB.getState(0)) transmit(F("Act MainB\t"));
+		if (rec.drogB.getState(0)) transmit(F("Act DrogueB\t"));
 #endif // DELAYED
 	}
+#endif // COMmode
+
 #endif // PapgW
 
 #if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
@@ -1098,11 +1150,11 @@ inline void SDSend()
 					SDC.tab();
 				}
 
-				if ( rec_mainN.getState(0) ) SDC.theFile.print(F("Act MainN\t"));
-				if ( rec_drogN.getState(0) ) SDC.theFile.print(F("Act DrogueN\t"));
+				if ( rec.mainN.getState(0) ) SDC.theFile.print(F("Act MainN\t"));
+				if ( rec.drogN.getState(0) ) SDC.theFile.print(F("Act DrogueN\t"));
 #if DELAYED
-				if (rec_mainB.getState(0)) SDC.theFile.print(F("Act MainB\t"));
-				if (rec_drogB.getState(0)) SDC.theFile.print(F("Act DrogueB\t"));
+				if (rec.mainB.getState(0)) SDC.theFile.print(F("Act MainB\t"));
+				if (rec.drogB.getState(0)) SDC.theFile.print(F("Act DrogueB\t"));
 #endif // DELAYED
 
 
@@ -1193,11 +1245,11 @@ inline void LoRaSend()
 		//LRutil.oneTimeReset();
 	}
 #if ApoGee
-	if (rec_mainN.getState(0)) LoRa.print(F("Act MainN\t"));
-	if (rec_drogN.getState(0)) LoRa.print(F("Act DrogueN\t"));
+	if (rec.mainN.getState(0)) LoRa.print(F("Act MainN\t"));
+	if (rec.drogN.getState(0)) LoRa.print(F("Act DrogueN\t"));
 #if DELAYED
-	if (rec_mainB.getState(0)) LoRa.print(F("Act MainB\t"));
-	if (rec_drogB.getState(0)) LoRa.print(F("Act DrogueB\t"))
+	if (rec.mainB.getState(0)) LoRa.print(F("Act MainB\t"));
+	if (rec.drogB.getState(0)) LoRa.print(F("Act DrogueB\t"))
 #endif // DELAYED
 		;
 #endif // ApoGee
@@ -1308,12 +1360,12 @@ inline void readEverything()
 
 #endif // GPSmode
 #if ApoGee && (RBF || WUF)
-	if (rec_mainN.info()) sysC++;
-	if (rec_drogN.info()) sysC++;
+	if (rec.mainN.info()) sysC++;
+	if (rec.drogN.info()) sysC++;
 
 #if DELAYED
-	if (rec_mainB.info()) sysC++;
-	if (rec_drogB.info()) sysC++;
+	if (rec.mainB.info()) sysC++;
+	if (rec.drogB.info()) sysC++;
 #endif // DELAYED
 
 #endif // ApoGee && (RBF || WUF)

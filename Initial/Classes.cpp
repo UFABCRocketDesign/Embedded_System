@@ -1065,12 +1065,12 @@ bool MonoDeploy::begin()
 {
 	pinMode(cPin, OUTPUT);
 	digitalWrite(cPin, sPin);
-	pinMode(iPin, INPUT_PULLUP);
+	pinMode(iPin, INPUT);
 	return info();
 }
 bool MonoDeploy::info()
 {
-	return digitalRead(iPin);
+	return analogRead(iPin) > 100;
 }
 bool MonoDeploy::getState(bool type)
 {
@@ -1088,7 +1088,7 @@ bool MonoDeploy::getGlobalState()
 }
 void MonoDeploy::refresh()
 {
-	Tnow = micros();
+	Tnow = micros() - TimeZero;
 	if (useM && Tnow >= TimeZero + Tmax && !getApogee()) sealApogee(true);
 	if (getApogee())
 	{
