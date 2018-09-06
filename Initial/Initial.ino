@@ -8,25 +8,27 @@
 
 #pragma region Configurations
 
-#define BaudRate 2000000
+#define BaudRate 250000
 
-#define GY80 (1)							//Use GY80 sensor
+#define GY80 (0)							//Use GY80 sensor
 #define BMP085 (GY80 || 1)					//Use BMP085 sensor
 #define ADXL345 (GY80 || 0)					//Use ADXL345 sensor
 #define L3G4200D (GY80 || 0)				//Use L3G4200D sensor
 #define HMC5883 (GY80 || 0)					//Use HMC5883 sensor
 #define SDCard (1)							//Use SD card
-#define GPSmode (1)							//Use GPS
-#define LoRamode (1)						//Serial mode for transmission on LoRa module
+#define GPSmode (0)							//Use GPS
+#define LoRamode (0)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
+#define BuZZ (0)							//Buzzer mode
 
 #define ApoGee (BMP085 && 1)				//Detection of apogee
-#define PRINT (1)							//Print or not things on Serial
+#define PRINT (0)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
-#define BuZZ (1)							//Buzzer mode
+#define BEEPING (BuZZ && 1)					//Buzzer mode
 #define RGB (0)								//RGB LED board
-#define DELAYED (ApoGee && 1)				//Redundancy mode
+#define DualDeploy (ApoGee && 0)			//Dual Parachute Deployment
+#define DELAYED (ApoGee && 0)				//Redundancy mode
 
 #define PbarT (PRINT && BMP085 && 1)		//Print barometer temperature data
 #define PbarP (PRINT && BMP085 && 1)		//Print barometer pressure data
@@ -43,6 +45,7 @@
 #define PmagY (PRINT && HMC5883 && 1)		//Print magnetometer Y axis data
 #define PmagZ (PRINT && HMC5883 && 1)		//Print magnetometer Z axis data
 
+#define papgI (PRINT && ApoGee && 1)		//Print MonoDeploy.info of every instance
 #define PapgW (PRINT && ApoGee && 1)		//Print apogee information when detected
 #define PapgH (PRINT && ApoGee && 1)		//Print altimeter data
 #define PapgB (PRINT && ApoGee && 1)		//Print altimeter base
@@ -59,7 +62,7 @@
 #define Ncom (PRINT && 0)					//Print eachN counter
 #define Ps_n (PRINT && 0)					//Print SYSTEM_n
 
-#define PWMapg (ApoGee && 1)				//Show the apogee coefficient in a LED
+#define PWMapg (ApoGee && 0)				//Show the apogee coefficient in a LED
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (BMP085 || ADXL345 || L3G4200D || HMC5883)
@@ -75,47 +78,74 @@
 #define baro Barometer
 #define MM_baro M_baro
 Baro baro;									//Barometer object declaration
-MovingAverage MM_baro[2]{ (5),(5) };		//Array declaration of the moving average filter objects
+//MovingAverage MM_baro[2]{ (2),(2) };		//Array declaration of the moving average filter objects
+float MM_baro[2]{};
 #endif // BMP085
 
 #if ApoGee
 #define apg Apogee
-Apogeu apg(5, 30, 50);						//Apogee checker object declaration
+Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
-#define p2h 350								//Height to main parachute
 #define mainN MainNormal
+
+#if DualDeploy
+#define p2h 350								//Height to main parachute
+//#define p2h 15								//Height to main parachute  
 #define drogN DrogueNormal
+#endif // DualDeploy
 
 #if DELAYED
 #define sysDelay 1.5
-#define p2h_D 300							//Height to main parachute on redundance mode
 #define mainB MainBackup
-#define drogB DrogueBackup
+
+#if DualDeploy
+#define p2h_D 300							//Height to main parachute on redundance mode
+//#define p2h_D 10							//Height to main parachute on redundance mode
+#define drogB DrogueBackup  
+#endif // DualDeploy
+
 #endif // DELAYED
+
 
 #define pins_drogN (36, A14) /*ign1*/
 #define pins_drogB (A7, A8)  /*ign2*/
-#define pins_mainN (46, A2)  /*ign3*/
-#define pins_mainB (A1, A0)	 /*ign4*/
+#define pins_mainN (4, A2)  /*ign3*/
+#define pins_mainB (A1, A1)	 /*ign4*/
 
 struct Recovery
 {
 	static MonoDeploy mainN;
+
+#if DualDeploy
 	static MonoDeploy drogN;
+#endif // DualDeploy
+
 
 #if DELAYED
 	static MonoDeploy mainB;
+
+#if DualDeploy
 	static MonoDeploy drogB;
+#endif // DualDeploy
+
 #endif // DELAYED
 	static bool begin()
 	{
 		bool aux = true;
 		aux &= mainN.begin();
+
+#if DualDeploy
 		aux &= drogN.begin();
+#endif // DualDeploy
+
 
 #if DELAYED
 		aux &= mainB.begin();
+
+#if DualDeploy
 		aux &= drogB.begin();
+#endif // DualDeploy
+
 #endif // DELAYED
 
 
@@ -125,20 +155,36 @@ struct Recovery
 	{
 		bool aux = false;
 		aux |= mainN.getGlobalState();
+
+#if DualDeploy
 		aux |= drogN.getGlobalState();
+#endif // DualDeploy
+
 #if DELAYED
 		aux |= mainB.getGlobalState();
+
+#if DualDeploy
 		aux |= drogB.getGlobalState();
+#endif // DualDeploy
+
 #endif // DELAYED
 		return aux;
 	}
 	static void refresh()
 	{
 		mainN.refresh();
+
+#if DualDeploy
 		drogN.refresh();
+#endif // DualDeploy
+
 #if DELAYED
 		mainB.refresh();
+
+#if DualDeploy
 		drogB.refresh();
+#endif // DualDeploy
+
 #endif // DELAYED
 	}
 	static void resetTimer()
@@ -160,17 +206,26 @@ struct Recovery
 } rec;
 
 MonoDeploy Recovery::mainN pins_mainN;
+
+#if DualDeploy
 MonoDeploy Recovery::drogN pins_drogN;
+#endif // DualDeploy
+
 
 #if DELAYED
 MonoDeploy Recovery::mainB pins_mainB;
+
+#if DualDeploy
 MonoDeploy Recovery::drogB pins_drogB;
+#endif // DualDeploy
+
 #endif // DELAYED
 
 #endif // ApoGee
 
 #if WUF
-#define WUFheigh 50
+#define WUFheigh 10
+//#define WUFheigh 5
 #endif // WUF
 
 #if ADXL345
@@ -196,7 +251,7 @@ MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving avera
 
 #if SDCard
 #define SDC SecureDigitalCard
-SDCH SDC(53, "Horus");						//Declaration of object to help SD card file management
+SDCH SDC(10, "Yoki");						//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
@@ -237,9 +292,12 @@ unsigned short sysC = 0;
 #if BuZZ
 #define buzzPin 6							//Pin that the buzzer is connected
 #define buzzCmd LOW							//Buzzer is on in high state
+#endif // BuZZ
+
+#if BEEPING
 #define holdT .075
 Helpful beeper;
-#endif // BuZZ
+#endif // BEEPING
 
 #if PWMapg
 #define PWMout 13							//Pin that the LED who shows apogee state is connected
@@ -284,19 +342,34 @@ void setup()
 
 #if ApoGee
 	rec.begin();
+#if DualDeploy
 	rec.mainN.setHeightCmd(p2h);
+#endif // DualDeploy
+
 #endif // ApoGee
 
 #if DELAYED
+#if DualDeploy
 	rec.mainB.setHeightCmd(p2h_D);
-	rec.drogB.setDelayCmd(sysDelay);
+#else
+	rec.mainB.setDelayCmd(sysDelay);
+#endif // !DualDeploy
+
+#if DualDeploy
+		rec.drogB.setDelayCmd(sysDelay);
+#endif // DualDeploy
+
 #endif // DELAYED
 
 
 #if BuZZ
 	pinMode(buzzPin, OUTPUT);
-	beep();
+	digitalWrite(buzzPin, !buzzCmd);
 #endif // BuZZ
+#if BEEPING
+	beep();
+#endif // BEEPING
+
 
 #if PRINT
 	Serial.begin(BaudRate);
@@ -351,7 +424,7 @@ void setup()
 
 #if PapgB
 		Serial.println(apg.getZero());
-#else
+#elif PRINT
 		Serial.println();
 #endif // PRINT
 
@@ -421,10 +494,18 @@ void setup()
 
 #if ApoGee && COMmode
 	transmitln(rec.mainN.info() ? F("IgnMainN ok") : F("IgnMainN err"));
+
+#if DualDeploy
 	transmitln(rec.drogN.info() ? F("IgnDrogN ok") : F("IgnDrogN err"));
+#endif // DualDeploy
+
 #if DELAYED
 	transmitln(rec.mainB.info() ? F("IgnMainB ok") : F("IgnMainB err"));
+
+#if DualDeploy
 	transmitln(rec.drogB.info() ? F("IgnDrogB ok") : F("IgnDrogB err"));
+#endif // DualDeploy
+
 #endif // DELAYED
 
 #endif // ApoGee && COMmode
@@ -724,7 +805,7 @@ void loop()
 	{
 		apg.apgSigma();
 		apg.apgAlpha();
-		rec.sealApogee(apg.getApogeu(0.9f));
+		rec.sealApogee(apg.getApogeu(0.8f));
 		rec.putHeight(apg.getAltitude());
 		rec.refresh();
 #if PapgM
@@ -732,9 +813,9 @@ void loop()
 #endif // PapgM
 		if (rec.getApogee()) Gutil.mem = 1;
 	}
-#if BuZZ
+#if BEEPING
 	else beep(SYSTEM_n); //rec
-#endif // BuZZ
+#endif // BEEPING
 #endif // ApoGee
 #if PWMapg
 	analogWrite(PWMout, (char)(apg.getSigma() * 255));
@@ -752,9 +833,9 @@ void loop()
 	LoRaSend();
 #endif // LoRamode
 
-#if BuZZ && !WUF && !RBF && !ApoGee
+#if BEEPING && !WUF && !RBF && !ApoGee
 	beep(1);
-#endif // BuZZ && !WUF && !RBF && !ApoGee
+#endif // BEEPING && !WUF && !RBF && !ApoGee
 }
 
 //////////////////////////////////////////////////////RBF//////////////////////////////////////////////////////
@@ -858,15 +939,15 @@ inline void WaitUntil(float minHeight)
 		LoRaSend();
 #endif // LoRamode
 
-#if BuZZ
+#if BEEPING
 		beep(sysC);
-#endif // BuZZ
+#endif // BEEPING
 
 	}
 	while (abs(apg.getAltitude()) < minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
-#if BuZZ
+#if BEEPING
 	beep();
-#endif // BuZZ
+#endif // BEEPING
 }
 #endif // WUF
 
@@ -1071,10 +1152,18 @@ inline void SerialSend()
 	if (rec.getGlobalState())
 	{
 		if (rec.mainN.getState(0)) transmit(F("Act MainN\t"));
+
+#if DualDeploy
 		if (rec.drogN.getState(0)) transmit(F("Act DrogueN\t"));
+#endif // DualDeploy
+
 #if DELAYED
 		if (rec.mainB.getState(0)) transmit(F("Act MainB\t"));
+
+#if DualDeploy
 		if (rec.drogB.getState(0)) transmit(F("Act DrogueB\t"));
+
+#endif // DualDeploy
 #endif // DELAYED
 	}
 #endif // COMmode
@@ -1151,10 +1240,18 @@ inline void SDSend()
 				}
 
 				if ( rec.mainN.getState(0) ) SDC.theFile.print(F("Act MainN\t"));
-				if ( rec.drogN.getState(0) ) SDC.theFile.print(F("Act DrogueN\t"));
+
+#if DualDeploy
+				if (rec.drogN.getState(0)) SDC.theFile.print(F("Act DrogueN\t"));
+#endif // DualDeploy
+
 #if DELAYED
 				if (rec.mainB.getState(0)) SDC.theFile.print(F("Act MainB\t"));
+
+#if DualDeploy
 				if (rec.drogB.getState(0)) SDC.theFile.print(F("Act DrogueB\t"));
+#endif // DualDeploy
+
 #endif // DELAYED
 
 
@@ -1176,7 +1273,7 @@ inline void SDSend()
 
 //////////////////////////////////////////////////////BZZ//////////////////////////////////////////////////////
 
-#if BuZZ
+#if BEEPING
 inline void beep(unsigned int N)
 {
 	if (beeper.eachT(holdT*SYSTEM_n * 4) || beeper.oneTime())
@@ -1199,7 +1296,7 @@ inline void beep()
 	digitalWrite(buzzPin, !buzzCmd);
 	beeper.counterReset();
 }
-#endif // BuZZ
+#endif // BEEPING
 
 //////////////////////////////////////////////////////LRM//////////////////////////////////////////////////////
 
@@ -1361,11 +1458,19 @@ inline void readEverything()
 #endif // GPSmode
 #if ApoGee && (RBF || WUF)
 	if (rec.mainN.info()) sysC++;
+
+#if DualDeploy
 	if (rec.drogN.info()) sysC++;
+#endif // DualDeploy
+
 
 #if DELAYED
 	if (rec.mainB.info()) sysC++;
+
+#if DualDeploy
 	if (rec.drogB.info()) sysC++;
+#endif // DualDeploy
+
 #endif // DELAYED
 
 #endif // ApoGee && (RBF || WUF)

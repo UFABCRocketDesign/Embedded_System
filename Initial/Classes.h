@@ -283,8 +283,8 @@ class Apogeu
 	//float* Alt = new float[N];
 	float* altMed = new float[R]();
 
-	//MovingAverage Alt;
-	SerialFilter Alt;
+	MovingAverage Alt;
+	//SerialFilter Alt;
 public:
 	Apogeu(unsigned int n, unsigned int r, float s);
 	float addZero(long P, float sealevelP = 101325);

@@ -1,5 +1,4 @@
 *.sln
-*.filters*
 *.vsarduino.h
 *.vmps.xml
 *.ino.elf
@@ -12,7 +11,7 @@
 *.elf
 *.d
 *.o
-*.vcxproj
+*.vcxproj*
 *.a
 *.idb
 Initial/.vs/*
