@@ -673,8 +673,12 @@ bool GyGPS::isNew()
 
 
 ///Rotinas de verificacao de apogeu
-//Apogeu::Apogeu(unsi7gned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Alt(N, 5), Rf(Rl1 * (Rl1 + 1) * (2 * Rl1 + 1) / 6)
+
+#ifdef ARDUINO_AVR_MEGA2560
+Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Alt(N, 5), Rf(Rl1 * (Rl1 + 1) * (2 * Rl1 + 1) / 6)
+#else
 Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Alt(N), Rf(Rl1 * (Rl1 + 1) * (2 * Rl1 + 1) / 6)
+#endif // ARDUINO_AVR_MEGA2560
 {
 	//for (int i = Rl1; i > 0; i--) Rf += (float)(i*i);
 }
@@ -1023,7 +1027,7 @@ bool MonoDeploy::apogee = false;
 unsigned long MonoDeploy::TimeZero = 0;
 unsigned long MonoDeploy::Tseal = 0;
 float MonoDeploy::height = 0;
-MonoDeploy::MonoDeploy(unsigned int commandPin, unsigned int infoPin): cPin(commandPin), iPin(infoPin)
+MonoDeploy::MonoDeploy(unsigned int commandPin, unsigned int infoPin, unsigned long actionTime, unsigned int systemMode): cPin(commandPin), iPin(infoPin), sysMode(systemMode), Tign((unsigned long)(actionTime * 1000000.0))
 {
 }
 void MonoDeploy::resetTimer()
@@ -1064,9 +1068,19 @@ void MonoDeploy::setTmax(float T)
 }
 bool MonoDeploy::begin()
 {
-	pinMode(cPin, OUTPUT);
-	digitalWrite(cPin, sPin);
-	pinMode(iPin, INPUT);
+	if (sysMode == 0)
+	{
+		pinMode(cPin, OUTPUT);
+		digitalWrite(cPin, sPin);
+		pinMode(iPin, INPUT);
+	}
+#if SERVO_MODE	
+	else if(sysMode)
+	{
+		motor.attach(cPin);
+		motor.write(0);
+	}
+#endif
 	return info();
 }
 bool MonoDeploy::info()
@@ -1117,7 +1131,14 @@ void MonoDeploy::refresh()
 			else sPin = !command;
 		}
 	}
-	digitalWrite(cPin, sPin);
+	if(sysMode == 0) digitalWrite(cPin, sPin);
+#if SERVO_MODE
+	else if(sysMode == 1)
+	{
+		if (sPin) motor.write(90);
+		else motor.write(0);
+	}
+#endif
 	if (!globalStateAux && sPin == command)	globalStateAux = true;
 	else if (globalStateAux && sPin != command)	globalState = false;
 }

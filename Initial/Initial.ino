@@ -10,25 +10,27 @@
 
 #define BaudRate 250000
 
-#define GY80 (0)							//Use GY80 sensor
+#define GY80 (1)							//Use GY80 sensor
 #define BMP085 (GY80 || 1)					//Use BMP085 sensor
 #define ADXL345 (GY80 || 0)					//Use ADXL345 sensor
 #define L3G4200D (GY80 || 0)				//Use L3G4200D sensor
 #define HMC5883 (GY80 || 0)					//Use HMC5883 sensor
 #define SDCard (1)							//Use SD card
 #define GPSmode (0)							//Use GPS
-#define LoRamode (0)						//Serial mode for transmission on LoRa module
+#define LoRamode (1)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
-#define BuZZ (0)							//Buzzer mode
+#define BuZZ (1)							//Buzzer mode
 
 #define ApoGee (BMP085 && 1)				//Detection of apogee
-#define PRINT (0)							//Print or not things on Serial
+#define PRINT (1)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
 #define BEEPING (BuZZ && 1)					//Buzzer mode
 #define RGB (0)								//RGB LED board
 #define DualDeploy (ApoGee && 0)			//Dual Parachute Deployment
-#define DELAYED (ApoGee && 0)				//Redundancy mode
+#define DELAYED (ApoGee && 1)				//Redundancy mode
+
+#define ELEVATOR (1)
 
 #define PbarT (PRINT && BMP085 && 1)		//Print barometer temperature data
 #define PbarP (PRINT && BMP085 && 1)		//Print barometer pressure data
@@ -66,7 +68,7 @@
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (BMP085 || ADXL345 || L3G4200D || HMC5883)
-#define SYSTEM_n (char(SDCard)+char(BMP085)+char(ADXL345)+char(L3G4200D)+char(HMC5883)+char(GPSmode)+char(ApoGee)*2+char(DELAYED)*2)
+#define SYSTEM_n (char(SDCard)+char(BMP085)+char(ADXL345)+char(L3G4200D)+char(HMC5883)+char(GPSmode)+char(ApoGee)+char(DualDeploy)+char(DELAYED)+char(DualDeploy && DELAYED))
 
 #pragma endregion
 
@@ -84,33 +86,41 @@ float MM_baro[2]{};
 
 #if ApoGee
 #define apg Apogee
-Apogeu apg(10, 15, 50);						//Apogee checker object declaration
+Apogeu apg(10, 25, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
 #define mainN MainNormal
 
 #if DualDeploy
-#define p2h 350								//Height to main parachute
-//#define p2h 15								//Height to main parachute  
+#if ELEVATOR
+#define p2h 15								//Height to main parachute  
+#else
+#define p2h 350								//Height to main parachute  
+#endif // ELEVATOR
+
 #define drogN DrogueNormal
 #endif // DualDeploy
 
 #if DELAYED
-#define sysDelay 1.5
+#define sysDelay 2.5
 #define mainB MainBackup
 
 #if DualDeploy
-#define p2h_D 300							//Height to main parachute on redundance mode
-//#define p2h_D 10							//Height to main parachute on redundance mode
+#if ELEVATOR
+#define p2h_D 10							//Height to main parachute on redundance mode
+#else
+#define p2h_D 300							//Height to main parachute on redundance mode  
+#endif // ELEVATOR
+
 #define drogB DrogueBackup  
 #endif // DualDeploy
 
 #endif // DELAYED
 
 
-#define pins_drogN (36, A14) /*ign1*/
-#define pins_drogB (A7, A8)  /*ign2*/
-#define pins_mainN (4, A2)  /*ign3*/
-#define pins_mainB (A1, A1)	 /*ign4*/
+#define pins_drogN (4, 40)  /*act1*/
+#define pins_drogB (3, 40)  /*act2*/
+#define pins_mainN (8, 40, 20, 1)  /*act3*/
+#define pins_mainB (41, 40)	 /*act4*/
 
 struct Recovery
 {
@@ -224,8 +234,13 @@ MonoDeploy Recovery::drogB pins_drogB;
 #endif // ApoGee
 
 #if WUF
-#define WUFheigh 10
-//#define WUFheigh 5
+
+#if ELEVATOR
+#define WUFheigh 5
+#else
+#define WUFheigh 10  
+#endif // ELEVATOR
+
 #endif // WUF
 
 #if ADXL345
@@ -250,8 +265,15 @@ MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving avera
 #endif // HMC5883
 
 #if SDCard
+
+#ifdef ARDUINO_AVR_MEGA2560
+#define SD_CS_PIN 53
+#else
+#define SD_CS_PIN 10
+#endif // ARDUINO_AVR_MEGA2560
+
 #define SDC SecureDigitalCard
-SDCH SDC(10, "Yoki");						//Declaration of object to help SD card file management
+SDCH SDC(SD_CS_PIN, "Horus");						//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
@@ -295,7 +317,7 @@ unsigned short sysC = 0;
 #endif // BuZZ
 
 #if BEEPING
-#define holdT .075
+#define holdT .1
 Helpful beeper;
 #endif // BEEPING
 
@@ -768,7 +790,7 @@ void setup()
 #if WUF
 	WaitUntil(WUFheigh);
 #if COMmode
-	transmitln(F("LiftOff confirmed"));
+	transmit(F("LiftOff confirmed"));
 #endif // COMmode
 
 #endif // WUF
@@ -1341,14 +1363,21 @@ inline void LoRaSend()
 #endif // ApoGee
 		//LRutil.oneTimeReset();
 	}
+
 #if ApoGee
 	if (rec.mainN.getState(0)) LoRa.print(F("Act MainN\t"));
+
+#if DualDeploy
 	if (rec.drogN.getState(0)) LoRa.print(F("Act DrogueN\t"));
+#endif // DualDeploy
+
 #if DELAYED
 	if (rec.mainB.getState(0)) LoRa.print(F("Act MainB\t"));
-	if (rec.drogB.getState(0)) LoRa.print(F("Act DrogueB\t"))
+#if DualDeploy
+	if (rec.drogB.getState(0)) LoRa.print(F("Act DrogueB\t"));
+#endif // DualDeploy
 #endif // DELAYED
-		;
+
 #endif // ApoGee
 }
 #endif // LoRamode

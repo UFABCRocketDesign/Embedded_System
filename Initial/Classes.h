@@ -14,6 +14,11 @@
 #include <SPI.h>
 #include <SD.h>
 
+#define SERVO_MODE 1
+#if SERVO_MODE
+#include <Servo.h>
+#endif // SERVO_MODE
+
 class Sens
 {
 protected:
@@ -283,8 +288,13 @@ class Apogeu
 	//float* Alt = new float[N];
 	float* altMed = new float[R]();
 
+
+#ifdef ARDUINO_AVR_MEGA2560
+	SerialFilter Alt;
+#else
 	MovingAverage Alt;
-	//SerialFilter Alt;
+#endif // ARDUINO_AVR_MEGA2560
+
 public:
 	Apogeu(unsigned int n, unsigned int r, float s);
 	float addZero(long P, float sealevelP = 101325);
@@ -359,15 +369,19 @@ public:
 
 class MonoDeploy
 {
-	static const unsigned long Tign = ((unsigned long)(5 * 1000000.0));	//Active time
 	static const bool command = HIGH;	//Active state
 	static bool apogee;
 	static unsigned long TimeZero;	//Zero reference for timer
 	static unsigned long Tseal;	//Seal momment time
 	static float height;
 	
+	const unsigned long Tign;	//Active time
 	const unsigned int cPin;	//Command pin
 	const unsigned int iPin;	//Info pin
+	const unsigned int sysMode;
+#if SERVO_MODE
+	Servo motor;
+#endif
 	unsigned long Tnow;
 	unsigned long Tcmd;
 	unsigned long Theight;
@@ -385,7 +399,7 @@ class MonoDeploy
 	bool globalStateAux = false;
 	bool sPin = !command;	//Output sate
 public:
-	MonoDeploy(unsigned int commandPin, unsigned int infoPin);
+	MonoDeploy(unsigned int commandPin, unsigned int infoPin, unsigned long actionTime = 5, unsigned int systemMode = 0);
 
 	static void resetTimer();
 	static void sealApogee(bool apg);
