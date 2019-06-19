@@ -10,27 +10,29 @@
 
 #define BaudRate 250000
 
-#define GY80 (1)							//Use GY80 sensor
-#define BMP085 (GY80 || 1)					//Use BMP085 sensor
+#define GY80 (1)							//Use GY80 module
+#define BMP085 (GY80 || 0)					//Use BMP085 sensor
 #define ADXL345 (GY80 || 0)					//Use ADXL345 sensor
 #define L3G4200D (GY80 || 0)				//Use L3G4200D sensor
 #define HMC5883 (GY80 || 0)					//Use HMC5883 sensor
 #define SDCard (1)							//Use SD card
-#define GPSmode (0)							//Use GPS
+#define GPSmode (1)							//Use GPS
 #define LoRamode (1)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
 #define BuZZ (1)							//Buzzer mode
+#define ForceSysC (0)
 
 #define ApoGee (BMP085 && 1)				//Detection of apogee
-#define PRINT (1)							//Print or not things on Serial
+#define PRINT (0)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
 #define BEEPING (BuZZ && 1)					//Buzzer mode
+#define BlinkBuzzer (BuZZ && 0)
 #define RGB (0)								//RGB LED board
-#define DualDeploy (ApoGee && 0)			//Dual Parachute Deployment
+#define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
 #define DELAYED (ApoGee && 1)				//Redundancy mode
 
-#define ELEVATOR (1)
+#define ELEVATOR (0)
 
 #define PbarT (PRINT && BMP085 && 1)		//Print barometer temperature data
 #define PbarP (PRINT && BMP085 && 1)		//Print barometer pressure data
@@ -64,7 +66,7 @@
 #define Ncom (PRINT && 0)					//Print eachN counter
 #define Ps_n (PRINT && 0)					//Print SYSTEM_n
 
-#define PWMapg (ApoGee && 0)				//Show the apogee coefficient in a LED
+#define PWMapg (ApoGee && 1)				//Show the apogee coefficient in a LED
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (BMP085 || ADXL345 || L3G4200D || HMC5883)
@@ -86,7 +88,7 @@ float MM_baro[2]{};
 
 #if ApoGee
 #define apg Apogee
-Apogeu apg(10, 25, 50);						//Apogee checker object declaration
+Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
 #define mainN MainNormal
 
@@ -94,7 +96,7 @@ Apogeu apg(10, 25, 50);						//Apogee checker object declaration
 #if ELEVATOR
 #define p2h 15								//Height to main parachute  
 #else
-#define p2h 350								//Height to main parachute  
+#define p2h 450								//Height to main parachute  
 #endif // ELEVATOR
 
 #define drogN DrogueNormal
@@ -108,7 +110,7 @@ Apogeu apg(10, 25, 50);						//Apogee checker object declaration
 #if ELEVATOR
 #define p2h_D 10							//Height to main parachute on redundance mode
 #else
-#define p2h_D 300							//Height to main parachute on redundance mode  
+#define p2h_D 400							//Height to main parachute on redundance mode  
 #endif // ELEVATOR
 
 #define drogB DrogueBackup  
@@ -117,10 +119,12 @@ Apogeu apg(10, 25, 50);						//Apogee checker object declaration
 #endif // DELAYED
 
 
-#define pins_drogN (4, 40)  /*act1*/
-#define pins_drogB (3, 40)  /*act2*/
-#define pins_mainN (8, 40, 20, 1)  /*act3*/
-#define pins_mainB (41, 40)	 /*act4*/
+#define pins_drogN (36, 68)  /*act1*/
+#define pins_drogB (61, 62)  /*act2*/
+//#define pins_mainN (8, 40, 20, 1)  /*act3*/
+#define pins_mainN (46, 56)  /*act3*/
+#define pins_mainB (55, 58)	/*act4*/
+
 
 struct Recovery
 {
@@ -129,7 +133,6 @@ struct Recovery
 #if DualDeploy
 	static MonoDeploy drogN;
 #endif // DualDeploy
-
 
 #if DELAYED
 	static MonoDeploy mainB;
@@ -238,7 +241,7 @@ MonoDeploy Recovery::drogB pins_drogB;
 #if ELEVATOR
 #define WUFheigh 5
 #else
-#define WUFheigh 10  
+#define WUFheigh 50
 #endif // ELEVATOR
 
 #endif // WUF
@@ -247,21 +250,24 @@ MonoDeploy Recovery::drogB pins_drogB;
 #define acel Accelerometer
 #define MM_acel M_acel
 Acel acel;									//Acelerometer object declaration
-MovingAverage MM_acel[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
+//MovingAverage MM_acel[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
+float MM_acel[3]{};
 #endif // ADXL345
 
 #if L3G4200D
 #define giro Gyroscope
 #define MM_giro M_giro
 Giro giro(2000);							//Gyroscope object declaration
-MovingAverage MM_giro[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
+//MovingAverage MM_giro[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
+float MM_giro[3]{};
 #endif // L3G4200D
 
 #if HMC5883
 #define magn Magnetometer
 #define MM_magn M_magn
 Magn magn;									//Magnetometer object declaration
-MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
+//MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
+float MM_magn[3]{};
 #endif // HMC5883
 
 #if SDCard
@@ -273,7 +279,7 @@ MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving avera
 #endif // ARDUINO_AVR_MEGA2560
 
 #define SDC SecureDigitalCard
-SDCH SDC(SD_CS_PIN, "Horus");						//Declaration of object to help SD card file management
+SDCH SDC(SD_CS_PIN, "Angra");						//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
@@ -303,17 +309,23 @@ Helpful Gutil;								//Declaration of helpful object to general cases
 
 #if RBF
 #define rbfHelper ReBeFlight
-#define RBFpin 7							//Pin that the RBF system is connected
+#define RBFpin 2							//Pin that the RBF system is connected
 #endif // RBF
 
-#if RBF || WUF
+#if RBF || WUF || ForceSysC
 unsigned short sysC = 0;
-#endif // RBF || WUF
+#endif // RBF || WUF || ForceSysC
 
 
 #if BuZZ
-#define buzzPin 6							//Pin that the buzzer is connected
+
+#if BlinkBuzzer
+#define buzzPin LED_BUILTIN
+#define buzzCmd HIGH
+#else
+#define buzzPin A0							//Pin that the buzzer is connected
 #define buzzCmd LOW							//Buzzer is on in high state
+#endif // BlinkBuzzer
 #endif // BuZZ
 
 #if BEEPING
@@ -378,7 +390,7 @@ void setup()
 #endif // !DualDeploy
 
 #if DualDeploy
-		rec.drogB.setDelayCmd(sysDelay);
+	rec.drogB.setDelayCmd(sysDelay);
 #endif // DualDeploy
 
 #endif // DELAYED
@@ -813,9 +825,9 @@ void setup()
 
 void loop()
 {
-#if RBF || WUF
+#if RBF || WUF || ForceSysC
 	sysC = 0;
-#endif // RBF || WUF
+#endif // RBF || WUF || ForceSysC
 
 	Gutil.counter();
 	readEverything();
@@ -855,7 +867,9 @@ void loop()
 	LoRaSend();
 #endif // LoRamode
 
-#if BEEPING && !WUF && !RBF && !ApoGee
+#if BEEPING && ForceSysC
+	beep(sysC);
+#elif BEEPING && !WUF && !RBF && !ApoGee
 	beep(1);
 #endif // BEEPING && !WUF && !RBF && !ApoGee
 }
@@ -1282,9 +1296,9 @@ inline void SDSend()
 #endif // ApoGee
 			SDC.theFile.println();
 			SDC.close();
-#if RBF || WUF
+#if RBF || WUF || ForceSysC
 			sysC++;
-#endif // RBF || WUF
+#endif // RBF || WUF || ForceSysC
 
 		}
 		else SDC.util.mem = 1;
@@ -1350,6 +1364,10 @@ inline void LoRaSend()
 		LoRa.print(apg.getSigma(), 3);
 		LoRa.print('\t');
 #endif // ApoGee
+#if SDCard 
+		LoRa.print(!SDC.util.mem);
+		LoRa.print('\t');
+#endif // SDCard 
 #if ApoGee
 		if (Gutil.mem)
 		{
@@ -1436,9 +1454,9 @@ inline void readEverything()
 	{
 		MM_baro[0] = baro.getTemperature();
 		MM_baro[1] = baro.getPressure();
-#if RBF || WUF
+#if RBF || WUF || ForceSysC
 		sysC++;
-#endif // RBF || WUF
+#endif // RBF || WUF || ForceSysC
 
 	}
 #endif // BMP085
@@ -1448,9 +1466,9 @@ inline void readEverything()
 		MM_acel[0] = acel.getX();
 		MM_acel[1] = acel.getY();
 		MM_acel[2] = acel.getZ();
-#if RBF || WUF
+#if RBF || WUF || ForceSysC
 		sysC++;
-#endif // RBF || WUF
+#endif // RBF || WUF || ForceSysC
 
 	}
 #endif // ADXL345
@@ -1460,9 +1478,9 @@ inline void readEverything()
 		MM_giro[0] = giro.getX();
 		MM_giro[1] = giro.getY();
 		MM_giro[2] = giro.getZ();
-#if RBF || WUF
+#if RBF || WUF || ForceSysC
 		sysC++;
-#endif // RBF || WUF
+#endif // RBF || WUF || ForceSysC
 
 	}
 #endif // L3G4200D
@@ -1472,17 +1490,17 @@ inline void readEverything()
 		MM_magn[0] = magn.getX();
 		MM_magn[1] = magn.getY();
 		MM_magn[2] = magn.getZ();
-#if RBF || WUF
+#if RBF || WUF || ForceSysC
 		sysC++;
-#endif // RBF || WUF
+#endif // RBF || WUF || ForceSysC
 
 	}
 #endif // HMC5883  
 #if GPSmode
-	if (GpS) GpS.util.forT(3);
-#if RBF || WUF
+	if (GpS) GpS.util.forT(5);
+#if RBF || WUF || ForceSysC
 	if (GpS.util.forT()) sysC++;
-#endif // RBF || WUF
+#endif // RBF || WUF || ForceSysC
 
 #endif // GPSmode
 #if ApoGee && (RBF || WUF)
