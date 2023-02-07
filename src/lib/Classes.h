@@ -19,21 +19,12 @@
 #include "Baro/Baro.h"
 #include "Acel/Acel.h"
 #include "Magn/Magn.h"
+#include "Giro/Giro.h"
 
 #define SERVO_MODE 1
 #if SERVO_MODE
 #include <Servo.h>
 #endif // SERVO_MODE
-
-class Giro :public Sens, public TriA
-{
-public:
-	Giro(long sc, long recalT = 0.1);
-	void begin();
-	bool readAll();
-private:
-	const long scale;
-};
 
 class Helpful
 {
