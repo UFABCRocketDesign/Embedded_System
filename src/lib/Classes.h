@@ -23,6 +23,7 @@
 #include "Helpful/Helpful.h"
 #include "RoundArray/RoundArray.h"
 #include "MovingAverage/MovingAverage.h"
+#include "SerialFilter/SerialFilter.h"
 
 #define SERVO_MODE 1
 #if SERVO_MODE
@@ -45,19 +46,6 @@ public:
 	float getMin();
 	operator float();
 };*/
-
-class SerialFilter
-{
-	const int N;
-	MovingAverage **MM = new MovingAverage*[N];
-public:
-	SerialFilter(int n, int v);
-	SerialFilter(int n, int V[]);
-	float addValor(const float &valor);
-	float getMedia();
-	float operator=(const float &valor);
-	operator float();
-};
 
 class Term	//LM35
 {
