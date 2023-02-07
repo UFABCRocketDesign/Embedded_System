@@ -24,6 +24,7 @@
 #include "RoundArray/RoundArray.h"
 #include "MovingAverage/MovingAverage.h"
 #include "SerialFilter/SerialFilter.h"
+#include "GyGPS/GyGPS.h"
 
 #define SERVO_MODE 1
 #if SERVO_MODE
@@ -53,54 +54,6 @@ class Term	//LM35
 public:
 	Term(byte aPin);
 	float read();
-};
-
-class GyGPS : public Sens
-{
-	//#define GpSerial Serial1
-	HardwareSerial &GpSerial;
-	TinyGPS gps;							//GPS object declaration
-	const unsigned short GMT;
-	unsigned short sentences = 0;			//GPS variables declaration
-	unsigned short failed = 0;
-	unsigned char satellites = 0;
-	unsigned long precision = 0;
-	unsigned long chars = 0;
-	unsigned long age = 0;
-	float latitude = 0;
-	float longitude = 0;
-	float altitude = 0;
-	float Kph = 0;
-	float mps = 0;
-	int year = 0;
-	byte month = 0;
-	byte day = 0;
-	byte hour = 0;
-	byte minute = 0;
-	byte second = 0;
-public:
-	GyGPS(HardwareSerial &S, short gmt = 0);
-	Helpful util;						//Declaration of helpful object to GPS
-	unsigned short getFailed();				//Return functions
-	unsigned short getSentences();
-	unsigned char getSatellites();
-	unsigned long getPrecision();
-	unsigned long getChars();
-	unsigned long getAge();
-	float getLatitude();
-	float getLongitude();
-	float getAltitude();
-	float getKph();
-	float getMps();
-	int getYear();
-	byte getMonth();
-	byte getDay();
-	byte getHour(bool gmt = 1);
-	byte getMinute();
-	byte getSecond();
-	void begin();
-	bool readAll();							//GPS function declaration
-	bool isNew();
 };
 
 class Apogeu
