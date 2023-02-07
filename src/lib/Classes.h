@@ -18,19 +18,12 @@
 #include "TriA/TriA.h"
 #include "Baro/Baro.h"
 #include "Acel/Acel.h"
+#include "Magn/Magn.h"
 
 #define SERVO_MODE 1
 #if SERVO_MODE
 #include <Servo.h>
 #endif // SERVO_MODE
-
-class Magn :public Sens, public TriA
-{
-public:
-	Magn(long recalT = 0.1);
-	void begin();
-	bool readAll();
-};
 
 class Giro :public Sens, public TriA
 {

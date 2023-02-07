@@ -1,18 +1,18 @@
-// Acel.h
+// Magn.h
 
 #pragma once
 
-#ifndef _ACEL_h
-#define _ACEL_h
+#ifndef _MAGN_h
+#define _MAGN_h
 
 #include <Wire.h>
 #include "../Sens/Sens.h"
 #include "../TriA/TriA.h"
 
-class Acel : public Sens, public TriA
+class Magn : public Sens, public TriA
 {
 public:
-	Acel(long recalT = 0.1);
+	Magn(long recalT = 0.1);
 	void begin();
 	bool readAll();
 };
