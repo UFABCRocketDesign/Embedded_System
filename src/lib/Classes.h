@@ -21,47 +21,12 @@
 #include "Magn/Magn.h"
 #include "Giro/Giro.h"
 #include "Helpful/Helpful.h"
+#include "RoundArray/RoundArray.h"
 
 #define SERVO_MODE 1
 #if SERVO_MODE
 #include <Servo.h>
 #endif // SERVO_MODE
-
-template <typename type> class RoundArray
-{
-	const size_t Len;
-	type* Vals = new type[Len]();
-	size_t pointer = 0;
-public:
-	RoundArray(const unsigned int &len) :Len(len)
-	{
-	}
-	~RoundArray() // Destructor
-	{
-		delete[] Vals;
-	}
-	void push(const type &var)
-	{
-		Vals[pointer] = var;
-		pointer = pointer + 1 == Len ? 0 : pointer + 1;
-	}
-	operator float()
-	{
-		return Vals[pointer];
-	}
-	type &operator[](int index)
-	{
-		return Vals[(Len + pointer - index - 1) % Len];
-	}
-	void operator=(const type &var)
-	{
-		push(var);
-	}
-	size_t length()
-	{
-		return Len;
-	}
-};
 
 class MovingAverage
 {
