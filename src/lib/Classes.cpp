@@ -1,18 +1,5 @@
 #include "Classes.h"
 
-///Sensor base class
-Sens::Sens(uint8_t add, long recalT) : address(add), recalibrateT((long)(recalT * 1000000))
-{
-}
-long Sens::getTimeLapse()
-{
-	return lastReadT - lastWorkT;
-}
-Sens::operator bool()
-{
-	return readAll();
-}
-
 
 ///Barometro
 Baro::Baro(float recalT) :Sens(0x77, recalT)
@@ -1074,7 +1061,7 @@ bool MonoDeploy::begin()
 		digitalWrite(cPin, sPin);
 		pinMode(iPin, INPUT);
 	}
-#if SERVO_MODE	
+#if SERVO_MODE
 	else if(sysMode)
 	{
 		motor.attach(cPin);

@@ -14,27 +14,12 @@
 #include <SPI.h>
 #include <SD.h>
 
+#include "Sens/Sens.h"
+
 #define SERVO_MODE 1
 #if SERVO_MODE
 #include <Servo.h>
 #endif // SERVO_MODE
-
-class Sens
-{
-protected:
-	const uint8_t address;
-	const long recalibrateT;
-	unsigned long thisReadT = 0;
-	unsigned long lastReadT = 0;
-	unsigned long lastWorkT = 0;
-	bool state = 0;
-public:
-	Sens(uint8_t add, long recalT = 0.1);
-	virtual void begin() = 0;
-	virtual bool readAll() = 0;
-	long getTimeLapse();
-	operator bool();
-};
 
 class Baro :public Sens
 {
@@ -374,7 +359,7 @@ class MonoDeploy
 	static unsigned long TimeZero;	//Zero reference for timer
 	static unsigned long Tseal;	//Seal momment time
 	static float height;
-	
+
 	const unsigned long Tign;	//Active time
 	const unsigned int cPin;	//Command pin
 	const unsigned int iPin;	//Info pin
@@ -405,7 +390,7 @@ public:
 	static void sealApogee(bool apg);
 	static bool getApogee();
 	static void putHeight(float H);
-	
+
 	void setHeightCmd(float H);
 	void setDelayCmd(float T);
 	void setTmax(float T);
