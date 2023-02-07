@@ -2,7 +2,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
-#include "Classes.h"
+#include "src/lib/Classes.h"
 
 /////////////////////////////////////////////////CONFIGURATION/////////////////////////////////////////////////
 
@@ -89,14 +89,14 @@ float MM_baro[2]{};
 #if ApoGee
 #define apg Apogee
 Apogeu apg(10, 15, 50);						//Apogee checker object declaration
-#define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)  
+#define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)
 #define mainN MainNormal
 
 #if DualDeploy
 #if ELEVATOR
-#define p2h 15								//Height to main parachute  
+#define p2h 15								//Height to main parachute
 #else
-#define p2h 450								//Height to main parachute  
+#define p2h 450								//Height to main parachute
 #endif // ELEVATOR
 
 #define drogN DrogueNormal
@@ -110,10 +110,10 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #if ELEVATOR
 #define p2h_D 10							//Height to main parachute on redundance mode
 #else
-#define p2h_D 400							//Height to main parachute on redundance mode  
+#define p2h_D 400							//Height to main parachute on redundance mode
 #endif // ELEVATOR
 
-#define drogB DrogueBackup  
+#define drogB DrogueBackup
 #endif // DualDeploy
 
 #endif // DELAYED
@@ -445,7 +445,7 @@ void setup()
 	Wire.begin();
 #endif // WIREmode
 
-#if BMP085 
+#if BMP085
 	baro.begin();
 	if (baro)
 	{
@@ -1364,10 +1364,10 @@ inline void LoRaSend()
 		LoRa.print(apg.getSigma(), 3);
 		LoRa.print('\t');
 #endif // ApoGee
-#if SDCard 
+#if SDCard
 		LoRa.print(!SDC.util.mem);
 		LoRa.print('\t');
-#endif // SDCard 
+#endif // SDCard
 #if ApoGee
 		if (Gutil.mem)
 		{
@@ -1495,7 +1495,7 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 
 	}
-#endif // HMC5883  
+#endif // HMC5883
 #if GPSmode
 	if (GpS) GpS.util.forT(5);
 #if RBF || WUF || ForceSysC
