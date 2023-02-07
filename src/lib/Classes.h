@@ -17,19 +17,12 @@
 #include "Sens/Sens.h"
 #include "TriA/TriA.h"
 #include "Baro/Baro.h"
+#include "Acel/Acel.h"
 
 #define SERVO_MODE 1
 #if SERVO_MODE
 #include <Servo.h>
 #endif // SERVO_MODE
-
-class Acel : public Sens, public TriA
-{
-public:
-	Acel(long recalT = 0.1);
-	void begin();
-	bool readAll();
-};
 
 class Magn :public Sens, public TriA
 {
