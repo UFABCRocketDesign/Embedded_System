@@ -22,27 +22,12 @@
 #include "Giro/Giro.h"
 #include "Helpful/Helpful.h"
 #include "RoundArray/RoundArray.h"
+#include "MovingAverage/MovingAverage.h"
 
 #define SERVO_MODE 1
 #if SERVO_MODE
 #include <Servo.h>
 #endif // SERVO_MODE
-
-class MovingAverage
-{
-	const unsigned int N;
-	RoundArray<float> Vals;
-	float media = 0, max = 0, min, sigma;
-public:
-	MovingAverage(int n);
-	float addValor(const float &valor);
-	float getMedia();
-	float getVar();
-	float getMax();
-	float getMin();
-	float operator=(const float &valor);
-	operator float();
-};
 
 /*
 class MediaMovel
