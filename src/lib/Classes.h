@@ -15,6 +15,7 @@
 #include <SD.h>
 
 #include "Sens/Sens.h"
+#include "TriA/TriA.h"
 
 #define SERVO_MODE 1
 #if SERVO_MODE
@@ -41,19 +42,6 @@ public:
 	bool readAll();
 	float getTemperature();
 	long getPressure();
-};
-
-class TriA
-{
-protected:
-	float X = 0;
-	float Y = 0;
-	float Z = 0;
-public:
-	virtual bool readAll() = 0;
-	float getX();
-	float getY();
-	float getZ();
 };
 
 class Acel : public Sens, public TriA
