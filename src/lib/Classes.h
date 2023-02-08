@@ -9,26 +9,25 @@
 #else
 #include "WProgram.h"
 #endif
-// #include <TinyGPS.h>
-// #include <Wire.h>
 
 #define SERVO_MODE 0
 
-#include "Sens/Sens.h"
-#include "TriA/TriA.h"
-#include "Baro/Baro.h"
-#include "Acel/Acel.h"
-#include "Magn/Magn.h"
-#include "Giro/Giro.h"
-#include "Helpful/Helpful.h"
-#include "RoundArray/RoundArray.h"
-#include "MovingAverage/MovingAverage.h"
-#include "SerialFilter/SerialFilter.h"
-#include "GyGPS/GyGPS.h"
-#include "Apogeu/Apogeu.h"
-#include "DuDeploy/DuDeploy.h"
-#include "MonoDeploy/MonoDeploy.h"
-#include "SDCH/SDCH.h"
+// #include "Sens/Sens.h" // Base dos sensores
+// #include "TriA/TriA.h" // Base dos sensores de 3 eixos
+#include "Baro/Baro.h" // Barometro BMP085
+#include "Acel/Acel.h" // Acelerometro ADXL345
+#include "Magn/Magn.h" // MagnetometroHMC5883
+#include "Giro/Giro.h" // Giroscopio L3G4200D
+#include "Helpful/Helpful.h" // Auxiliares de codigo
+// #include "RoundArray/RoundArray.h" // Vetor rotativo
+#include "MovingAverage/MovingAverage.h" // Media movel simples
+#include "SerialFilter/SerialFilter.h" // Media movel em cascata
+#include "GyGPS/GyGPS.h" // Auxiliar para GPS
+#include "Apogeu/Apogeu.h" // Processamento de altitude e deteccao de apogeu
+// #include "DuDeploy/DuDeploy.h" // Acionamento de paraquedas duplo
+#include "MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
+#include "SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
+#include "Term/Term.h" // Termometro LM35
 
 /*
 class MediaMovel
@@ -46,16 +45,6 @@ public:
 	float getMin();
 	operator float();
 };*/
-
-class Term	//LM35
-{
-	const byte Apin;
-public:
-	Term(byte aPin);
-	float read();
-};
-
-
 
 /*
 class ComProtocol
