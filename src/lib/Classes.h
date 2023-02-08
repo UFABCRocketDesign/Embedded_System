@@ -29,22 +29,7 @@
 #include "SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
 #include "Term/Term.h" // Termometro LM35
 
-/*
-class MediaMovel
-{
-	const unsigned int N;
-	float* Vals = new float[N];
-	float media, max = 0, min, sigma;
-public:
-	MediaMovel(int n);	//Inicializadore
-	~MediaMovel();
-	float addValor(const float &valor);
-	float getMedia();
-	float getVar();
-	float getMax();
-	float getMin();
-	operator float();
-};*/
+#include "MediaMovel/MediaMovel.h"
 
 /*
 class ComProtocol
