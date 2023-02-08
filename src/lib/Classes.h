@@ -22,9 +22,9 @@
 // #include "DuDeploy/DuDeploy.h" // Acionamento de paraquedas duplo
 #include "MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
 #include "SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
-#include "Term/Term.h" // Termometro LM35
+// #include "Term/Term.h" // Termometro LM35
 
-#include "MediaMovel/MediaMovel.h" // Media Movel Legado [substituida por MovingAverage]
-#include "ComProtocol/ComProtocol.h" // Protocolo de comunicacao entre placas [descontinuado]
+// #include "MediaMovel/MediaMovel.h" // Media Movel Legado [substituida por MovingAverage]
+// #include "ComProtocol/ComProtocol.h" // Protocolo de comunicacao entre placas [descontinuado]
 
 #endif
