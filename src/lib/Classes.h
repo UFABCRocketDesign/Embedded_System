@@ -9,10 +9,8 @@
 #else
 #include "WProgram.h"
 #endif
-#include <TinyGPS.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <SD.h>
+// #include <TinyGPS.h>
+// #include <Wire.h>
 
 #define SERVO_MODE 0
 
@@ -30,6 +28,7 @@
 #include "Apogeu/Apogeu.h"
 #include "DuDeploy/DuDeploy.h"
 #include "MonoDeploy/MonoDeploy.h"
+#include "SDCH/SDCH.h"
 
 /*
 class MediaMovel
@@ -57,27 +56,7 @@ public:
 };
 
 
-class SDCH
-{
-	const uint8_t CS;
-	const String Fname0;
-	const String Ftype;
-	const uint8_t coef;
-	const unsigned long nMax;
-	unsigned long number = 0;
-	String Fname;
-	void newName();
-public:
-	SDCH(uint8_t csPin, String name, String type = "txt");
-	File theFile;
-	Helpful util;
-	bool begin();
-	bool open();
-	size_t tab();
-	void close();
-	operator bool();
-	String getFname();
-};
+
 /*
 class ComProtocol
 {
