@@ -10,11 +10,13 @@
 
 #define BaudRate 115200
 
-#define USE_GY80 (0)							//Use GY80 module
-#define USE_BMP085 (USE_GY80 || 1)					//Use BMP085 sensor
-#define USE_ADXL345 (USE_GY80 || 0)					//Use ADXL345 sensor
-#define USE_L3G4200D (USE_GY80 || 0)				//Use L3G4200D sensor
-#define USE_HMC5883 (USE_GY80 || 0)					//Use HMC5883 sensor
+#define USE_GY80 (0)						//Use GY80 module
+
+#define USE_BMP085 (USE_GY80 || 1)			//Use BMP085 sensor
+#define USE_ADXL345 (USE_GY80 || 1)			//Use ADXL345 sensor
+#define USE_L3G4200D (USE_GY80 || 0)		//Use L3G4200D sensor
+#define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
+
 #define SDCard (1)							//Use SD card
 #define GPSmode (1)							//Use GPS
 #define LoRamode (1)						//Serial mode for transmission on LoRa module
@@ -22,7 +24,7 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
-#define ApoGee (USE_BMP085 && 1)				//Detection of apogee
+#define ApoGee (USE_BMP085 && 1)			//Detection of apogee
 #define PRINT (1)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
@@ -248,11 +250,12 @@ MonoDeploy Recovery::drogB pins_drogB;
 #endif // WUF
 
 #if USE_ADXL345
-#define acel Accelerometer
-#define MM_acel M_acel
-Acel acel;									//Acelerometer object declaration
-//MovingAverage MM_acel[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
-float MM_acel[3]{};
+#include "src/lib/ADXL345/ADXL345.h" // Barometro BMP085
+#define accel Accelerometer
+#define MM_accel M_accel
+ADXL345 accel;									//Accelerometer object declaration
+//MovingAverage MM_accel[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
+float MM_accel[3]{};
 #endif // USE_ADXL345
 
 #if USE_L3G4200D
@@ -480,17 +483,17 @@ void setup()
 #endif // USE_BMP085
 
 #if USE_ADXL345
-	acel.begin();
-	if (acel)
+	accel.begin();
+	if (accel)
 	{
 #if COMmode
-		transmitln(F("Acel ok"));
+		transmitln(F("Accel ok"));
 #endif // COMmode
 	}
 	else
 	{
 #if COMmode
-		transmitln(F("Acel err"));
+		transmitln(F("Accel err"));
 #endif // COMmode
 	}
 #endif // USE_ADXL345
@@ -568,7 +571,7 @@ void setup()
 		SDC.theFile.println(F(
 			"temp\t"
 #if USE_ADXL345
-			"\tacel\t\t"
+			"\taccel\t\t"
 #endif // USE_ADXL345
 #if USE_L3G4200D
 			"\tgiro\t\t"
@@ -646,7 +649,7 @@ void setup()
 
 
 #if PaclX || PaclY || PaclZ
-	"acel"
+	"accel"
 #endif // PaclX || PaclY || PaclZ
 #if PaclX
 	"\t"
@@ -1035,17 +1038,17 @@ inline void SerialSend()
 	Serial.print('|');
 #endif // Psep && (PaclX || PaclY || PaclZ)
 #if PaclX
-	Serial.print(MM_acel[0], 3);
+	Serial.print(MM_accel[0], 3);
 	Serial.print('\t');
 #endif // PaclX
 
 #if PaclY
-	Serial.print(MM_acel[1], 3);
+	Serial.print(MM_accel[1], 3);
 	Serial.print('\t');
 #endif // PaclY
 
 #if PaclZ
-	Serial.print(MM_acel[2], 3);
+	Serial.print(MM_accel[2], 3);
 	Serial.print('\t');
 #endif // PaclZ
 
@@ -1225,7 +1228,7 @@ inline void SDSend()
 		{
 			SDC.theFile.print(SDC.util.sinceBegin(), 3); SDC.tab();
 #if USE_ADXL345
-			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_acel[i], 3);	SDC.tab(); }
+			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_accel[i], 3);	SDC.tab(); }
 #endif // USE_ADXL345
 #if USE_L3G4200D
 			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_giro[i], 1);	SDC.tab(); }
@@ -1462,11 +1465,11 @@ inline void readEverything()
 	}
 #endif // USE_BMP085
 #if USE_ADXL345
-	if (acel)
+	if (accel)
 	{
-		MM_acel[0] = acel.getX();
-		MM_acel[1] = acel.getY();
-		MM_acel[2] = acel.getZ();
+		MM_accel[0] = accel.getX();
+		MM_accel[1] = accel.getY();
+		MM_accel[2] = accel.getZ();
 #if RBF || WUF || ForceSysC
 		sysC++;
 #endif // RBF || WUF || ForceSysC

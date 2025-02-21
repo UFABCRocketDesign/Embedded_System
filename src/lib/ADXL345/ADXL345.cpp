@@ -1,11 +1,11 @@
-#include "Acel.h"
+#include "ADXL345.h"
 
 ///Acelerometro
-Acel::Acel(long recalT) :Sens(0x53, recalT)
+ADXL345::ADXL345(long recalT) : Accel(0x53, recalT)
 {
 }
 
-void Acel::begin()
+void ADXL345::begin()
 {
 	Wire.beginTransmission(address);// enable to measute g data
 	Wire.write(0x2D);
@@ -31,7 +31,7 @@ void Acel::begin()
 	Wire.endTransmission();           // stop transmitting
 }
 
-bool Acel::readAll()
+bool ADXL345::readAll()
 {
 	thisReadT = micros();
 	Wire.beginTransmission(address);
