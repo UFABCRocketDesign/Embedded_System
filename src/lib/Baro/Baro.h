@@ -10,25 +10,14 @@
 
 class Baro : public Sens
 {
-	const int OSS = 0; // Oversampling Setting
-	unsigned int ut = 0;
-	unsigned long up = 0;
-	unsigned long b4, b7;
-	long b1, b2, b3, b5, b6;
-	long x1, x2, x3;
-	int ac1, ac2, ac3; // Calibration values
-	unsigned int ac4, ac5, ac6;
-	int mb, mc, md;
-
+protected:
 	float celcius;
-	long pascal;
+	float pascal;
 
 public:
-	Baro(float recalT = 0.1);
-	void begin();
-	bool readAll();
+	Baro(uint8_t address, float recalT = 0.1);
 	float getTemperature();
-	long getPressure();
+	float getPressure();
 };
 
 #endif

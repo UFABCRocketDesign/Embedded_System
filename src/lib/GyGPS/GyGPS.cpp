@@ -1,7 +1,7 @@
 #include "GyGPS.h"
 
 ///Dados do GPS
-GyGPS::GyGPS(HardwareSerial &S, short gmt) :GpSerial(S), GMT(gmt), Sens(NULL)
+GyGPS::GyGPS(HardwareSerial &S, short gmt) :GpSerial(S), GMT(gmt), Sens(0x0)
 {
 }
 

@@ -8,13 +8,13 @@
 
 #pragma region Configurations
 
-#define BaudRate 250000
+#define BaudRate 115200
 
-#define GY80 (1)							//Use GY80 module
-#define BMP085 (GY80 || 0)					//Use BMP085 sensor
-#define ADXL345 (GY80 || 0)					//Use ADXL345 sensor
-#define L3G4200D (GY80 || 0)				//Use L3G4200D sensor
-#define HMC5883 (GY80 || 0)					//Use HMC5883 sensor
+#define USE_GY80 (0)							//Use GY80 module
+#define USE_BMP085 (USE_GY80 || 1)					//Use BMP085 sensor
+#define USE_ADXL345 (USE_GY80 || 0)					//Use ADXL345 sensor
+#define USE_L3G4200D (USE_GY80 || 0)				//Use L3G4200D sensor
+#define USE_HMC5883 (USE_GY80 || 0)					//Use HMC5883 sensor
 #define SDCard (1)							//Use SD card
 #define GPSmode (1)							//Use GPS
 #define LoRamode (1)						//Serial mode for transmission on LoRa module
@@ -22,8 +22,8 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
-#define ApoGee (BMP085 && 1)				//Detection of apogee
-#define PRINT (0)							//Print or not things on Serial
+#define ApoGee (USE_BMP085 && 1)				//Detection of apogee
+#define PRINT (1)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
 #define BEEPING (BuZZ && 1)					//Buzzer mode
@@ -34,20 +34,20 @@
 
 #define ELEVATOR (0)
 
-#define PbarT (PRINT && BMP085 && 1)		//Print barometer temperature data
-#define PbarP (PRINT && BMP085 && 1)		//Print barometer pressure data
+#define PbarT (PRINT && USE_BMP085 && 1)		//Print barometer temperature data
+#define PbarP (PRINT && USE_BMP085 && 1)		//Print barometer pressure data
 
-#define PaclX (PRINT && ADXL345 && 1)		//Print accelerometer X axis data
-#define PaclY (PRINT && ADXL345 && 1)		//Print accelerometer Y axis data
-#define PaclZ (PRINT && ADXL345 && 1)		//Print accelerometer Z axis data
+#define PaclX (PRINT && USE_ADXL345 && 1)		//Print accelerometer X axis data
+#define PaclY (PRINT && USE_ADXL345 && 1)		//Print accelerometer Y axis data
+#define PaclZ (PRINT && USE_ADXL345 && 1)		//Print accelerometer Z axis data
 
-#define PgirX (PRINT && L3G4200D && 1)		//Print gyroscope x axis data
-#define PgirY (PRINT && L3G4200D && 1)		//Print gyroscope Y axis data
-#define PgirZ (PRINT && L3G4200D && 1)		//Print gyroscope Z axis data
+#define PgirX (PRINT && USE_L3G4200D && 1)		//Print gyroscope x axis data
+#define PgirY (PRINT && USE_L3G4200D && 1)		//Print gyroscope Y axis data
+#define PgirZ (PRINT && USE_L3G4200D && 1)		//Print gyroscope Z axis data
 
-#define PmagX (PRINT && HMC5883 && 1)		//Print magnetometer x axis data
-#define PmagY (PRINT && HMC5883 && 1)		//Print magnetometer Y axis data
-#define PmagZ (PRINT && HMC5883 && 1)		//Print magnetometer Z axis data
+#define PmagX (PRINT && USE_HMC5883 && 1)		//Print magnetometer x axis data
+#define PmagY (PRINT && USE_HMC5883 && 1)		//Print magnetometer Y axis data
+#define PmagZ (PRINT && USE_HMC5883 && 1)		//Print magnetometer Z axis data
 
 #define papgI (PRINT && ApoGee && 1)		//Print MonoDeploy.info of every instance
 #define PapgW (PRINT && ApoGee && 1)		//Print apogee information when detected
@@ -69,8 +69,8 @@
 #define PWMapg (ApoGee && 1)				//Show the apogee coefficient in a LED
 
 #define COMmode (PRINT || LoRamode)
-#define WIREmode (BMP085 || ADXL345 || L3G4200D || HMC5883)
-#define SYSTEM_n (char(SDCard)+char(BMP085)+char(ADXL345)+char(L3G4200D)+char(HMC5883)+char(GPSmode)+char(ApoGee)+char(DualDeploy)+char(DELAYED)+char(DualDeploy && DELAYED))
+#define WIREmode (USE_BMP085 || USE_ADXL345 || USE_L3G4200D || USE_HMC5883)
+#define SYSTEM_n (char(SDCard)+char(USE_BMP085)+char(USE_ADXL345)+char(USE_L3G4200D)+char(USE_HMC5883)+char(GPSmode)+char(ApoGee)+char(DualDeploy)+char(DELAYED)+char(DualDeploy && DELAYED))
 
 #pragma endregion
 
@@ -78,13 +78,14 @@
 
 #pragma region Declarations
 
-#if BMP085
+#if USE_BMP085
+#include "src/lib/BMP085/BMP085.h" // Barometro BMP085
 #define baro Barometer
 #define MM_baro M_baro
-Baro baro;									//Barometer object declaration
+BMP085 baro;									//Barometer object declaration
 //MovingAverage MM_baro[2]{ (2),(2) };		//Array declaration of the moving average filter objects
 float MM_baro[2]{};
-#endif // BMP085
+#endif // USE_BMP085
 
 #if ApoGee
 #define apg Apogee
@@ -246,29 +247,29 @@ MonoDeploy Recovery::drogB pins_drogB;
 
 #endif // WUF
 
-#if ADXL345
+#if USE_ADXL345
 #define acel Accelerometer
 #define MM_acel M_acel
 Acel acel;									//Acelerometer object declaration
 //MovingAverage MM_acel[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_acel[3]{};
-#endif // ADXL345
+#endif // USE_ADXL345
 
-#if L3G4200D
+#if USE_L3G4200D
 #define giro Gyroscope
 #define MM_giro M_giro
 Giro giro(2000);							//Gyroscope object declaration
 //MovingAverage MM_giro[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_giro[3]{};
-#endif // L3G4200D
+#endif // USE_L3G4200D
 
-#if HMC5883
+#if USE_HMC5883
 #define magn Magnetometer
 #define MM_magn M_magn
 Magn magn;									//Magnetometer object declaration
 //MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_magn[3]{};
-#endif // HMC5883
+#endif // USE_HMC5883
 
 #if SDCard
 
@@ -445,7 +446,7 @@ void setup()
 	Wire.begin();
 #endif // WIREmode
 
-#if BMP085
+#if USE_BMP085
 	baro.begin();
 	if (baro)
 	{
@@ -476,9 +477,9 @@ void setup()
 		transmitln(F("Baro err"));
 #endif // COMmode
 	}
-#endif // BMP085
+#endif // USE_BMP085
 
-#if ADXL345
+#if USE_ADXL345
 	acel.begin();
 	if (acel)
 	{
@@ -492,9 +493,9 @@ void setup()
 		transmitln(F("Acel err"));
 #endif // COMmode
 	}
-#endif // ADXL345
+#endif // USE_ADXL345
 
-#if L3G4200D
+#if USE_L3G4200D
 	giro.begin();
 	if (giro)
 	{
@@ -508,9 +509,9 @@ void setup()
 		transmitln(F("Giro err"));
 #endif // COMmode
 	}
-#endif // L3G4200D
+#endif // USE_L3G4200D
 
-#if HMC5883
+#if USE_HMC5883
 	magn.begin();
 	if (magn)
 	{
@@ -524,7 +525,7 @@ void setup()
 		transmitln(F("Magn err"));
 #endif // COMmode
 	}
-#endif // HMC5883
+#endif // USE_HMC5883
 
 #if ApoGee && COMmode
 	transmitln(rec.mainN.info() ? F("IgnMainN ok") : F("IgnMainN err"));
@@ -566,18 +567,18 @@ void setup()
 
 		SDC.theFile.println(F(
 			"temp\t"
-#if ADXL345
+#if USE_ADXL345
 			"\tacel\t\t"
-#endif // ADXL345
-#if L3G4200D
+#endif // USE_ADXL345
+#if USE_L3G4200D
 			"\tgiro\t\t"
-#endif // L3G4200D
-#if HMC5883
+#endif // USE_L3G4200D
+#if USE_HMC5883
 			"\tmag\t\t"
-#endif // HMC5883
-#if BMP085
+#endif // USE_HMC5883
+#if USE_BMP085
 			"\tbaro\t\t"
-#endif // BMP085
+#endif // USE_BMP085
 #if ApoGee
 			"\t"
 #endif // ApoGee
@@ -590,18 +591,18 @@ void setup()
 
 		SDC.theFile.println(F(
 			"seg\t"
-#if ADXL345
+#if USE_ADXL345
 			"X\tY\tZ\t"
-#endif // ADXL345
-#if L3G4200D
+#endif // USE_ADXL345
+#if USE_L3G4200D
 			"X\tY\tZ\t"
-#endif // L3G4200D
-#if HMC5883
+#endif // USE_L3G4200D
+#if USE_HMC5883
 			"X\tY\tZ\t"
-#endif // HMC5883
-#if BMP085
+#endif // USE_HMC5883
+#if USE_BMP085
 			"C\tPascal\t"
-#endif // BMP085
+#endif // USE_BMP085
 #if ApoGee
 			"m\t"
 #endif // ApoGee
@@ -893,11 +894,11 @@ inline void RemoveBefore()
 			Serial.print(F(" parts of "));
 			Serial.print(SYSTEM_n);
 			Serial.print(F(" working, waiting...\t"));
-#if BMP085
+#if USE_BMP085
 			Serial.print(baro.getTemperature());
 			Serial.print(F(" "));
 			Serial.write(0xB0);
-#endif // BMP085
+#endif // USE_BMP085
 #if GPSmode
 			Serial.print(F("C\tLat: "));
 			Serial.print(GpS.getLatitude(), 6);
@@ -1223,22 +1224,22 @@ inline void SDSend()
 		if (SDC)
 		{
 			SDC.theFile.print(SDC.util.sinceBegin(), 3); SDC.tab();
-#if ADXL345
+#if USE_ADXL345
 			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_acel[i], 3);	SDC.tab(); }
-#endif // ADXL345
-#if L3G4200D
+#endif // USE_ADXL345
+#if USE_L3G4200D
 			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_giro[i], 1);	SDC.tab(); }
-#endif // L3G4200D
-#if HMC5883
+#endif // USE_L3G4200D
+#if USE_HMC5883
 			for (short i = 0; i < 3; i++) { SDC.theFile.print(MM_magn[i], 1);	SDC.tab(); }
-#endif // HMC5883
-#if BMP085
+#endif // USE_HMC5883
+#if USE_BMP085
 			for (short i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]);		SDC.tab(); }
 #if ApoGee
 			SDC.theFile.print(apg.getAltitude()); SDC.tab();
 #endif // ApoGee
 
-#endif // BMP085
+#endif // USE_BMP085
 
 #if GPSmode
 			if (GpS.isNew())
@@ -1449,7 +1450,7 @@ template <typename T, typename R> void transmitln(T message, R value)
 
 inline void readEverything()
 {
-#if BMP085
+#if USE_BMP085
 	if (baro)
 	{
 		MM_baro[0] = baro.getTemperature();
@@ -1459,8 +1460,8 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 
 	}
-#endif // BMP085
-#if ADXL345
+#endif // USE_BMP085
+#if USE_ADXL345
 	if (acel)
 	{
 		MM_acel[0] = acel.getX();
@@ -1471,8 +1472,8 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 
 	}
-#endif // ADXL345
-#if L3G4200D
+#endif // USE_ADXL345
+#if USE_L3G4200D
 	if (giro)
 	{
 		MM_giro[0] = giro.getX();
@@ -1483,8 +1484,8 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 
 	}
-#endif // L3G4200D
-#if HMC5883
+#endif // USE_L3G4200D
+#if USE_HMC5883
 	if (magn)
 	{
 		MM_magn[0] = magn.getX();
@@ -1495,7 +1496,7 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 
 	}
-#endif // HMC5883
+#endif // USE_HMC5883
 #if GPSmode
 	if (GpS) GpS.util.forT(5);
 #if RBF || WUF || ForceSysC

@@ -9,7 +9,7 @@
 
 // #include "Sens/Sens.h" // Base dos sensores
 // #include "TriA/TriA.h" // Base dos sensores de 3 eixos
-#include "Baro/Baro.h" // Barometro BMP085
+// #include "Baro/Baro.h" // Barometro BMP085
 #include "Acel/Acel.h" // Acelerometro ADXL345
 #include "Magn/Magn.h" // MagnetometroHMC5883
 #include "Giro/Giro.h" // Giroscopio L3G4200D
