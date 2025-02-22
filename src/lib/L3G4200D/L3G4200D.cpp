@@ -1,11 +1,11 @@
-#include "Giro.h"
+#include "L3G4200D.h"
 
 ///Giroscopio
-Giro::Giro(long sc, long recalT) : scale(sc), Sens(0x69, recalT)
+L3G4200D::L3G4200D(long sc, long recalT) : Gyro(sc, 0x69, recalT)
 {
 }
 
-void Giro::begin()
+void L3G4200D::begin()
 {
 	Wire.beginTransmission(address);			// start transmission to device
 	Wire.write(0x20);							// send register address ctrl_1
@@ -38,7 +38,7 @@ void Giro::begin()
 	Wire.endTransmission();						// end transmission
 }
 
-bool Giro::readAll()
+bool L3G4200D::readAll()
 {
 	thisReadT = micros();
 	Wire.beginTransmission(address);

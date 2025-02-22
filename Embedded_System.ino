@@ -14,7 +14,7 @@
 
 #define USE_BMP085 (USE_GY80 || 1)			//Use BMP085 sensor
 #define USE_ADXL345 (USE_GY80 || 1)			//Use ADXL345 sensor
-#define USE_L3G4200D (USE_GY80 || 0)		//Use L3G4200D sensor
+#define USE_L3G4200D (USE_GY80 || 1)		//Use L3G4200D sensor
 #define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
 
 #define SDCard (1)							//Use SD card
@@ -250,7 +250,7 @@ MonoDeploy Recovery::drogB pins_drogB;
 #endif // WUF
 
 #if USE_ADXL345
-#include "src/lib/ADXL345/ADXL345.h" // Barometro BMP085
+#include "src/lib/ADXL345/ADXL345.h" // Accelerometer ADXL345
 #define accel Accelerometer
 #define MM_accel M_accel
 ADXL345 accel;									//Accelerometer object declaration
@@ -259,9 +259,10 @@ float MM_accel[3]{};
 #endif // USE_ADXL345
 
 #if USE_L3G4200D
+#include "src/lib/L3G4200D/L3G4200D.h" // Gyroscope L3G4200D
 #define giro Gyroscope
 #define MM_giro M_giro
-Giro giro(2000);							//Gyroscope object declaration
+L3G4200D giro(2000);							//Gyroscope object declaration
 //MovingAverage MM_giro[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_giro[3]{};
 #endif // USE_L3G4200D
