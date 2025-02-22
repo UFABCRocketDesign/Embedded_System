@@ -15,7 +15,7 @@
 #define USE_BMP085 (USE_GY80 || 1)			//Use BMP085 sensor
 #define USE_ADXL345 (USE_GY80 || 1)			//Use ADXL345 sensor
 #define USE_L3G4200D (USE_GY80 || 1)		//Use L3G4200D sensor
-#define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
+#define USE_HMC5883 (USE_GY80 || 1)			//Use HMC5883 sensor
 
 #define SDCard (1)							//Use SD card
 #define GPSmode (1)							//Use GPS
@@ -268,9 +268,10 @@ float MM_giro[3]{};
 #endif // USE_L3G4200D
 
 #if USE_HMC5883
+#include "src/lib/HMC5883/HMC5883.h" // Gyroscope L3G4200D
 #define magn Magnetometer
 #define MM_magn M_magn
-Magn magn;									//Magnetometer object declaration
+HMC5883 magn;									//Magnetometer object declaration
 //MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_magn[3]{};
 #endif // USE_HMC5883
