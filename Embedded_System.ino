@@ -14,7 +14,7 @@
 #define USE_GY91 (0)						//Use GY80 module
 
 #define SDCard (0)							//Use SD card
-#define GPSmode (1)							//Use GPS
+#define GPSmode (0)							//Use GPS
 #define LoRamode (0)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
 #define BuZZ (0)							//Buzzer mode
@@ -27,7 +27,7 @@
 #define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
 
 /**************************** GY91 ****************************/
-#define USE_BMP280 (USE_GY91 || 0)			//Use BMP280 sensor
+#define USE_BMP280 (USE_GY91 || 1)			//Use BMP280 sensor
 #define USE_MPU9250_ACCEL (USE_GY91 || 0)	//Use MPU9250 sensor, accelerometer
 #define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
 #define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
@@ -42,7 +42,7 @@
 #define PRINT (1)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
-#define BEEPING (BuZZ && 1)					//Buzzer mode
+#define BEEPING (BuZZ && 0)					//Buzzer mode
 #define BlinkBuzzer (BuZZ && 0)
 #define RGB (0)								//RGB LED board
 #define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
@@ -75,10 +75,10 @@
 #define PapgM (PRINT && ApoGee && 0)		//Print apogee sigma max
 
 #define Pgps (PRINT && GPSmode && 1)		//Print GPS informations
-#define Psep (PRINT && 1)					//Print visual separator
+#define Psep (PRINT && 0)					//Print visual separator
 
 #define Tcom (PRINT && 1)					//Print time counter
-#define Lcom (PRINT && 1)					//Print loop counter
+#define Lcom (PRINT && 0)					//Print loop counter
 #define Ncom (PRINT && 0)					//Print eachN counter
 #define Ps_n (PRINT && 0)					//Print SYSTEM_n
 
@@ -102,7 +102,8 @@
 #include "src/lib/BMP085/BMP085.h" // Barometro BMP085
 BMP085 baro;									//Barometer object declaration
 #elif USE_BMP280
-//...
+#include "src/lib/BMP280/BMP280.h" // Barometro BMP280
+BMP280 baro;									//Barometer object declaration
 #endif // USE_BMP085 / USE_BMP280
 //MovingAverage MM_baro[2]{ (2),(2) };		//Array declaration of the moving average filter objects
 float MM_baro[2]{};

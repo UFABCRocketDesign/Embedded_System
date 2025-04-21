@@ -1,6 +1,6 @@
 #include "BMP280.h"
 
-BMP280::BMP280(float recalT) {}
+BMP280::BMP280(float recalT) : Baro(BMP280_ADDRESS, recalT) {}
 
 void BMP280::begin()
 {
@@ -34,12 +34,12 @@ void BMP280::begin()
   Wire.write(BMP280_CONTROL);
   Wire.endTransmission();
 
-#if BMP280_CONFIG
+// #if BMP280_CONFIG
   Wire.beginTransmission(BMP280_ADDRESS);
   Wire.write(BMP280_ADDERESS_CONFIG);
   Wire.write(BMP280_CONFIG);
   Wire.endTransmission();
-#endif // BMP280_CONFIG
+// #endif // BMP280_CONFIG
 }
 
 bool BMP280::readAll()
@@ -73,7 +73,7 @@ bool BMP280::readAll()
     adc_p = ((uint32_t(Wire.read()) << 16) | (uint32_t(Wire.read()) << 8) | (uint32_t(Wire.read()))) >> 4; // 0xF7 / 0xF8 / 0xF9
     adc_t = ((uint32_t(Wire.read()) << 16) | (uint32_t(Wire.read()) << 8) | (uint32_t(Wire.read()))) >> 4; // 0xFA / 0xFB / 0xFC
 
-    celsius = float(bmp280_compensate_T_int32(adc_t)) / 100.0;
+    celcius = float(bmp280_compensate_T_int32(adc_t)) / 100.0;
     pascal = float(bmp280_compensate_P_int64(adc_p)) / 256.0;
     lastWorkT = thisReadT;
   }
