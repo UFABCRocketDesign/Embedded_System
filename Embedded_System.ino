@@ -10,14 +10,14 @@
 
 #define BaudRate 115200
 
-#define USE_GY80 (1)						//Use GY80 module
+#define USE_GY80 (0)						//Use GY80 module
 #define USE_GY91 (0)						//Use GY80 module
 
-#define SDCard (1)							//Use SD card
+#define SDCard (0)							//Use SD card
 #define GPSmode (1)							//Use GPS
-#define LoRamode (1)						//Serial mode for transmission on LoRa module
+#define LoRamode (0)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
-#define BuZZ (1)							//Buzzer mode
+#define BuZZ (0)							//Buzzer mode
 #define ForceSysC (0)
 
 /**************************** GY80 ****************************/
@@ -1052,18 +1052,18 @@ inline void SerialSend()
 #endif // Lcom
 
 #if Tcom
-	static Helpful G;
-	static float a;
+	// static Helpful G;
+	// static float a;
 
-	float b= Gutil.sinceBegin();
+	// float b= Gutil.sinceBegin();
 
-	//Serial.print((b-a)*500, 3);
-	if ((b - a) * 100 > 1) Serial.print(G.lapse(),6);
-	else G.lapse();
-	a = b;
+	// //Serial.print((b-a)*500, 3);
+	// if ((b - a) * 100 > 1) Serial.print(G.lapse(),6);
+	// else G.lapse();
+	// a = b;
 
-	//Serial.print(Gutil.sinceBegin());
-	//Serial.print('\t');
+	Serial.print(Gutil.sinceBegin());
+	Serial.print('\t');
 #endif // Tcom
 
 	////////////////////////////////////////////////////

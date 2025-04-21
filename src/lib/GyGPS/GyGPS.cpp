@@ -77,7 +77,7 @@ byte GyGPS::getDay()
 
 byte GyGPS::getHour(bool gmt)
 {
-	return hour + gmt ? GMT : 0;
+	return hour + (gmt ? GMT : 0);
 }
 
 byte GyGPS::getMinute()
@@ -106,18 +106,41 @@ bool GyGPS::readAll()
 	}
 	if (state)
 	{
+#if USE_TINY_PLUS
+		latitude = gps.location.lat();
+		longitude = gps.location.lng();
+		age = gps.location.age();
+		satellites = gps.satellites.value();
+		precision = gps.hdop.value();
+		altitude = gps.altitude.meters();
+		Kph = gps.speed.kmph();
+		mps = gps.speed.mps();
+#else
 		gps.f_get_position(&latitude, &longitude, &age);
 		satellites = gps.satellites();
 		precision = gps.hdop();
 		altitude = gps.f_altitude();
 		Kph = gps.f_speed_kmph();
 		mps = gps.f_speed_mps();
+#endif // USE_TINY_PLUS
 
 		lastWorkT = thisReadT;
 	}
 	lastReadT = thisReadT;
+#if USE_TINY_PLUS
+	year = gps.date.year();
+	month = gps.date.month();
+	day = gps.date.day();
+	hour = gps.time.hour();
+	minute = gps.time.minute();
+	second = gps.time.second();
+	chars = gps.charsProcessed();
+	sentences = gps.sentencesWithFix();
+	failed = gps.failedChecksum();
+#else
 	gps.crack_datetime(&year, &month, &day, &hour, &minute, &second);
 	gps.stats(&chars, &sentences, &failed);
+#endif // USE_TINY_PLUS
 	return state;
 }
 

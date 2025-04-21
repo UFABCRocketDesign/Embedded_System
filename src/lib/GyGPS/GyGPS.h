@@ -11,7 +11,13 @@
 #include "WProgram.h"
 #endif
 
+#define USE_TINY_PLUS 1
+
+#if USE_TINY_PLUS
+#include <TinyGPSPlus.h>
+#else
 #include <TinyGPS.h>
+#endif // USE_TINY_PLUS
 
 #include "../Sens/Sens.h"
 #include "../Helpful/Helpful.h"
@@ -20,7 +26,11 @@ class GyGPS : public Sens
 {
 	// #define GpSerial Serial1
 	HardwareSerial &GpSerial;
+#if USE_TINY_PLUS
+	TinyGPSPlus gps; // GPS object declaration
+#else
 	TinyGPS gps; // GPS object declaration
+#endif // USE_TINY_PLUS
 	const unsigned short GMT;
 	unsigned short sentences = 0; // GPS variables declaration
 	unsigned short failed = 0;
