@@ -4,10 +4,10 @@ BMP280::BMP280(float recalT) : Baro(BMP280_ADDRESS, recalT) {}
 
 void BMP280::begin()
 {
-  Wire.beginTransmission(BMP280_ADDRESS);
+  Wire.beginTransmission(address);
   Wire.write(BMP280_ADDRESS_COMPENSATION_L);
   Wire.endTransmission();
-  Wire.requestFrom(BMP280_ADDRESS, 24);
+  Wire.requestFrom(address, uint8_t(24));
 
   unsigned long temp = micros();
   while (Wire.available() < 24)
@@ -29,13 +29,13 @@ void BMP280::begin()
   dig_P8 = Wire.read() | Wire.read() << 8; // 0x9C / 0x9D
   dig_P9 = Wire.read() | Wire.read() << 8; // 0x9E / 0x9F
 
-  Wire.beginTransmission(BMP280_ADDRESS);
+  Wire.beginTransmission(address);
   Wire.write(BMP280_ADDERESS_CONTROL);
   Wire.write(BMP280_CONTROL);
   Wire.endTransmission();
 
 // #if BMP280_CONFIG
-  Wire.beginTransmission(BMP280_ADDRESS);
+  Wire.beginTransmission(address);
   Wire.write(BMP280_ADDERESS_CONFIG);
   Wire.write(BMP280_CONFIG);
   Wire.endTransmission();
@@ -58,10 +58,10 @@ bool BMP280::readAll()
 #endif // PRINT
     }
 
-    Wire.beginTransmission(BMP280_ADDRESS);
+    Wire.beginTransmission(address);
     Wire.write(BMP280_ADDRESS_PRESS_MSB);
     Wire.endTransmission();
-    Wire.requestFrom(BMP280_ADDRESS, 6);
+    Wire.requestFrom(address, uint8_t(6));
 
     unsigned long temp = micros();
     while (Wire.available() < 6)
