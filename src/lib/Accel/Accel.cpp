@@ -1,6 +1,7 @@
 #include "Accel.h"
 
-///Acelerometro
-Accel::Accel(uint8_t address, long recalT) :Sens(address, recalT)
+
+Accel::Accel(long sc, uint8_t address, long recalT)
+  : scale(sc), Sens(address, recalT)
 {
 }

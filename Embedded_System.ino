@@ -11,7 +11,7 @@
 #define BaudRate 115200
 
 #define USE_GY80 (0)						//Use GY80 module
-#define USE_GY91 (0)						//Use GY80 module
+#define USE_GY91 (1)						//Use GY80 module
 
 #define SDCard (0)							//Use SD card
 #define GPSmode (0)							//Use GPS
@@ -27,9 +27,9 @@
 #define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
 
 /**************************** GY91 ****************************/
-#define USE_BMP280 (USE_GY91 || 0)			//Use BMP280 sensor
-#define USE_MPU9250_ACCEL (USE_GY91 || 0)	//Use MPU9250 sensor, accelerometer
-#define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
+#define USE_BMP280 (USE_GY91 || 1)			//Use BMP280 sensor
+#define USE_MPU9250_ACCEL (USE_GY91 || 1)	//Use MPU9250 sensor, accelerometer
+#define USE_MPU9250_GYRO (USE_GY91 || 1)	//Use MPU9250 sensor, gyroscope
 #define USE_AK8963 (USE_GY91 || 1)			//Use AK8963 sensor
 
 /************************** 9DoF IMU **************************/
@@ -276,7 +276,8 @@ MonoDeploy Recovery::drogB pins_drogB;
 #include "src/lib/ADXL345/ADXL345.h" // Accelerometer ADXL345
 ADXL345 accel;									//Accelerometer object declaration
 #elif USE_MPU9250_ACCEL
-//...
+#include "src/lib/MPU9250_ACCEL/MPU9250_ACCEL.h" // Accelerometer MPU9250_ACCEL
+MPU9250_ACCEL accel(16);									//Accelerometer object declaration
 #endif // USE_ADXL345 / USE_MPU9250_ACCEL
 //MovingAverage MM_accel[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_accel[3]{};
@@ -289,7 +290,8 @@ float MM_accel[3]{};
 #include "src/lib/L3G4200D/L3G4200D.h" // Gyroscope L3G4200D
 L3G4200D giro(2000);							//Gyroscope object declaration
 #elif USE_MPU9250_GYRO
-// ...
+#include "src/lib/MPU9250_GYRO/MPU9250_GYRO.h" // Gyroscope MPU9250_GYRO
+MPU9250_GYRO giro(2000);							//Gyroscope object declaration
 #endif // USE_L3G4200D / USE_MPU9250_GYRO
 //MovingAverage MM_giro[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_giro[3]{};

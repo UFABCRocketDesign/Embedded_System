@@ -1,5 +1,3 @@
-// Accel.h
-
 #pragma once
 
 #ifndef _ACCEL_h
@@ -11,8 +9,11 @@
 
 class Accel : public Sens, public TriA
 {
+protected:
+	const long scale;
+
 public:
-	Accel(uint8_t address, long recalT = 0.1);
+	Accel(long sc, uint8_t address, long recalT = 0.1);
 };
 
 #endif
