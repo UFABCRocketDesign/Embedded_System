@@ -17,11 +17,11 @@
 // #include "RoundArray/RoundArray.h" // Vetor rotativo
 #include "MovingAverage/MovingAverage.h" // Media movel simples
 #include "SerialFilter/SerialFilter.h" // Media movel em cascata
-#include "GyGPS/GyGPS.h" // Auxiliar para GPS
-#include "Apogeu/Apogeu.h" // Processamento de altitude e deteccao de apogeu
+// #include "GyGPS/GyGPS.h" // Auxiliar para GPS
+// #include "Apogeu/Apogeu.h" // Processamento de altitude e deteccao de apogeu
 // #include "DuDeploy/DuDeploy.h" // Acionamento de paraquedas duplo
-#include "MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
-#include "SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
+// #include "MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
+// #include "SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
 // #include "Term/Term.h" // Termometro LM35
 
 // #include "MediaMovel/MediaMovel.h" // Media Movel Legado [substituida por MovingAverage]

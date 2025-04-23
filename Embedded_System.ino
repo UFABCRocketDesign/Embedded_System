@@ -1,7 +1,3 @@
-#include <TinyGPS.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <SD.h>
 #include "src/lib/Classes.h"
 
 /////////////////////////////////////////////////CONFIGURATION/////////////////////////////////////////////////
@@ -13,11 +9,11 @@
 #define USE_GY80 (0)						//Use GY80 module
 #define USE_GY91 (1)						//Use GY80 module
 
-#define SDCard (0)							//Use SD card
-#define GPSmode (0)							//Use GPS
-#define LoRamode (0)						//Serial mode for transmission on LoRa module
+#define SDCard (1)							//Use SD card
+#define GPSmode (1)							//Use GPS
+#define LoRamode (1)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
-#define BuZZ (0)							//Buzzer mode
+#define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
 /**************************** GY80 ****************************/
@@ -27,16 +23,23 @@
 #define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
 
 /**************************** GY91 ****************************/
-#define USE_BMP280 (USE_GY91 || 1)			//Use BMP280 sensor
-#define USE_MPU9250_ACCEL (USE_GY91 || 1)	//Use MPU9250 sensor, accelerometer
-#define USE_MPU9250_GYRO (USE_GY91 || 1)	//Use MPU9250 sensor, gyroscope
-#define USE_AK8963 (USE_GY91 || 1)			//Use AK8963 sensor
+#define USE_BMP280 (USE_GY91 || 0)			//Use BMP280 sensor
+#define USE_MPU9250_ACCEL (USE_GY91 || 0)	//Use MPU9250 sensor, accelerometer
+#define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
+#define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
 
 /************************** 9DoF IMU **************************/
 #define USE_BARO (USE_BMP085 || USE_BMP280)				// Use any Barometer
 #define USE_ACCEL (USE_ADXL345 || USE_MPU9250_ACCEL)	// Use any Accelerometer
 #define USE_GYRO (USE_L3G4200D || USE_MPU9250_GYRO)		// Use any Gyroscope
 #define USE_MAGN (USE_HMC5883 || USE_AK8963)			// Use any Magnetometer
+
+/**************************** LoRa ****************************/
+
+#define LoRa_DORJI (LoRamode && 0)		// Dorji LoRa Module (2019 and before)
+#define LoRa_E32 (LoRamode && 1)		// E32 LoRa Module (2019 and before)
+
+/*************************** Others ***************************/
 
 #define ApoGee (USE_BARO && 1)				//Detection of apogee
 #define PRINT (1)							//Print or not things on Serial
@@ -84,6 +87,7 @@
 
 #define PWMapg (ApoGee && 1)				//Show the apogee coefficient in a LED
 
+#define PERF_Tcom_print (0)				//Print time counter every 100 iterations (for performance tests)
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)
@@ -110,6 +114,8 @@ float MM_baro[2]{};
 #endif // USE_BARO
 
 #if ApoGee
+#include "src/lib/Apogeu/Apogeu.h" // Processamento de altitude e deteccao de apogeu
+#include "src/lib/MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
 #define apg Apogee
 Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)
@@ -313,6 +319,10 @@ float MM_magn[3]{};
 
 #if SDCard
 
+#include <SPI.h>
+#include <SD.h>
+#include "src/lib/SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
+
 #ifdef ARDUINO_AVR_MEGA2560
 #define SD_CS_PIN 53
 #else
@@ -320,20 +330,33 @@ float MM_magn[3]{};
 #endif // ARDUINO_AVR_MEGA2560
 
 #define SDC SecureDigitalCard
-SDCH SDC(SD_CS_PIN, "Angra");						//Declaration of object to help SD card file management
+SDCH SDC(SD_CS_PIN, "Arace");						//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
+#include "src/lib/GyGPS/GyGPS.h" // Auxiliar para GPS
 #define GpS GlobalPSystem
 GyGPS GpS(Serial1, 0);
 #endif // GPSmode
 
 #if LoRamode
+#if LoRa_DORJI
 #define LoRaDelay 1.5
+#elif LoRa_E32
+#define LoRaDelay 0.5
+#else
+#define LoRaDelay 5
+#endif // LoRa_DORJI || LoRa_E32
 #define LoRa LongRange
 #define LRutil LRutilitario
 HardwareSerial &LoRa(Serial3);
 Helpful LRutil;								//Declaration of helpful object to telemetry system
+#define LoRaBaudRate 9600
+#if LoRa_E32
+#define M0_LORA_PIN 12 // Pinos adicionais do LoRa
+#define M1_LORA_PIN 11 // Pinos adicionais do LoRa
+#define AUX_LORA_PIN A8 // Pinos adicionais do LoRa
+#endif // LoRa_E32
 #endif // LoRamode
 
 #if TalkingBoard
@@ -341,9 +364,9 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 ComProtocol Talk(Serial2, 9600);			//Declaration of communication protocol object
 #endif // TalkingBoard
 
-#if PRINT
+#if ((PRINT) || (PERF_Tcom_print))
 #define Serial Serial
-#endif // PRINT
+#endif // ((PRINT) || (PERF_Tcom_print))
 
 #define Gutil utilitario
 Helpful Gutil;								//Declaration of helpful object to general cases
@@ -446,7 +469,7 @@ void setup()
 #endif // BEEPING
 
 
-#if PRINT
+#if ((PRINT) || (PERF_Tcom_print))
 	Serial.begin(BaudRate);
 	Serial.println();
 #if Ps_n
@@ -457,7 +480,11 @@ void setup()
 #endif // Serial
 
 #if LoRamode
-	LoRa.begin(9600);
+#if LoRa_E32
+  pinMode(M0_LORA_PIN,OUTPUT); digitalWrite(M0_LORA_PIN,LOW);
+  pinMode(M1_LORA_PIN,OUTPUT); digitalWrite(M1_LORA_PIN,LOW);
+#endif // LoRa_E32
+	LoRa.begin(LoRaBaudRate);
 #endif // LoRamode
 
 #if GPSmode
@@ -673,12 +700,16 @@ void setup()
 	////////////////RBF directive////////////////
 
 
-#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 	Serial.println(F(
-#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 #if Lcom
 	"loop\t"
 #endif // Lcom
+
+#if PERF_Tcom_print
+	"temp\t"
+#endif // PERF_Tcom_print
 
 #if Tcom
 	"temp\t"
@@ -757,13 +788,17 @@ void setup()
 	"\t\t\tGPS\t\t\t"
 #endif // Pgps
 
-#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 	));
 	Serial.println(F(
-#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 #if Lcom
 	"\t"
 #endif // Lcom
+
+#if PERF_Tcom_print
+	"s\t"
+#endif // PERF_Tcom_print
 
 #if Tcom
 	"s\t"
@@ -830,9 +865,9 @@ void setup()
 	"Latitude\tLongitude\tAltitude\tSpeed (m/s)\tSat\tPrec\t"
 #endif // Pgps
 
-#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 	));
-#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 
 #if SDCard
 	SDC.util.begin();
@@ -896,9 +931,9 @@ void loop()
 	analogWrite(PWMout, (char)(apg.getSigma() * 255));
 #endif // PWMapg
 
-#if PRINT
+#if ((PRINT) || (PERF_Tcom_print))
 	SerialSend();
-#endif // PRINT
+#endif // ((PRINT) || (PERF_Tcom_print))
 
 #if SDCard
 	SDSend();
@@ -1004,9 +1039,9 @@ inline void WaitUntil(float minHeight)
 		analogWrite(PWMout, (char)(apg.getSigma() * 255));
 #endif // PWMapg
 
-#if PRINT
+#if ((PRINT) || (PERF_Tcom_print))
 		SerialSend();
-#endif // PRINT
+#endif // ((PRINT) || (PERF_Tcom_print))
 
 #if SDCard
 		SDSend();
@@ -1030,7 +1065,7 @@ inline void WaitUntil(float minHeight)
 
 //////////////////////////////////////////////////////SPT//////////////////////////////////////////////////////
 
-#if PRINT
+#if ((PRINT) || (PERF_Tcom_print))
 inline void SerialSend()
 {
 
@@ -1055,17 +1090,19 @@ inline void SerialSend()
 	Serial.print(F(":\t"));
 #endif // Lcom
 
+#if PERF_Tcom_print // Print elapsed iteration time every 100 iterations, for performance tests only
+	static Helpful G;
+	static float a;
+
+	float b= Gutil.sinceBegin();
+
+	//Serial.print((b-a)*500, 3);
+	if ((b - a) * 100 > 1) Serial.println(G.lapse(),6);
+	else G.lapse();
+	a = b;
+#endif // PERF_Tcom_print
+
 #if Tcom
-	// static Helpful G;
-	// static float a;
-
-	// float b= Gutil.sinceBegin();
-
-	// //Serial.print((b-a)*500, 3);
-	// if ((b - a) * 100 > 1) Serial.print(G.lapse(),6);
-	// else G.lapse();
-	// a = b;
-
 	Serial.print(Gutil.sinceBegin());
 	Serial.print('\t');
 #endif // Tcom
@@ -1252,7 +1289,7 @@ inline void SerialSend()
 #endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
 
 }
-#endif // PRINT
+#endif // ((PRINT) || (PERF_Tcom_print))
 
 //////////////////////////////////////////////////////SDC//////////////////////////////////////////////////////
 
