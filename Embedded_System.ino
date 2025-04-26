@@ -16,6 +16,8 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
+#define PROJECT_NAME "Arace"
+
 /**************************** GY80 ****************************/
 #define USE_BMP085 (USE_GY80 || 0)			//Use BMP085 sensor
 #define USE_ADXL345 (USE_GY80 || 0)			//Use ADXL345 sensor
@@ -45,6 +47,9 @@
 #define PRINT (1)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
 #define WUF (ApoGee && 1)					//Wait Until Flight
+#define ACT_BUZZER (BuZZ && 0)				//Active buzzer in hardware
+#define PSS_BUZZER (BuZZ && 1)				//Passive buzzer in hardware
+#define MORSE_MSG (BuZZ && 1)				//Morse beeping
 #define BEEPING (BuZZ && 0)					//Buzzer mode
 #define BlinkBuzzer (BuZZ && 0)
 #define RGB (0)								//RGB LED board
@@ -330,7 +335,7 @@ float MM_magn[3]{};
 #endif // ARDUINO_AVR_MEGA2560
 
 #define SDC SecureDigitalCard
-SDCH SDC(SD_CS_PIN, "Arace");						//Declaration of object to help SD card file management
+SDCH SDC(SD_CS_PIN, PROJECT_NAME);						//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
@@ -387,11 +392,16 @@ unsigned short sysC = 0;
 #define buzzPin LED_BUILTIN
 #define buzzCmd HIGH
 #else
-#define buzzPin A0							//Pin that the buzzer is connected
+// #define buzzPin A0							//Pin that the buzzer is connected
 #define buzzCmd LOW							//Buzzer is on in high state
+#define buzzPin 49							//Pin that the buzzer is connected
 #endif // BlinkBuzzer
 #endif // BuZZ
-
+#if MORSE_MSG
+#include "src/lib/Morse/Morse.h"
+Morse mensageiro(buzzPin, String("~ ") + PROJECT_NAME);
+Helpful Mutil;
+#endif // MORSE_MSG
 #if BEEPING
 #define holdT .1
 Helpful beeper;
@@ -460,10 +470,14 @@ void setup()
 #endif // DELAYED
 
 
-#if BuZZ
+#if ACT_BUZZER
 	pinMode(buzzPin, OUTPUT);
 	digitalWrite(buzzPin, !buzzCmd);
-#endif // BuZZ
+#endif // ACT_BUZZER
+#if MORSE_MSG
+	mensageiro.setup();
+	mensageiro.updateMorse();
+#endif // MORSE_MSG
 #if BEEPING
 	beep();
 #endif // BEEPING
@@ -489,6 +503,7 @@ void setup()
 
 #if GPSmode
 	GpS.begin();
+	GpS.util.forT(60);
 	if (GpS)
 	{
 		if (GpS.util.oneTime())
@@ -923,9 +938,22 @@ void loop()
 #endif // PapgM
 		if (rec.getApogee()) Gutil.mem = 1;
 	}
+	else {
+#if MORSE_MSG
+		if(Mutil.oneTime())
+		{
+			mensageiro.msgAux = F(". ~ . ^ . < . = . > . [ . ] . { . } A ");
+			mensageiro.msgAux += String(apg.getApgPt());
+			mensageiro.msgAux += F(" m");
+			mensageiro.setNextMessage(mensageiro.msgAux);
+			mensageiro.msgAux = "";
+		}
+		mensageiro.updateMorse();
+#endif // MORSE_MSG
 #if BEEPING
-	else beep(SYSTEM_n); //rec
+		beep(SYSTEM_n); //rec
 #endif // BEEPING
+	}
 #endif // ApoGee
 #if PWMapg
 	analogWrite(PWMout, (char)(apg.getSigma() * 255));
@@ -943,6 +971,9 @@ void loop()
 	LoRaSend();
 #endif // LoRamode
 
+#if MORSE_MSG && ForceSysC
+	mensageiro.updateMorse();
+#endif // MORSE_MSG
 #if BEEPING && ForceSysC
 	beep(sysC);
 #elif BEEPING && !WUF && !RBF && !ApoGee
@@ -1024,6 +1055,9 @@ inline void WaitUntil(float minHeight)
 	do
 	{
 		sysC = 0;
+#if MORSE_MSG
+		mensageiro.msgAux = "";
+#endif // MORSE_MSG
 		Gutil.counter();
 		readEverything();
 
@@ -1051,12 +1085,20 @@ inline void WaitUntil(float minHeight)
 		LoRaSend();
 #endif // LoRamode
 
+#if MORSE_MSG
+	if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("~ ~ ~ "+mensageiro.msgAux);
+	if(mensageiro.updateMorse()) Mutil.oneTimeReset();
+#endif // MORSE_MSG
 #if BEEPING
 		beep(sysC);
 #endif // BEEPING
 
 	}
 	while (abs(apg.getAltitude()) < minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
+#if MORSE_MSG
+	mensageiro.setQuiet();
+	Mutil.oneTimeReset();
+#endif // MORSE_MSG
 #if BEEPING
 	beep();
 #endif // BEEPING
@@ -1379,7 +1421,13 @@ inline void SDSend()
 #endif // RBF || WUF || ForceSysC
 
 		}
-		else SDC.util.mem = 1;
+		else
+		{
+			SDC.util.mem = 1;
+#if MORSE_MSG
+			mensageiro.msgAux += " S";
+#endif  // MORSE_MSG
+		}
 	}
 	else if (SDC.util.eachT(15)) if (SDC.begin()) SDC.util.mem = 0;
 }
@@ -1535,7 +1583,10 @@ inline void readEverything()
 #if RBF || WUF || ForceSysC
 		sysC++;
 #endif // RBF || WUF || ForceSysC
-
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " B";
+#endif  // MORSE_MSG
 	}
 #endif // USE_BARO
 #if USE_ACCEL
@@ -1547,7 +1598,10 @@ inline void readEverything()
 #if RBF || WUF || ForceSysC
 		sysC++;
 #endif // RBF || WUF || ForceSysC
-
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " A";
+#endif  // MORSE_MSG
 	}
 #endif // USE_ACCEL
 #if USE_GYRO
@@ -1559,7 +1613,10 @@ inline void readEverything()
 #if RBF || WUF || ForceSysC
 		sysC++;
 #endif // RBF || WUF || ForceSysC
-
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " G";
+#endif  // MORSE_MSG
 	}
 #endif // USE_GYRO
 #if USE_MAGN
@@ -1571,29 +1628,62 @@ inline void readEverything()
 #if RBF || WUF || ForceSysC
 		sysC++;
 #endif // RBF || WUF || ForceSysC
-
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " M";
+#endif  // MORSE_MSG
 	}
 #endif // USE_MAGN
 #if GPSmode
-	if (GpS) GpS.util.forT(5);
+	if (GpS) GpS.util.forT(10);
+	if (GpS.util.forT()) {
 #if RBF || WUF || ForceSysC
-	if (GpS.util.forT()) sysC++;
+		sysC++;
 #endif // RBF || WUF || ForceSysC
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " L";
+#endif  // MORSE_MSG
+}
 
 #endif // GPSmode
 #if ApoGee && (RBF || WUF)
-	if (rec.mainN.info()) sysC++;
+	if (rec.mainN.info()) {
+		sysC++;
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmn";
+#endif  // MORSE_MSG
+	}
 
 #if DualDeploy
-	if (rec.drogN.info()) sysC++;
+	if (rec.drogN.info()) {
+		sysC++;
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdn";
+#endif  // MORSE_MSG
+	}
 #endif // DualDeploy
 
 
 #if DELAYED
-	if (rec.mainB.info()) sysC++;
+	if (rec.mainB.info()) {
+		sysC++;
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmb";
+#endif  // MORSE_MSG
+	}
 
 #if DualDeploy
-	if (rec.drogB.info()) sysC++;
+	if (rec.drogB.info()) {
+		sysC++;
+	} else {
+#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdb";
+#endif  // MORSE_MSG
+	}
 #endif // DualDeploy
 
 #endif // DELAYED

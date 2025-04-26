@@ -5,7 +5,7 @@
 
 #include "../Magn/Magn.h"
 
-#define MPU9250_ADDRESS_M 0b01101000
+#define MPU9250_ADDRESS_M (uint8_t(0b01101000))
 
 #define MPU9250_MAG_ADDRESS 0b00001100
 

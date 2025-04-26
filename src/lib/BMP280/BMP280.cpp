@@ -78,6 +78,8 @@ bool BMP280::readAll()
     lastWorkT = thisReadT;
   }
   lastReadT = thisReadT;
+
+  return state;
 }
 
 BMP280_S32_t BMP280::bmp280_compensate_T_int32(BMP280_S32_t adc_T)

@@ -82,4 +82,5 @@ bool AK8963::readAll()
 		lastWorkT = thisReadT;
 	}
 	lastReadT = thisReadT;
+	return state;
 }
