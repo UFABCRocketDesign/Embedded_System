@@ -17,6 +17,8 @@
 
 class Morse {
 
+protected:
+
 	static const char *const letters[26];  //For Letters
 	static const char *const numbers[10];  //For Numbers
 	static const char *const space[1];     //For Space
@@ -47,18 +49,32 @@ class Morse {
 	bool newMessage = false;
 	bool quiet = false;
 
-	bool playMorseChar(char c);
+	virtual bool playMorseChar(char c);
 
 public:
 
 	String msgAux = "";
 
 	Morse(uint8_t pin, String msg = "", unsigned int fDot = 523, unsigned int fDash = 784, unsigned int fAlrmHi = 62, unsigned int fAlrmLo = 1976);
-	void setup();
+	virtual void setup();
 	void setNextMessage(String message);
 	bool updateMorse();
-	void setQuiet();
+	virtual void setQuiet();
 	bool getQuiet();
+};
+
+class MorseAtvBzz : public Morse
+{
+	const uint8_t buzzerCmd;
+
+	uint8_t alarmState = !buzzerCmd;
+
+	bool playMorseChar(char c);
+
+	public:
+	MorseAtvBzz(uint8_t pin, bool cmd = LOW, String msg = "", unsigned int fAlrmFs = 5, unsigned int fAlrmSl = 100);
+	void setup();
+	void setQuiet();
 };
 
 /*

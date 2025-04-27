@@ -136,43 +136,39 @@ bool Morse::playMorseChar(char c)
 			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (-cos(M_PI * currentMarkIndex / 50.0) * 0.5 + 0.5);
 
 			currentMarkIndex++;
-			if (400 < currentMarkIndex)
+			if (alarmSteps < currentMarkIndex)
 			{
+	#if _MORSE_PRINT
+					Serial.print(currentMark);
+	#endif // _MORSE_PRINT
 				currentMark = '\0';
-#if _MORSE_PRINT
-				Serial.print('~');
-#endif // _MORSE_PRINT
 			}
 			tone(buzzerPin, signal);
 		}
 		else if (currentMark == '^')
 		{
 			nextActionMillis = currentMillis + alarmDelay;
-			if (ALARM_LOW > abs(currentMarkIndex))
-			{
-				if (abs(currentMarkIndex) > 1)
-				{
-#if _MORSE_PRINT
-					Serial.print(currentMark);
-#endif // _MORSE_PRINT
-					currentMark = '\0';
-				}
-				currentMarkIndex = ALARM_LOW;
-			}
-			else if (ALARM_HIGH < abs(currentMarkIndex))
-				currentMarkIndex = -ALARM_HIGH;
-			currentMarkIndex += 10;
 
-			tone(buzzerPin, abs(currentMarkIndex));
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1- abs((2*currentMarkIndex - float(alarmSteps) - 1.0) / (float(alarmSteps) - 1.0)));
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+	#if _MORSE_PRINT
+				Serial.print(currentMark);
+	#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			tone(buzzerPin, signal);
 		}
 		else if (currentMark == '<')
 		{
 			nextActionMillis = currentMillis + alarmDelay;
 
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (currentMarkIndex / 400.0);
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (currentMarkIndex / float(alarmSteps));
 
 			currentMarkIndex++;
-			if (400 < currentMarkIndex)
+			if (alarmSteps < currentMarkIndex)
 			{
 #if _MORSE_PRINT
 				Serial.print(currentMark);
@@ -188,7 +184,7 @@ bool Morse::playMorseChar(char c)
 			int signal = ((currentMarkIndex / 50) % 2) ? ALARM_LOW : ALARM_HIGH;
 
 			currentMarkIndex++;
-			if (400 < currentMarkIndex)
+			if (alarmSteps < currentMarkIndex)
 			{
 #if _MORSE_PRINT
 				Serial.print(currentMark);
@@ -201,10 +197,10 @@ bool Morse::playMorseChar(char c)
 		{
 			nextActionMillis = currentMillis + alarmDelay;
 
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * ((400 - currentMarkIndex) / 400.0);
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * ((alarmSteps - currentMarkIndex) / float(alarmSteps));
 
 			currentMarkIndex++;
-			if (400 < currentMarkIndex)
+			if (alarmSteps < currentMarkIndex)
 			{
 #if _MORSE_PRINT
 				Serial.print(currentMark);
@@ -318,4 +314,267 @@ bool Morse::updateMorse()
 		return true;
 	}
 	return false;
+}
+
+
+MorseAtvBzz::MorseAtvBzz(uint8_t pin, bool cmd = LOW, String msg = "", unsigned int fAlrmFs = 5, unsigned int fAlrmSl = 100)
+	: Morse(pin, msg, 0, 0, fAlrmFs, fAlrmSl),
+	  buzzerCmd(cmd) {}
+
+void MorseAtvBzz::setup()
+{
+	pinMode(buzzerPin, OUTPUT);
+	digitalWrite(buzzerPin, !buzzerCmd);
+}
+
+void MorseAtvBzz::setQuiet()
+{
+	digitalWrite(buzzerPin, !buzzerCmd);
+	currentCharIndex = 0;
+	currentMarkIndex = 0;
+	quiet = true;
+}
+
+bool MorseAtvBzz::playMorseChar(char c)
+{
+
+	char const *seq = 0;
+	bool numAux = false;
+
+	if (isDigit(c))
+	{
+		// seq = Morse::numbers[c - '0'];
+		seq = pgm_read_ptr_near(Morse::numbers + (c - '0'));
+		numAux = true;
+	}
+	else if (isUpperCase(c))
+		seq = pgm_read_ptr_near(Morse::letters + (c - 'A'));
+	else if (isLowerCase(c))
+		seq = pgm_read_ptr_near(Morse::letters + (c - 'a'));
+	else if (c == '-' || c == '.')
+		seq = pgm_read_ptr_near(Morse::morse + (c - '-'));
+	else if (c >= '{' && c <= '~')
+		seq = pgm_read_ptr_near(Morse::tilde + (c - '{'));
+	else if (c >= '[' && c <= '_')
+		seq = pgm_read_ptr_near(Morse::zigzag + (c - '['));
+	else if (c >= '<' && c <= '>')
+		seq = pgm_read_ptr_near(Morse::compare + (c - '<'));
+	else
+		seq = pgm_read_ptr_near(Morse::space);
+
+	float currentMillis = millis();
+
+	if (currentMillis >= nextActionMillis)
+	{
+		// Serial.println((unsigned int)seq);
+		if (currentMark == '\0')
+		{
+			currentMarkIndex = 0;
+			currentMark = ' ';
+#if _MORSE_PRINT
+			Serial.print(currentMark);
+#endif // _MORSE_PRINT
+			nextActionMillis = currentMillis + dotDelay;
+			return 1;
+		}
+		if (currentMark == ' ')
+		{
+			digitalWrite(buzzerPin, !buzzerCmd);
+			currentMark = seq[currentMarkIndex++];
+			nextActionMillis = currentMillis + dotDelay;
+		}
+		else if (currentMark == '.')
+		{
+			digitalWrite(buzzerPin, buzzerCmd);
+#if _MORSE_PRINT
+			Serial.print(currentMark);
+#endif // _MORSE_PRINT
+			currentMark = ' ';
+			nextActionMillis = currentMillis + dotDelay;
+		}
+		else if (currentMark == '-')
+		{
+			digitalWrite(buzzerPin, buzzerCmd);
+#if _MORSE_PRINT
+			Serial.print(currentMark);
+#endif // _MORSE_PRINT
+			currentMark = ' ';
+			nextActionMillis = currentMillis + dashDelay;
+		}
+		else if (currentMark == '*')
+		{
+			digitalWrite(buzzerPin, !buzzerCmd);
+#if _MORSE_PRINT
+			Serial.print(' ');
+#endif // _MORSE_PRINT
+			currentMark = ' ';
+			nextActionMillis = currentMillis + dashDelay;
+		}
+		else if (currentMark == '~')
+		{
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (-cos(M_PI * currentMarkIndex / 50.0) * 0.5 + 0.5);
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+	#if _MORSE_PRINT
+				Serial.print(currentMark);
+	#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == '^')
+		{
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1- abs((2*currentMarkIndex - float(alarmSteps) - 1.0) / (float(alarmSteps) - 1.0)));
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+#if _MORSE_PRINT
+				Serial.print(currentMark);
+#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == '<')
+		{
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (currentMarkIndex / float(alarmSteps));
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+#if _MORSE_PRINT
+				Serial.print(currentMark);
+#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == '=')
+		{
+			int signal = ((currentMarkIndex / 50) % 2) ? ALARM_LOW : ALARM_HIGH;
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+#if _MORSE_PRINT
+				Serial.print(currentMark);
+#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == '>')
+		{
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * ((alarmSteps - currentMarkIndex) / float(alarmSteps));
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+#if _MORSE_PRINT
+				Serial.print(currentMark);
+#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == '[')
+		{
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (pow((currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+#if _MORSE_PRINT
+				Serial.print(currentMark);
+#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == ']')
+		{
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (pow(1.0 - (currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+#if _MORSE_PRINT
+				Serial.print(currentMark);
+#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == '{')
+		{
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1.0 - pow(1.0 - (currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+#if _MORSE_PRINT
+				Serial.print(currentMark);
+#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == '}')
+		{
+			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1.0 - pow((currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
+
+			nextActionMillis = currentMillis + signal;
+
+			currentMarkIndex++;
+			if (alarmSteps < currentMarkIndex)
+			{
+#if _MORSE_PRINT
+				Serial.print(currentMark);
+#endif // _MORSE_PRINT
+				currentMark = '\0';
+			}
+			alarmState = !alarmState;
+			digitalWrite(buzzerPin, alarmState);
+		}
+		else if (currentMark == '*')
+		{
+			digitalWrite(buzzerPin, !buzzerCmd);
+			currentMark = ' ';
+#if _MORSE_PRINT
+			Serial.print(currentMark);
+#endif // _MORSE_PRINT
+			nextActionMillis = currentMillis + dashDelay;
+		}
+		else
+			currentMark = '\0';
+	}
+	return 0;
 }
