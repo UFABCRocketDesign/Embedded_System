@@ -52,6 +52,7 @@ public:
 	float addZero(long P, float sealevelP = 101325);
 	float getZero();
 	void resetZero();
+	void resetAptPt();
 	void resetTimer();
 	//float addAltitude(float H);
 	float calcAlt(const long &P, float sealevelP = 101325);

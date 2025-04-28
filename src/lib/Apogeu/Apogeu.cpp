@@ -36,6 +36,11 @@ void Apogeu::resetZero()
 	baseIndex = 0;
 }
 
+void Apogeu::resetAptPt()
+{
+	apgPt = altMed[0];
+}
+
 void Apogeu::resetTimer()
 {
 	TimeZero = micros();

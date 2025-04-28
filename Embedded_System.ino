@@ -46,7 +46,9 @@
 #define ApoGee (USE_BARO && 1)				//Detection of apogee
 #define PRINT (1)							//Print or not things on Serial
 #define RBF (0)								//Revome Before Flight
-#define WUF (ApoGee && 1)					//Wait Until Flight
+#define WU (ApoGee && 1)					//Wait Until Directives
+#define WUF (WU && 1)						//Wait Until Flight
+#define WUPS (WU && 1)						//Wait Until Pressure Stabilize
 #define ACT_BUZZER (BuZZ && 0)				//Active buzzer in hardware
 #define PSS_BUZZER (BuZZ && 1)				//Passive buzzer in hardware
 #define MORSE_MSG (BuZZ && 1)				//Morse beeping
@@ -56,7 +58,7 @@
 #define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
 #define DELAYED (ApoGee && 1)				//Redundancy mode
 
-#define ELEVATOR (0)
+#define ELEVATOR (1)
 
 #define PbarT (PRINT && USE_BARO && 1)		//Print barometer temperature data
 #define PbarP (PRINT && USE_BARO && 1)		//Print barometer pressure data
@@ -274,8 +276,10 @@ MonoDeploy Recovery::drogB pins_drogB;
 
 #if ELEVATOR
 #define WUFheigh 5
+#define WUPSdelay 3
 #else
 #define WUFheigh 50
+#define WUPSdelay 10
 #endif // ELEVATOR
 
 #endif // WUF
@@ -896,11 +900,10 @@ void setup()
 	////////////////WUF directive////////////////
 
 #if WUF
-	WaitUntil(WUFheigh);
+	WaitUntilFlight(WUFheigh);
 #if COMmode
 	transmit(F("LiftOff confirmed"));
 #endif // COMmode
-
 #endif // WUF
 
 	////////////////WUF directive////////////////
@@ -915,11 +918,20 @@ void setup()
 	apg.resetTimer();
 	rec.resetTimer();
 #endif // ApoGee
+
+#if WUPS
+	WaitUntilPressureStabilize(WUPSdelay);
+#if COMmode
+	transmit(F("Pressure Stabilize timer expired"));
+#endif // COMmode
+#endif // WUPS
+
 }
 #pragma endregion
+
 /////////////////////////////////////////////////////LOOP//////////////////////////////////////////////////////
 
-#pragma region Lopp
+#pragma region Loop
 void loop()
 {
 #if RBF || WUF || ForceSysC
@@ -1054,47 +1066,54 @@ inline void RemoveBefore()
 }
 #endif // RBF
 
-//////////////////////////////////////////////////////WUF//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////WU//////////////////////////////////////////////////////
+
+#if WU
+inline void WaitUntil()
+{
+	sysC = 0;
+	#if MORSE_MSG
+		if(!mensageiro.getQuiet()) mensageiro.msgAux = "";
+	#endif // MORSE_MSG
+			Gutil.counter();
+			readEverything();
+
+	#if ApoGee
+			apg.calcAlt(baro.getPressure());
+			apg.apgSigma();
+			apg.apgAlpha();
+	#if PapgM
+			Gutil.comparer(apg.getSigma());
+	#endif // PapgM
+	#endif // ApoGee
+	#if PWMapg
+			analogWrite(PWMout, (char)(apg.getSigma() * 255));
+	#endif // PWMapg
+
+	#if ((PRINT) || (PERF_Tcom_print))
+			SerialSend();
+	#endif // ((PRINT) || (PERF_Tcom_print))
+
+	#if SDCard
+			SDSend();
+	#endif // SDCard
+
+	#if LoRamode
+			LoRaSend();
+	#endif // LoRamode
+}
+#endif // WU
 
 #if WUF
-inline void WaitUntil(float minHeight)
+inline void WaitUntilFlight(float minHeight)
 {
 	do
 	{
-		sysC = 0;
-#if MORSE_MSG
-		mensageiro.msgAux = "";
-#endif // MORSE_MSG
-		Gutil.counter();
-		readEverything();
-
-#if ApoGee
-		apg.calcAlt(baro.getPressure());
-		apg.apgSigma();
-		apg.apgAlpha();
-#if PapgM
-		Gutil.comparer(apg.getSigma());
-#endif // PapgM
-#endif // ApoGee
-#if PWMapg
-		analogWrite(PWMout, (char)(apg.getSigma() * 255));
-#endif // PWMapg
-
-#if ((PRINT) || (PERF_Tcom_print))
-		SerialSend();
-#endif // ((PRINT) || (PERF_Tcom_print))
-
-#if SDCard
-		SDSend();
-#endif // SDCard
-
-#if LoRamode
-		LoRaSend();
-#endif // LoRamode
+		WaitUntil();
 
 #if MORSE_MSG
-	if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("~ ~ ~ "+mensageiro.msgAux);
-	if(mensageiro.updateMorse()) Mutil.oneTimeReset();
+		if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("~ ~ ~ "+mensageiro.msgAux);
+		if(mensageiro.updateMorse()) Mutil.oneTimeReset();
 #endif // MORSE_MSG
 #if BEEPING
 		beep(sysC);
@@ -1111,6 +1130,18 @@ inline void WaitUntil(float minHeight)
 #endif // BEEPING
 }
 #endif // WUF
+
+#if WUPS
+inline void WaitUntilPressureStabilize(float waitTime) {
+	Gutil.forT(waitTime);
+	while (Gutil.forT())
+	{
+		WaitUntil();
+	}
+	// Ensure that apogee point was not given during pressure anomaly
+	apg.resetAptPt();
+}
+#endif // WUPS
 
 //////////////////////////////////////////////////////SPT//////////////////////////////////////////////////////
 
