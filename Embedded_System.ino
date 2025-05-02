@@ -1,4 +1,15 @@
-#include "src/lib/Classes.h"
+/////////////////////////////////////////////////CHOOSE SHIELD/////////////////////////////////////////////////
+
+#pragma region ShieldSelection
+
+#include "src/lib/shields.h"
+
+#define USING_SHIELD MEGA_OCTA_PTH_MK_I
+// #define USING_SHIELD MEGA_STACK_DADOS_ACIONAMENTO_2019
+
+#include "src/lib/pinos.h"
+
+#pragma endregion
 
 /////////////////////////////////////////////////CONFIGURATION/////////////////////////////////////////////////
 
@@ -7,10 +18,10 @@
 #define BaudRate 115200
 
 #define USE_GY80 (0)						//Use GY80 module
-#define USE_GY91 (1)						//Use GY80 module
+#define USE_GY91 (1)						//Use GY91 module
 
-#define SDCard (1)							//Use SD card
-#define GPSmode (1)							//Use GPS
+#define SDCard (0)							//Use SD card
+#define GPSmode (0)							//Use GPS
 #define LoRamode (1)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
 #define BuZZ (1)							//Buzzer mode
@@ -106,6 +117,8 @@
 
 #pragma region Declarations
 
+#include "src/lib/Classes.h"
+
 #if USE_BARO
 #define baro Barometer
 #define MM_baro M_baro
@@ -155,11 +168,21 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #endif // DELAYED
 
 
-#define pins_drogN (36, 68)  /*act1*/
-#define pins_drogB (61, 62)  /*act2*/
-//#define pins_mainN (8, 40, 20, 1)  /*act3*/
-#define pins_mainN (46, 56)  /*act3*/
-#define pins_mainB (55, 58)	/*act4*/
+// #define pins_drogN (36, 68)  /*act1*/
+// #define pins_drogB (61, 62)  /*act2*/
+// //#define pins_mainN (8, 40, 20, 1)  /*act3*/
+// #define pins_mainN (46, 56)  /*act3*/
+// #define pins_mainB (55, 58)  /*act4*/
+
+// #define pins_drogN (A0, A1) /*act1*/
+// #define pins_drogB (A2, A3) /*act2*/
+// #define pins_mainN (A4, A5) /*act3*/
+// #define pins_mainB (A6, A7) /*act4*/
+
+#define pins_drogN (IGN_1, HEAL_1) /*act1*/
+#define pins_drogB (IGN_2, HEAL_2) /*act2*/
+#define pins_mainN (IGN_3, HEAL_3) /*act3*/
+#define pins_mainB (IGN_4, HEAL_4) /*act4*/
 
 
 struct Recovery
@@ -276,13 +299,21 @@ MonoDeploy Recovery::drogB pins_drogB;
 
 #if ELEVATOR
 #define WUFheigh 5
-#define WUPSdelay 3
 #else
 #define WUFheigh 50
-#define WUPSdelay 10
 #endif // ELEVATOR
 
 #endif // WUF
+
+#if WUPS
+
+#if ELEVATOR
+#define WUPSdelay 3
+#else
+#define WUPSdelay 10
+#endif // ELEVATOR
+
+#endif // WUPS
 
 #if USE_ACCEL
 #define accel Accelerometer
@@ -331,12 +362,6 @@ float MM_magn[3]{};
 #include <SPI.h>
 #include <SD.h>
 #include "src/lib/SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
-
-#ifdef ARDUINO_AVR_MEGA2560
-#define SD_CS_PIN 53
-#else
-#define SD_CS_PIN 10
-#endif // ARDUINO_AVR_MEGA2560
 
 #define SDC SecureDigitalCard
 SDCH SDC(SD_CS_PIN, PROJECT_NAME);						//Declaration of object to help SD card file management
@@ -396,9 +421,9 @@ unsigned short sysC = 0;
 #define buzzPin LED_BUILTIN
 #define buzzCmd HIGH
 #else
-// #define buzzPin A0							//Pin that the buzzer is connected
 #define buzzCmd LOW							//Buzzer is on in high state
-#define buzzPin 49							//Pin that the buzzer is connected
+// #define buzzPin A0							//Pin that the buzzer is connected
+// #define buzzPin 49							//Pin that the buzzer is connected
 #endif // BlinkBuzzer
 #endif // BuZZ
 #if MORSE_MSG
@@ -413,10 +438,6 @@ Helpful Mutil;
 #define holdT .1
 Helpful beeper;
 #endif // BEEPING
-
-#if PWMapg
-#define PWMout 13							//Pin that the LED who shows apogee state is connected
-#endif // PWMapg
 
 #if RGB
 #define rPin 7
