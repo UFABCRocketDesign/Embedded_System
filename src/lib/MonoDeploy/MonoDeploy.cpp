@@ -9,7 +9,7 @@ MonoDeploy::MonoDeploy(unsigned int commandPin, unsigned int infoPin, unsigned l
 {
 }
 
-void MonoDeploy::resetTimer()
+void MonoDeploy::resetTimer() // To reset timer on liftoff
 {
 	TimeZero = micros();
 }
@@ -98,19 +98,22 @@ void MonoDeploy::refresh()
 	if (useM && Tnow >= TimeZero + Tmax && !getApogee()) sealApogee(true);
 	if (getApogee())
 	{
-		if (useH && !useH_A)
+		if (useH && !useH_A) // If use Height and not reached yet
 		{
-			if (height <= cmdHeight)
+			if (height <= cmdHeight) // height reached
 			{
 				useH_A = true;
 				Theight = Tnow;
 			}
 		}
-		if (useT)
+		if (useT && !useT_A) // If use Time and not reached yet
 		{
-			useT_A = (useH) ? (Tnow >= Theight + cmdDelay && useH_A) : (Tnow >= Tseal + cmdDelay);
+			useT_A = (useH) ? ((Tnow >= Theight + cmdDelay) && useH_A) : (Tnow >= Tseal + cmdDelay);
 		}
-		bool triggers = (!useH && !useT) || (useH && !useT && useH_A) || (!useH && useT && useT_A) || (useH && useT && useH_A && useT_A);
+		bool triggers = (!useH && !useT) || // If dont use height nor delayed
+			(useH && !useT && useH_A) || // If only use height
+			(!useH && useT && useT_A) || // If only use delayed
+			(useH && useT && useH_A && useT_A); // If use both
 		if (cmdSeal || triggers)
 		{
 			if (!cmdSeal)
@@ -132,4 +135,25 @@ void MonoDeploy::refresh()
 #endif
 	if (!globalStateAux && sPin == command)	globalStateAux = true;
 	else if (globalStateAux && sPin != command)	globalState = false;
+}
+
+void MonoDeploy::emergency(bool state, float T_EM)
+{
+	if(state && !emergencyState) // Begin of emergency case, saving states
+	{
+		useH_EM = useH; // Save original settings
+		useT_EM = useT; // Save original settings
+		cmdDelay_EM = cmdDelay; // Save original settings
+		useH = false;
+		useT = true; // Use delay mode to guarantee deployments
+		cmdDelay = (unsigned long)(T_EM * 1000000.0f);
+		// sealApogee(true); // It is not necessary, since another section will ensure this
+	}
+	if(!state && emergencyState) // End of emergency case, resumption of states
+	{
+		useH = useH_EM; // Restore original settings
+		useT = useT_EM; // Restore original settings
+		cmdDelay = cmdDelay_EM;
+	}
+	emergencyState = state;
 }

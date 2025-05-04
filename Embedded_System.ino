@@ -140,6 +140,7 @@ float MM_baro[2]{};
 Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)
 #define mainN MainNormal
+#define EM_mainN_DELAY 60					// Seconds before forced deployment
 
 #if DualDeploy
 #if ELEVATOR
@@ -149,11 +150,14 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #endif // ELEVATOR
 
 #define drogN DrogueNormal
+#define EM_drogN_DELAY 10					// Seconds before forced deployment
 #endif // DualDeploy
 
 #if DELAYED
 #define sysDelay 2.5
 #define mainB MainBackup
+#define EM_mainB_DELAY 65					// Seconds before forced deployment
+
 
 #if DualDeploy
 #if ELEVATOR
@@ -163,6 +167,7 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #endif // ELEVATOR
 
 #define drogB DrogueBackup
+#define EM_drogB_DELAY 15					// Seconds before forced deployment
 #endif // DualDeploy
 
 #endif // DELAYED
@@ -222,6 +227,24 @@ struct Recovery
 
 
 		return aux;
+	}
+	static void emergency(bool state)
+	{
+		if(state) MonoDeploy::sealApogee(true);
+		mainN.emergency(state, EM_mainN_DELAY);
+
+		#if DualDeploy
+				drogN.emergency(state, EM_drogN_DELAY);
+		#endif // DualDeploy
+
+		#if DELAYED
+				mainB.emergency(state, EM_mainB_DELAY);
+
+		#if DualDeploy
+				drogB.emergency(state, EM_drogB_DELAY);
+		#endif // DualDeploy
+
+		#endif // DELAYED
 	}
 	static bool getGlobalState()
 	{
@@ -525,8 +548,8 @@ void setup()
 
 #if LoRamode
 #if LoRa_E32
-  pinMode(M0_LORA_PIN,OUTPUT); digitalWrite(M0_LORA_PIN,LOW);
-  pinMode(M1_LORA_PIN,OUTPUT); digitalWrite(M1_LORA_PIN,LOW);
+	pinMode(M0_LORA_PIN,OUTPUT); digitalWrite(M0_LORA_PIN,LOW);
+	pinMode(M1_LORA_PIN,OUTPUT); digitalWrite(M1_LORA_PIN,LOW);
 #endif // LoRa_E32
 	LoRa.begin(LoRaBaudRate);
 #endif // LoRamode
@@ -964,7 +987,7 @@ void loop()
 
 #if ApoGee
 	apg.calcAlt(baro.getPressure());
-	//rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
+	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
 	if (rec.getGlobalState())
 	{
 		apg.apgSigma();
