@@ -34,7 +34,7 @@ protected:
 	const unsigned int ALARM_LOW = 62;
 	const unsigned int ALARM_HIGH = 1976;
 
-	const unsigned int dotDelay = 100;
+	const unsigned int dotDelay = 150;
 	const unsigned int dashDelay = 3 * dotDelay;
 	const unsigned int alarmDelay = 5;
 
@@ -56,11 +56,11 @@ public:
 	String msgAux = "";
 
 	Morse(uint8_t pin, String msg = "", unsigned int fDot = 523, unsigned int fDash = 784, unsigned int fAlrmHi = 62, unsigned int fAlrmLo = 1976);
-	virtual void setup();
-	void setNextMessage(String message);
-	bool updateMorse();
-	virtual void setQuiet();
-	bool getQuiet();
+	virtual void setup(); // Inicializa pinos
+	void setNextMessage(String message); // Configura a próxima mensagem (só vai tocar quando a atual acabar)
+	bool updateMorse(); // Toca a mensagem e retorna verdadeiro toda vez que acaba
+	virtual void setQuiet(); // Silencia o sistema
+	bool getQuiet(); // Verifica se o sistema está silenciado
 };
 
 class MorseAtvBzz : public Morse

@@ -1508,7 +1508,7 @@ inline void SDSend()
 		{
 			SDC.util.mem = 1;
 #if MORSE_MSG
-			mensageiro.msgAux += " S";
+			if(!mensageiro.getQuiet()) mensageiro.msgAux += " S"; // ...
 #endif  // MORSE_MSG
 		}
 	}
@@ -1668,7 +1668,7 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " B";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " B"; // -...
 #endif  // MORSE_MSG
 	}
 #endif // USE_BARO
@@ -1683,7 +1683,7 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " A";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " A"; // .-
 #endif  // MORSE_MSG
 	}
 #endif // USE_ACCEL
@@ -1698,7 +1698,7 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " G";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " G"; // --.
 #endif  // MORSE_MSG
 	}
 #endif // USE_GYRO
@@ -1713,7 +1713,7 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " M";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " M"; // --
 #endif  // MORSE_MSG
 	}
 #endif // USE_MAGN
@@ -1725,7 +1725,7 @@ inline void readEverything()
 #endif // RBF || WUF || ForceSysC
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " L";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " L"; // .-..
 #endif  // MORSE_MSG
 }
 
@@ -1735,7 +1735,7 @@ inline void readEverything()
 		sysC++;
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmn";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmn"; // .-. -- -.
 #endif  // MORSE_MSG
 	}
 
@@ -1744,7 +1744,7 @@ inline void readEverything()
 		sysC++;
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdn";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdn"; // .-. -.. -.
 #endif  // MORSE_MSG
 	}
 #endif // DualDeploy
@@ -1755,7 +1755,7 @@ inline void readEverything()
 		sysC++;
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmb";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmb"; // .-. -- -...
 #endif  // MORSE_MSG
 	}
 
@@ -1764,7 +1764,7 @@ inline void readEverything()
 		sysC++;
 	} else {
 #if MORSE_MSG
-		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdb";
+		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdb"; // .-. -.. -...
 #endif  // MORSE_MSG
 	}
 #endif // DualDeploy

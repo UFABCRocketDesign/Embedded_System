@@ -280,7 +280,7 @@ bool Morse::playMorseChar(char c)
 #if _MORSE_PRINT
 			Serial.print(currentMark);
 #endif // _MORSE_PRINT
-			nextActionMillis = currentMillis + dashDelay;
+			nextActionMillis = currentMillis + 2*dashDelay;
 		}
 		else
 			currentMark = '\0';
@@ -571,7 +571,7 @@ bool MorseAtvBzz::playMorseChar(char c)
 #if _MORSE_PRINT
 			Serial.print(currentMark);
 #endif // _MORSE_PRINT
-			nextActionMillis = currentMillis + dashDelay;
+			nextActionMillis = currentMillis + 2*dashDelay;
 		}
 		else
 			currentMark = '\0';
