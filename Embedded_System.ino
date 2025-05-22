@@ -452,7 +452,7 @@ unsigned short sysC = 0;
 #endif // BuZZ
 #if MORSE_MSG
 #include "src/lib/Morse/Morse.h"
-Morse mensageiro(buzzPin, String("^ ") + PROJECT_NAME);
+Morse mensageiro(buzzPin, String("~ ") + PROJECT_NAME);
 // Morse mensageiro(buzzPin, PROJECT_NAME);
 // MorseAtvBzz mensageiro(buzzPin, buzzCmd, PROJECT_NAME);
 // MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . = . > . [ . ] . { . }");
@@ -1157,7 +1157,7 @@ inline void WaitUntilFlight(float minHeight)
 		WaitUntil();
 
 #if MORSE_MSG
-		if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("~ ~ ~ "+mensageiro.msgAux);
+		if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("= = = "+mensageiro.msgAux);
 		if(mensageiro.updateMorse()) Mutil.oneTimeReset();
 #endif // MORSE_MSG
 #if BEEPING
