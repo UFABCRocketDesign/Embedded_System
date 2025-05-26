@@ -21,8 +21,8 @@
 #define USE_GY80 (0)						//Use GY80 module
 #define USE_GY91 (1)						//Use GY91 module
 
-#define SDCard (0)							//Use SD card
-#define GPSmode (0)							//Use GPS
+#define SDCard (1)							//Use SD card
+#define GPSmode (1)							//Use GPS
 #define LoRamode (1)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
 #define BuZZ (1)							//Buzzer mode
@@ -91,7 +91,7 @@
 #define PapgW (PRINT && ApoGee && 1)		//Print apogee information when detected
 #define PapgH (PRINT && ApoGee && 1)		//Print altimeter data
 #define PapgB (PRINT && ApoGee && 1)		//Print altimeter base
-#define PapgP (PRINT && ApoGee && 1)		//Print apogee information
+#define PapgP (PRINT && ApoGee && 0)		//Print current apogee information
 #define PapgA (PRINT && ApoGee && 1)		//Print apogee alpha
 #define PapgS (PRINT && ApoGee && 1)		//Print apogee sigma
 #define PapgM (PRINT && ApoGee && 0)		//Print apogee sigma max
@@ -132,6 +132,7 @@ BMP280 baro;									//Barometer object declaration
 #endif // USE_BMP085 / USE_BMP280
 //MovingAverage MM_baro[2]{ (2),(2) };		//Array declaration of the moving average filter objects
 float MM_baro[2]{};
+bool baroHasData = false;
 #endif // USE_BARO
 
 #if ApoGee
@@ -399,9 +400,9 @@ GyGPS GpS(Serial1, 0);
 
 #if LoRamode
 #if LoRa_DORJI
-#define LoRaDelay 1.5
+#define LoRaDelay 2.5
 #elif LoRa_E32
-#define LoRaDelay 0.5
+#define LoRaDelay 1.5
 #else
 #define LoRaDelay 5
 #endif // LoRa_DORJI || LoRa_E32
@@ -586,6 +587,9 @@ void setup()
 	baro.begin();
 	if (baro)
 	{
+#if USE_BMP280
+		for (short i = 0; i < 50; i++) baro.readAll(); // Contornar tempo de estabilização do filtro interno
+#endif // USE_BMP280
 #if ApoGee
 		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
 #endif // ApoGee
@@ -987,7 +991,7 @@ void loop()
 	readEverything();
 
 #if ApoGee
-	apg.calcAlt(baro.getPressure());
+	if(baroHasData) apg.calcAlt(baro.getPressure());
 	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
 	if (rec.getGlobalState())
 	{
@@ -1124,7 +1128,7 @@ inline void WaitUntil()
 			readEverything();
 
 	#if ApoGee
-			apg.calcAlt(baro.getPressure());
+			if(baroHasData) apg.calcAlt(baro.getPressure());
 			apg.apgSigma();
 			apg.apgAlpha();
 	#if PapgM
@@ -1157,7 +1161,7 @@ inline void WaitUntilFlight(float minHeight)
 		WaitUntil();
 
 #if MORSE_MSG
-		if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("= = = "+mensageiro.msgAux);
+		if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("= "+mensageiro.msgAux);
 		if(mensageiro.updateMorse()) Mutil.oneTimeReset();
 #endif // MORSE_MSG
 #if BEEPING
@@ -1666,9 +1670,11 @@ inline void readEverything()
 #if RBF || WUF || ForceSysC
 		sysC++;
 #endif // RBF || WUF || ForceSysC
+		baroHasData = true;
 	} else {
 #if MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " B"; // -...
+		baroHasData = false;
 #endif  // MORSE_MSG
 	}
 #endif // USE_BARO
