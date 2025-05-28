@@ -28,6 +28,8 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
+#define PRINT (1)							//Print or not things on Serial
+
 #define PROJECT_NAME "Arace"
 
 /**************************** GY80 ****************************/
@@ -56,15 +58,17 @@
 /*************************** Others ***************************/
 
 #define ApoGee (USE_BARO && 1)				//Detection of apogee
-#define PRINT (1)							//Print or not things on Serial
+
 #define RBF (0)								//Revome Before Flight
 #define WU (ApoGee && 1)					//Wait Until Directives
 #define WUF (WU && 1)						//Wait Until Flight
 #define WUPS (WU && 1)						//Wait Until Pressure Stabilize
+
 #define ACT_BUZZER (BuZZ && 0)				//Active buzzer in hardware
 #define PSS_BUZZER (BuZZ && 1)				//Passive buzzer in hardware
 #define MORSE_MSG (BuZZ && 1)				//Morse beeping
 #define BEEPING (BuZZ && 0)					//Buzzer mode
+
 #define BlinkBuzzer (BuZZ && 0)
 #define RGB (0)								//RGB LED board
 #define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
@@ -453,10 +457,14 @@ unsigned short sysC = 0;
 #endif // BuZZ
 #if MORSE_MSG
 #include "src/lib/Morse/Morse.h"
-Morse mensageiro(buzzPin, String("~ ") + PROJECT_NAME);
-// Morse mensageiro(buzzPin, PROJECT_NAME);
-// MorseAtvBzz mensageiro(buzzPin, buzzCmd, PROJECT_NAME);
+#define ALARM_DELAY 10					// Delay after alarm when all systems working properly
+#if ACT_BUZZER
+MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
 // MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . = . > . [ . ] . { . }");
+#elif PSS_BUZZER
+Morse mensageiro(buzzPin, "~ ");
+// Morse mensageiro(buzzPin, PROJECT_NAME);
+#endif  // ACT_BUZZER / PSS_BUZZER
 Helpful Mutil;
 #endif // MORSE_MSG
 #if BEEPING
@@ -1161,8 +1169,25 @@ inline void WaitUntilFlight(float minHeight)
 		WaitUntil();
 
 #if MORSE_MSG
-		if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("= "+mensageiro.msgAux);
-		if(mensageiro.updateMorse()) Mutil.oneTimeReset();
+		// if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("= "+mensageiro.msgAux);
+		// if(mensageiro.updateMorse()) Mutil.oneTimeReset();
+
+		if(mensageiro.msgAux.length() > 0) { // Any system failed
+			if(Mutil.oneTime()) mensageiro.setNextMessage("= "+mensageiro.msgAux);
+			if(mensageiro.updateMorse()) Mutil.oneTimeReset();
+		} else { // No system failed
+			if(!mensageiro.getQuiet())
+			{
+				if(mensageiro.updateMorse()) // After sound sequence completed
+				{
+					mensageiro.setQuiet(); // Mute sound
+					Mutil.forT(ALARM_DELAY); // Wait some time
+				}
+			}
+			else {
+				if(!Mutil.forT()) mensageiro.updateMorse(); // Restart sound
+			}
+		}
 #endif // MORSE_MSG
 #if BEEPING
 		beep(sysC);
@@ -1516,7 +1541,12 @@ inline void SDSend()
 #endif  // MORSE_MSG
 		}
 	}
-	else if (SDC.util.eachT(15)) if (SDC.begin()) SDC.util.mem = 0;
+	else{
+		if (SDC.util.eachT(15)) if (SDC.begin()) SDC.util.mem = 0;
+		#if MORSE_MSG
+			if(!mensageiro.getQuiet()) mensageiro.msgAux += " S"; // ...
+		#endif  // MORSE_MSG
+	}
 }
 #endif // SDCard
 
