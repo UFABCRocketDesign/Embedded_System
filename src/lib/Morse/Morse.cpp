@@ -23,7 +23,7 @@ static const char *const Morse::tilde[] PROGMEM = {"{", "|", "}", "~"};
 static const char *const Morse::zigzag[] PROGMEM = {"[", "\\", "]", "^", "_"};
 static const char *const Morse::compare[] PROGMEM = {"<", "=", ">"};
 
-Morse::Morse(uint8_t pin, String msg = "", unsigned int fDot = 523, unsigned int fDash = 784, unsigned int fAlrmHi = 62, unsigned int fAlrmLo = 1976)
+Morse::Morse(uint8_t pin, String msg, unsigned int fDot, unsigned int fDash, unsigned int fAlrmHi, unsigned int fAlrmLo)
 	: buzzerPin(pin),
 	  currentMessage(msg),
 	  FREQ_DOT(fDot),
@@ -317,7 +317,7 @@ bool Morse::updateMorse()
 }
 
 
-MorseAtvBzz::MorseAtvBzz(uint8_t pin, bool cmd = LOW, String msg = "", unsigned int fAlrmFs = 5, unsigned int fAlrmSl = 100)
+MorseAtvBzz::MorseAtvBzz(uint8_t pin, bool cmd, String msg, unsigned int fAlrmFs, unsigned int fAlrmSl)
 	: Morse(pin, msg, 0, 0, fAlrmFs, fAlrmSl),
 	  buzzerCmd(cmd) {}
 

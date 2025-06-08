@@ -19,7 +19,7 @@
 #define BaudRate 115200
 
 #define USE_GY80 (0)						//Use GY80 module
-#define USE_GY91 (1)						//Use GY91 module
+#define USE_GY91 (0)						//Use GY91 module
 
 #define SDCard (1)							//Use SD card
 #define GPSmode (1)							//Use GPS
@@ -28,7 +28,7 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
-#define PRINT (1)							//Print or not things on Serial
+#define PRINT (0)							//Print or not things on Serial
 
 #define PROJECT_NAME "Arace"
 
@@ -39,9 +39,9 @@
 #define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
 
 /**************************** GY91 ****************************/
-#define USE_BMP280 (USE_GY91 || 0)			//Use BMP280 sensor
-#define USE_MPU9250_ACCEL (USE_GY91 || 0)	//Use MPU9250 sensor, accelerometer
-#define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
+#define USE_BMP280 (USE_GY91 || 1)			//Use BMP280 sensor
+#define USE_MPU9250_ACCEL (USE_GY91 || 1)	//Use MPU9250 sensor, accelerometer
+#define USE_MPU9250_GYRO (USE_GY91 || 1)	//Use MPU9250 sensor, gyroscope
 #define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
 
 /************************** 9DoF IMU **************************/
@@ -74,7 +74,7 @@
 #define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
 #define DELAYED (ApoGee && 1)				//Redundancy mode
 
-#define ELEVATOR (1)
+#define ELEVATOR (0)
 
 #define PbarT (PRINT && USE_BARO && 1)		//Print barometer temperature data
 #define PbarP (PRINT && USE_BARO && 1)		//Print barometer pressure data
@@ -406,7 +406,7 @@ GyGPS GpS(Serial1, 0);
 #if LoRa_DORJI
 #define LoRaDelay 2.5
 #elif LoRa_E32
-#define LoRaDelay 1.5
+#define LoRaDelay 2.5
 #else
 #define LoRaDelay 5
 #endif // LoRa_DORJI || LoRa_E32
@@ -572,7 +572,7 @@ void setup()
 		if (GpS.util.oneTime())
 		{
 #if COMmode
-			transmit(F("GPS ok "));
+			transmit(F("\nGPS ok "));
 			transmit(GpS.getLatitude(), 6);
 			transmit(F(", "));
 			transmit(GpS.getLongitude(), 6);
@@ -582,7 +582,7 @@ void setup()
 	else
 	{
 #if COMmode
-		transmitln(F("GPS err, waiting signal"));
+		transmit(F("\nGPS err, waiting signal"));
 #endif // COMmode
 	}
 #endif // GPSmode
@@ -602,7 +602,7 @@ void setup()
 		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
 #endif // ApoGee
 #if COMmode
-		transmit(F("Baro ok "));
+		transmit(F("\nBaro ok "));
 #endif // COMmode
 
 #if PapgB
@@ -622,7 +622,7 @@ void setup()
 	else
 	{
 #if COMmode
-		transmitln(F("Baro err"));
+		transmit(F("\nBaro err"));
 #endif // COMmode
 	}
 #endif // USE_BARO
@@ -632,13 +632,13 @@ void setup()
 	if (accel)
 	{
 #if COMmode
-		transmitln(F("Accel ok"));
+		transmit(F("\nAccel ok"));
 #endif // COMmode
 	}
 	else
 	{
 #if COMmode
-		transmitln(F("Accel err"));
+		transmit(F("\nAccel err"));
 #endif // COMmode
 	}
 #endif // USE_ACCEL
@@ -648,13 +648,13 @@ void setup()
 	if (giro)
 	{
 #if COMmode
-		transmitln(F("Giro ok"));
+		transmit(F("\nGiro ok"));
 #endif // COMmode
 	}
 	else
 	{
 #if COMmode
-		transmitln(F("Giro err"));
+		transmit(F("\nGiro err"));
 #endif // COMmode
 	}
 #endif // USE_GYRO
@@ -664,29 +664,29 @@ void setup()
 	if (magn)
 	{
 #if COMmode
-		transmitln(F("Magn ok"));
+		transmit(F("\nMagn ok"));
 #endif // COMmode
 	}
 	else
 	{
 #if COMmode
-		transmitln(F("Magn err"));
+		transmit(F("\nMagn err"));
 #endif // COMmode
 	}
 #endif // USE_MAGN
 
 #if ApoGee && COMmode
-	transmitln(rec.mainN.info() ? F("IgnMainN ok") : F("IgnMainN err"));
+	transmit(rec.mainN.info() ? F("\nIgnMainN ok") : F("\nIgnMainN err"));
 
 #if DualDeploy
-	transmitln(rec.drogN.info() ? F("IgnDrogN ok") : F("IgnDrogN err"));
+	transmit(rec.drogN.info() ? F("\nIgnDrogN ok") : F("\nIgnDrogN err"));
 #endif // DualDeploy
 
 #if DELAYED
-	transmitln(rec.mainB.info() ? F("IgnMainB ok") : F("IgnMainB err"));
+	transmit(rec.mainB.info() ? F("\nIgnMainB ok") : F("\nIgnMainB err"));
 
 #if DualDeploy
-	transmitln(rec.drogB.info() ? F("IgnDrogB ok") : F("IgnDrogB err"));
+	transmit(rec.drogB.info() ? F("\nIgnDrogB ok") : F("\nIgnDrogB err"));
 #endif // DualDeploy
 
 #endif // DELAYED
@@ -699,8 +699,8 @@ void setup()
 	if (SDC)
 	{
 #if COMmode
-		transmit(F("SD start OK "));
-		transmitln(SDC.getFname());
+		transmit(F("\nSD start OK "));
+		transmit(SDC.getFname());
 #endif // COMmode
 
 		//////////////////File Header//////////////////
@@ -767,10 +767,14 @@ void setup()
 	{
 
 #if COMmode
-		transmitln(F("SD err"));
+		transmit(F("\nSD err"));
 #endif // COMmode
 	}
 #endif // SDCard
+
+#if COMmode
+		transmitln(F(""));
+#endif // COMmode
 
 	////////////////RBF directive////////////////
 

@@ -27,7 +27,7 @@ protected:
 	static const char *const zigzag[5];    //For Alarm
 	static const char *const compare[3];   //For Alarm
 
-	const int alarmSteps = 400;
+	const int alarmSteps = 200;
 
 	const unsigned int FREQ_DOT = 523;
 	const unsigned int FREQ_DASH = 784;
