@@ -1,27 +1,27 @@
 #include "Morse.h"
 
 // For letters
-static const char *const Morse::letters[] PROGMEM = {
+const char *const Morse::letters[] PROGMEM = {
 	".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",	 // A-I
 	".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", // J-R
 	"...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."		 // S-Z
 };
 
 // For Numbers
-static const char *const Morse::numbers[] PROGMEM = {
+const char *const Morse::numbers[] PROGMEM = {
 	"-----", ".----", "..---", "...--", "....-",
 	".....", "-....", "--...", "---..", "----."};
 
 // For Space
-static const char *const Morse::space[] PROGMEM = {"*"};
+const char *const Morse::space[] PROGMEM = {"*"};
 
 // For Morse
-static const char *const Morse::morse[] PROGMEM = {"-", "."};
+const char *const Morse::morse[] PROGMEM = {"-", "."};
 
 // For Alarms
-static const char *const Morse::tilde[] PROGMEM = {"{", "|", "}", "~"};
-static const char *const Morse::zigzag[] PROGMEM = {"[", "\\", "]", "^", "_"};
-static const char *const Morse::compare[] PROGMEM = {"<", "=", ">"};
+const char *const Morse::tilde[] PROGMEM = {"{", "|", "}", "~"};
+const char *const Morse::zigzag[] PROGMEM = {"[", "\\", "]", "^", "_"};
+const char *const Morse::compare[] PROGMEM = {"<", "=", ">"};
 
 Morse::Morse(uint8_t pin, String msg, unsigned int fDot, unsigned int fDash, unsigned int fAlrmHi, unsigned int fAlrmLo)
 	: buzzerPin(pin),
@@ -63,23 +63,23 @@ bool Morse::playMorseChar(char c)
 	if (isDigit(c))
 	{
 		// seq = Morse::numbers[c - '0'];
-		seq = pgm_read_ptr_near(Morse::numbers + (c - '0'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::numbers + (c - '0')));
 		numAux = true;
 	}
 	else if (isUpperCase(c))
-		seq = pgm_read_ptr_near(Morse::letters + (c - 'A'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::letters + (c - 'A')));
 	else if (isLowerCase(c))
-		seq = pgm_read_ptr_near(Morse::letters + (c - 'a'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::letters + (c - 'a')));
 	else if (c == '-' || c == '.')
-		seq = pgm_read_ptr_near(Morse::morse + (c - '-'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::morse + (c - '-')));
 	else if (c >= '{' && c <= '~')
-		seq = pgm_read_ptr_near(Morse::tilde + (c - '{'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::tilde + (c - '{')));
 	else if (c >= '[' && c <= '_')
-		seq = pgm_read_ptr_near(Morse::zigzag + (c - '['));
+		seq = (const char*)(pgm_read_ptr_near(Morse::zigzag + (c - '[')));
 	else if (c >= '<' && c <= '>')
-		seq = pgm_read_ptr_near(Morse::compare + (c - '<'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::compare + (c - '<')));
 	else
-		seq = pgm_read_ptr_near(Morse::space);
+		seq = (const char*)(pgm_read_ptr_near(Morse::space + 0));
 
 	float currentMillis = millis();
 
@@ -344,23 +344,23 @@ bool MorseAtvBzz::playMorseChar(char c)
 	if (isDigit(c))
 	{
 		// seq = Morse::numbers[c - '0'];
-		seq = pgm_read_ptr_near(Morse::numbers + (c - '0'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::numbers + (c - '0')));
 		numAux = true;
 	}
 	else if (isUpperCase(c))
-		seq = pgm_read_ptr_near(Morse::letters + (c - 'A'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::letters + (c - 'A')));
 	else if (isLowerCase(c))
-		seq = pgm_read_ptr_near(Morse::letters + (c - 'a'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::letters + (c - 'a')));
 	else if (c == '-' || c == '.')
-		seq = pgm_read_ptr_near(Morse::morse + (c - '-'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::morse + (c - '-')));
 	else if (c >= '{' && c <= '~')
-		seq = pgm_read_ptr_near(Morse::tilde + (c - '{'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::tilde + (c - '{')));
 	else if (c >= '[' && c <= '_')
-		seq = pgm_read_ptr_near(Morse::zigzag + (c - '['));
+		seq = (const char*)(pgm_read_ptr_near(Morse::zigzag + (c - '[')));
 	else if (c >= '<' && c <= '>')
-		seq = pgm_read_ptr_near(Morse::compare + (c - '<'));
+		seq = (const char*)(pgm_read_ptr_near(Morse::compare + (c - '<')));
 	else
-		seq = pgm_read_ptr_near(Morse::space);
+		seq = (const char*)(pgm_read_ptr_near(Morse::space + 0));
 
 	float currentMillis = millis();
 

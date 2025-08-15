@@ -13,13 +13,17 @@ Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 
 
 float Apogeu::addZero(long P, float sealevelP)
 {
+	// float currentHeight = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577);
+	float currentHeight = 44330.0 * (1 - pow(float(P) / sealevelP, 1 / 5.25588));
 	if (baseIndex == 0)
 	{
-		base = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577);
+		base = baseMax = baseMin = currentHeight;
 	}
 	else
 	{
-		base = ((base*baseIndex) + ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577)) / (baseIndex + 1);
+		base = ((base*baseIndex) + currentHeight) / (baseIndex + 1);
+		if(currentHeight > baseMax) baseMax = currentHeight;
+		if(currentHeight < baseMin) baseMin = currentHeight;
 	}
 	baseIndex++;
 	return base;
@@ -28,6 +32,34 @@ float Apogeu::addZero(long P, float sealevelP)
 float Apogeu::getZero()
 {
 	return base;
+}
+
+bool Apogeu::fixZero(float maxRange)
+{
+	float eeBase;
+	EEPROM.get(eeAddress, eeBase);
+
+	bool eeValid = true;
+	eeValid &= !isnan(eeBase);
+	eeValid &= !isinf(eeBase);
+	eeValid &= eeBase <= 44330.0f; // Max value of the barometric equation
+	eeValid &= eeBase >= -44330.0f; // Arbitrary value
+
+	if(eeValid && (baseMax - baseMin >= maxRange)) {
+		base = eeBase;
+		usingFixZero = true;
+	} else if(!eeValid || (abs(eeBase - base) >= maxRange)){
+		EEPROM.put(eeAddress, base);
+	}
+
+	return usingFixZero;
+}
+bool Apogeu::getFixZero(){
+	return usingFixZero;
+}
+
+uint16_t Apogeu::getEEAddress(){
+	return eeAddress;
 }
 
 void Apogeu::resetZero()

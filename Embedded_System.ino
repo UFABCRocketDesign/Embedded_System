@@ -125,8 +125,6 @@
 #include "src/lib/Classes.h"
 
 #if USE_BARO
-#define baro Barometer
-#define MM_baro M_baro
 #if USE_BMP085
 #include "src/lib/BMP085/BMP085.h" // Barometro BMP085
 BMP085 baro;									//Barometer object declaration
@@ -142,10 +140,8 @@ bool baroHasData = false;
 #if ApoGee
 #include "src/lib/Apogeu/Apogeu.h" // Processamento de altitude e deteccao de apogeu
 #include "src/lib/MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
-#define apg Apogee
 Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)
-#define mainN MainNormal
 #define EM_mainN_DELAY 60					// Seconds before forced deployment
 
 #if DualDeploy
@@ -155,13 +151,11 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define p2h 450								//Height to main parachute
 #endif // ELEVATOR
 
-#define drogN DrogueNormal
 #define EM_drogN_DELAY 10					// Seconds before forced deployment
 #endif // DualDeploy
 
 #if DELAYED
 #define sysDelay 2.5
-#define mainB MainBackup
 #define EM_mainB_DELAY 65					// Seconds before forced deployment
 
 
@@ -172,7 +166,6 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define p2h_D 400							//Height to main parachute on redundance mode
 #endif // ELEVATOR
 
-#define drogB DrogueBackup
 #define EM_drogB_DELAY 15					// Seconds before forced deployment
 #endif // DualDeploy
 
@@ -296,7 +289,7 @@ struct Recovery
 	{
 		MonoDeploy::sealApogee(apg);
 	}
-	static int putHeight(float H)
+	static void putHeight(float H)
 	{
 		MonoDeploy::putHeight(H);
 	}
@@ -345,8 +338,6 @@ MonoDeploy Recovery::drogB pins_drogB;
 #endif // WUPS
 
 #if USE_ACCEL
-#define accel Accelerometer
-#define MM_accel M_accel
 #if USE_ADXL345
 #include "src/lib/ADXL345/ADXL345.h" // Accelerometer ADXL345
 ADXL345 accel;									//Accelerometer object declaration
@@ -359,8 +350,6 @@ float MM_accel[3]{};
 #endif // USE_ACCEL
 
 #if USE_GYRO
-#define giro Gyroscope
-#define MM_giro M_giro
 #if USE_L3G4200D
 #include "src/lib/L3G4200D/L3G4200D.h" // Gyroscope L3G4200D
 L3G4200D giro(2000);							//Gyroscope object declaration
@@ -373,8 +362,6 @@ float MM_giro[3]{};
 #endif // USE_GYRO
 
 #if USE_MAGN
-#define magn Magnetometer
-#define MM_magn M_magn
 #if USE_HMC5883
 #include "src/lib/HMC5883/HMC5883.h" // Magnetometer HMC5883
 HMC5883 magn;									//Magnetometer object declaration
@@ -392,13 +379,11 @@ float MM_magn[3]{};
 #include <SD.h>
 #include "src/lib/SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
 
-#define SDC SecureDigitalCard
 SDCH SDC(SD_CS_PIN, PROJECT_NAME);						//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
 #include "src/lib/GyGPS/GyGPS.h" // Auxiliar para GPS
-#define GpS GlobalPSystem
 GyGPS GpS(Serial1, 0);
 #endif // GPSmode
 
@@ -410,8 +395,6 @@ GyGPS GpS(Serial1, 0);
 #else
 #define LoRaDelay 5
 #endif // LoRa_DORJI || LoRa_E32
-#define LoRa LongRange
-#define LRutil LRutilitario
 HardwareSerial &LoRa(Serial3);
 Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define LoRaBaudRate 9600
@@ -423,19 +406,15 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 #endif // LoRamode
 
 #if TalkingBoard
-#define Talk Talking
 ComProtocol Talk(Serial2, 9600);			//Declaration of communication protocol object
 #endif // TalkingBoard
 
 #if ((PRINT) || (PERF_Tcom_print))
-#define Serial Serial
 #endif // ((PRINT) || (PERF_Tcom_print))
 
-#define Gutil utilitario
 Helpful Gutil;								//Declaration of helpful object to general cases
 
 #if RBF
-#define rbfHelper ReBeFlight
 #define RBFpin 2							//Pin that the RBF system is connected
 #endif // RBF
 
@@ -600,19 +579,32 @@ void setup()
 #endif // USE_BMP280
 #if ApoGee
 		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
+		apg.fixZero();
 #endif // ApoGee
 #if COMmode
 		transmit(F("\nBaro ok "));
 #endif // COMmode
 
 #if PapgB
-		Serial.println(apg.getZero());
+		if(apg.getFixZero()){
+			Serial.print(F("(Using EEPROM Zero Ref @ < 0x"));
+  			Serial.print(apg.getEEAddress(), HEX);
+			Serial.print(F(" >!) "));
+		}
+
+		Serial.print(apg.getZero());
+		Serial.println();
 #elif PRINT
 		Serial.println();
 #endif // PRINT
 
 #if LoRamode
 #if ApoGee
+		if(apg.getFixZero()) {
+			LoRa.print(F("(Using EEPROM Zero Ref @ < 0x"));
+  			LoRa.print(apg.getEEAddress(), HEX);
+			LoRa.print(F(" >!) "));
+		}
 		LoRa.println(apg.getZero());
 #endif // ApoGee
 		LoRa.println();
@@ -706,9 +698,15 @@ void setup()
 		//////////////////File Header//////////////////
 
 #if ApoGee
-		SDC.theFile.print(F("Start at: "));
+		SDC.theFile.print(F("Start at:\t"));
 		SDC.theFile.print(apg.getZero());
-		SDC.theFile.println('m');
+		SDC.theFile.print(F("\tm"));
+		if(apg.getFixZero()) {
+			SDC.theFile.print(F("\t(Using EEPROM Zero Ref @ < 0x"));
+			SDC.theFile.print(apg.getEEAddress(), HEX);
+			SDC.theFile.print(F(" >!) "));
+		}
+		SDC.theFile.println();
 #endif // ApoGee
 
 		///////////////////////////////////////////////
@@ -773,7 +771,7 @@ void setup()
 #endif // SDCard
 
 #if COMmode
-		transmitln(F(""));
+		transmitln(F(" "));
 #endif // COMmode
 
 	////////////////RBF directive////////////////
