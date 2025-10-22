@@ -7,6 +7,7 @@
 #define USING_SHIELD MEGA_OCTA_PTH_MK_I
 // #define USING_SHIELD MEGA_STACK_DADOS_ACIONAMENTO_2019
 // #define USING_SHIELD MEGA_STACK_DADOS_ACIONAMENTO_2020
+// #define USING_SHIELD ESP_ESSENTIALS
 
 #include "src/lib/pinos.h"
 
@@ -19,29 +20,29 @@
 #define BaudRate 115200
 
 #define USE_GY80 (0)						//Use GY80 module
-#define USE_GY91 (0)						//Use GY91 module
+#define USE_GY91 (1)						//Use GY91 module
 
 #define SDCard (1)							//Use SD card
-#define GPSmode (1)							//Use GPS
+#define GPSmode (0)							//Use GPS
 #define LoRamode (1)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
-#define PRINT (0)							//Print or not things on Serial
+#define PRINT (1)							//Print or not things on Serial
 
 #define PROJECT_NAME "Arace"
 
 /**************************** GY80 ****************************/
-#define USE_BMP085 (USE_GY80 || 0)			//Use BMP085 sensor
+#define USE_BMP085 (USE_GY80 || 1)			//Use BMP085 sensor
 #define USE_ADXL345 (USE_GY80 || 0)			//Use ADXL345 sensor
 #define USE_L3G4200D (USE_GY80 || 0)		//Use L3G4200D sensor
 #define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
 
 /**************************** GY91 ****************************/
-#define USE_BMP280 (USE_GY91 || 1)			//Use BMP280 sensor
-#define USE_MPU9250_ACCEL (USE_GY91 || 1)	//Use MPU9250 sensor, accelerometer
-#define USE_MPU9250_GYRO (USE_GY91 || 1)	//Use MPU9250 sensor, gyroscope
+#define USE_BMP280 (USE_GY91 || 0)			//Use BMP280 sensor
+#define USE_MPU9250_ACCEL (USE_GY91 || 0)	//Use MPU9250 sensor, accelerometer
+#define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
 #define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
 
 /************************** 9DoF IMU **************************/
@@ -52,8 +53,10 @@
 
 /**************************** LoRa ****************************/
 
-#define LoRa_DORJI (LoRamode && 0)		// Dorji LoRa Module (2019 and before)
-#define LoRa_E32 (LoRamode && 1)		// E32 LoRa Module (2019 and before)
+#define USE_LoRa_DORJI (LoRamode && 0)		// Dorji LoRa Module (2019 and before)
+#define USE_LoRa_E32 (LoRamode && 1)		// E32 LoRa Module (2019 and before)
+
+#define USE_LoRa_E32_settable (USE_LoRa_E32 && 1)
 
 /*************************** Others ***************************/
 
@@ -74,7 +77,7 @@
 #define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
 #define DELAYED (ApoGee && 1)				//Redundancy mode
 
-#define ELEVATOR (0)
+#define ELEVATOR (1)
 
 #define PbarT (PRINT && USE_BARO && 1)		//Print barometer temperature data
 #define PbarP (PRINT && USE_BARO && 1)		//Print barometer pressure data
@@ -388,21 +391,61 @@ GyGPS GpS(Serial1, 0);
 #endif // GPSmode
 
 #if LoRamode
-#if LoRa_DORJI
+#if USE_LoRa_DORJI
 #define LoRaDelay 2.5
-#elif LoRa_E32
+#elif USE_LoRa_E32
 #define LoRaDelay 2.5
 #else
 #define LoRaDelay 5
-#endif // LoRa_DORJI || LoRa_E32
+#endif // USE_LoRa_DORJI || USE_LoRa_E32
 HardwareSerial &LoRa(Serial3);
 Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define LoRaBaudRate 9600
-#if LoRa_E32
+#if USE_LoRa_E32
 #if !defined(M0_LORA_PIN) || !defined(M1_LORA_PIN) || !defined(AUX_LORA_PIN)
 #error: Placa selecionada não utiliza LoRa E32
 #endif
-#endif // LoRa_E32
+#if USE_LoRa_E32_settable
+
+#define FREQUENCY_900
+
+#include "LoRa_E32.h"
+
+LoRa_E32 LoRaConfig(&LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_PIN), UART_BPS_RATE(LoRaBaudRate));
+
+void LoRaSetConfig()
+{
+  ResponseStructContainer c = LoRaConfig.getConfiguration();
+  // It's important get configuration pointer before all other operation
+  Configuration configuration = *(Configuration*)c.data;
+  Serial.println(c.status.getResponseDescription());
+  Serial.println(c.status.code);
+
+//   printParameters(configuration);
+  configuration.ADDL = 0x17;
+  configuration.ADDH = 0x0;
+  configuration.CHAN = 0x37;
+
+  // configuration.OPTION.fec = FEC_0_OFF;
+  // configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
+  // configuration.OPTION.ioDriveMode = IO_D_MODE_PUSH_PULLS_PULL_UPS;
+  // configuration.OPTION.transmissionPower = POWER_17;
+  // configuration.OPTION.wirelessWakeupTime = WAKE_UP_1250;
+
+  // configuration.SPED.airDataRate = AIR_DATA_RATE_011_48;
+  // configuration.SPED.uartBaudRate = UART_BPS_9600;
+  // configuration.SPED.uartParity = MODE_00_8N1;
+
+  // Set configuration changed and set to not hold the configuration
+  ResponseStatus rs = LoRaConfig.setConfiguration(configuration, WRITE_CFG_PWR_DWN_SAVE);
+  Serial.println(rs.getResponseDescription());
+  Serial.println(rs.code);
+//   printParameters(configuration);
+  c.close();
+}
+
+#endif //USE_LoRa_E32_settable
+#endif // USE_LoRa_E32
 #endif // LoRamode
 
 #if TalkingBoard
@@ -536,12 +579,17 @@ void setup()
 #endif // Serial
 
 #if LoRamode
-#if LoRa_E32
+#if USE_LoRa_E32_settable
+	LoRaConfig.begin();
+	LoRaSetConfig();
+#else
+#if USE_LoRa_E32
 	pinMode(M0_LORA_PIN,OUTPUT); digitalWrite(M0_LORA_PIN,LOW);
 	pinMode(M1_LORA_PIN,OUTPUT); digitalWrite(M1_LORA_PIN,LOW);
-#endif // LoRa_E32
+#endif // USE_LoRa_E32
 	LoRa.begin(LoRaBaudRate);
 #endif // LoRamode
+#endif  // USE_LoRa_E32_settable
 
 #if GPSmode
 	GpS.begin();

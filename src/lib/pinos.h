@@ -71,6 +71,18 @@
 #define M1_LORA_PIN 11 // Pinos adicionais do LoRa
 #define AUX_LORA_PIN 62 // Pinos adicionais do LoRa
 
+#elif USING_SHIELD == ESP_ESSENTIALS
+
+#define M0_LORA_PIN D15 // Pinos adicionais do LoRa
+#define M1_LORA_PIN D2 // Pinos adicionais do LoRa
+#define AUX_LORA_PIN 62 // Pinos adicionais do LoRa
+
+#define RX_LORA_ESP
+#define TX_LORA_ESP
+
+#define RX_GPS_ESP
+#define TX_GPS_ESP
+
 #else
 #error: Placa selecionada não está disponível
 #endif
