@@ -34,6 +34,7 @@ class MonoDeploy
 	unsigned long Tcmd; // Time when deployment start
 	unsigned long Theight; // Time when reached deployment height
 	unsigned long Tmax; // Time force apogee state if useM setted
+	float deploymentHeight = 0.0f; // Height value when was actually deployed
 	float cmdHeight; // Deployment height
 	unsigned long cmdDelay; // Time to delay deployment
 	bool useH = false; // Set to use hight based deployment
@@ -60,6 +61,7 @@ public:
 	static bool getApogee();
 	static void putHeight(float H);
 
+	float getDeploymentHeight();
 	void setHeightCmd(float H);
 	void setDelayCmd(float T);
 	void setTmax(float T);

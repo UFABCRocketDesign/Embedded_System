@@ -47,16 +47,16 @@ class Apogeu
 	float maxH = 0;
 	float minH = 0;
 	long TimeZero = 0;
-	bool apg_A = 0;
+	bool apg_H = 0;
 	bool* cond = new bool[Rl1]();
-	//float* Alt = new float[N];
-	float* altMed = new float[R]();
+	//float* Height = new float[N];
+	float* heightMed = new float[R]();
 
 
 #ifdef ARDUINO_AVR_MEGA2560
-	SerialFilter Alt;
+	SerialFilter Height;
 #else
-	MovingAverage Alt;
+	MovingAverage Height;
 #endif // ARDUINO_AVR_MEGA2560
 
 public:
@@ -70,7 +70,7 @@ public:
 	void resetAptPt();
 	void resetTimer();
 	//float addAltitude(float H);
-	float calcAlt(const long &P, float sealevelP = 101325);
+	float calcHeight(const long &P, float sealevelP = 101325);
 	void setGamma(bool apgE);
 
 	bool apgAlpha(bool serial = 0);
@@ -84,8 +84,8 @@ public:
 	bool getGamma();
 	float getSigma();
 
-	float getAltitude();
-	float getAltitude(float B);
+	float getHeight();
+	float getHeight(float B);
 	float getApgPt();
 	float getApgTm();
 	float getMaxH();

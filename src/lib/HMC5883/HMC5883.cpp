@@ -34,9 +34,9 @@ bool HMC5883::readAll()
 		Wire.requestFrom(address, (uint8_t)6);
 		if (6 <= Wire.available())
 		{
-			X = Wire.read() << 8 | Wire.read();		//X_msb << 8 | X_lsb
-			Z = Wire.read() << 8 | Wire.read();		//Z_msb << 8 | Z_lsb
-			Y = Wire.read() << 8 | Wire.read();		//Y_msb << 8 | Y_lsb
+			X = (Wire.read() << 8 | Wire.read())*(100.0f / 1090.0f);		//X_msb << 8 | X_lsb
+			Z = (Wire.read() << 8 | Wire.read())*(100.0f / 1090.0f);		//Z_msb << 8 | Z_lsb
+			Y = (Wire.read() << 8 | Wire.read())*(100.0f / 1090.0f);		//Y_msb << 8 | Y_lsb
 		}
 		lastWorkT = thisReadT;
 	}

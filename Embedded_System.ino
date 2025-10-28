@@ -23,7 +23,7 @@
 #define USE_GY91 (1)						//Use GY91 module
 
 #define SDCard (1)							//Use SD card
-#define GPSmode (0)							//Use GPS
+#define GPSmode (1)							//Use GPS
 #define LoRamode (1)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
 #define BuZZ (1)							//Buzzer mode
@@ -52,6 +52,8 @@
 #define USE_MAGN (USE_HMC5883 || USE_AK8963)			// Use any Magnetometer
 
 /**************************** LoRa ****************************/
+
+#define USE_LoRa_CONTIGUOUS (LoRamode && 1)		// Force data columns to always exist
 
 #define USE_LoRa_DORJI (LoRamode && 0)		// Dorji LoRa Module (2019 and before)
 #define USE_LoRa_E32 (LoRamode && 1)		// E32 LoRa Module (2019 and before)
@@ -408,6 +410,9 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 #if USE_LoRa_E32_settable
 
 #define FREQUENCY_900
+#define LoRa_ADDL 0x17
+#define LoRa_ADDH 0x00
+#define LoRa_ADDL 0x37
 
 #include "LoRa_E32.h"
 
@@ -422,9 +427,9 @@ void LoRaSetConfig()
   Serial.println(c.status.code);
 
 //   printParameters(configuration);
-  configuration.ADDL = 0x17;
-  configuration.ADDH = 0x0;
-  configuration.CHAN = 0x37;
+  configuration.ADDL = LoRa_ADDL;
+  configuration.ADDH = LoRa_ADDH;
+  configuration.CHAN = LoRa_ADDL;
 
   // configuration.OPTION.fec = FEC_0_OFF;
   // configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
@@ -760,29 +765,29 @@ void setup()
 		///////////////////////////////////////////////
 
 		SDC.theFile.println(F(
-			"temp\t"
+			"tempo.s\t"
 #if USE_ACCEL
-			"\taccel\t\t"
+			"mps2.x.accel\tmps2.y.accel\tmps2.z.accel\t"
 #endif // USE_ACCEL
 #if USE_GYRO
-			"\tgiro\t\t"
+			"dps.x.gyros\tdps.y.gyros\tdps.z.gyros\t"
 #endif // USE_GYRO
 #if USE_MAGN
-			"\tmag\t\t"
+			"uT.x.magn\tuT.y.magn\tuT.z.magn\t"
 #endif // USE_MAGN
 #if USE_BARO
-			"\tbaro\t\t"
+			"c.baro\tpa.baro\t"
 #endif // USE_BARO
 #if ApoGee
-			"\t"
+			"m.h.baro\t"
 #endif // ApoGee
 #if GPSmode
-			"\t\t\tGPS\t\t\t"
+			"lat.GPS\tlon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\t"
 #endif // GPSmode
 		));
 
 		///////////////////////////////////////////////
-
+/*
 		SDC.theFile.println(F(
 			"seg\t"
 #if USE_ACCEL
@@ -801,10 +806,10 @@ void setup()
 			"m\t"
 #endif // ApoGee
 #if GPSmode
-			"Latitude\tLongitude\tAltutude (m)\tspeed\tSat\tPrec\t"
+			"Latitude\tLongitude\tAltitude (m)\tspeed\tSat\tPrec\t"
 #endif // GPSmode
 		));
-
+*/
 		///////////////////////////////////////////////
 
 		SDC.close();
@@ -843,84 +848,75 @@ void setup()
 #endif // PERF_Tcom_print
 
 #if Tcom
-	"temp\t"
+	"tempo.s\t"
 #endif // Tcom
 
 
-#if PaclX || PaclY || PaclZ
-	"accel"
-#endif // PaclX || PaclY || PaclZ
 #if PaclX
-	"\t"
+	"mps2.x.accel\t"
 #endif // PaclX
 #if PaclY
-	"\t"
+	"mps2.y.accel\t"
 #endif // PaclY
 #if PaclZ
-	"\t"
+	"mps2.z.accel\t"
 #endif // PaclZ
 
 
-#if PgirX || PgirX || PgirX
-	"giro"
-#endif // PgirX || PgirX || PgirX
 #if PgirX
-	"\t"
+	"dps.x.gyros\t"
 #endif // PgirX
 #if PgirY
-	"\t"
+	"dps.y.gyros\t"
 #endif // PgirY
 #if PgirZ
-	"\t"
+	"dps.z.gyros\t"
 #endif // PgirZ
 
 
-#if PmagX || PmagY || PmagZ
-	"mag"
-#endif // PmagX || PmagY || PmagZ
 #if PmagX
-	"\t"
+	"uT.x.magn\t"
 #endif // PmagX
 #if PmagY
-	"\t"
+	"uT.y.magn\t"
 #endif // PmagY
 #if PmagZ
-	"\t"
+	"uT.z.magn\t"
 #endif // PmagZ
 
 
-#if PbarT || PbarP
-	"baro"
-#endif // PbarT || PbarP
 #if PbarT
-	"\t"
+	"c.baro\t"
 #endif // PbarT
 #if PbarP
-	"\t"
+	"pa.baro\t"
 #endif // PbarP
 
 #if PapgH
-	"\t"
+	"m.h.baro\t"
 #endif // PapgH
 #if PapgP
-	"\t\t"
+	"m.max.apg\tt.max.apg\t"
 #endif // PapgP
 #if PapgA
-	"\t"
+	"alpha.apg\t"
 #endif // PapgA
 #if PapgS
-	"\t"
+	"sigma.apg\t"
 #endif // PapgS
 #if PapgM
-	"\t"
+	"max.sigma.apg\t"
 #endif // PapgM
 
 #if Pgps
-	"\t\t\tGPS\t\t\t"
+	"Lat.GPS\tLon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\t"
 #endif // Pgps
 
 #if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-	));
+));
+#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
+/*
+#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 	Serial.println(F(
 #endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 #if Lcom
@@ -999,6 +995,7 @@ void setup()
 #if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 	));
 #endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
+*/
 
 #if SDCard
 	SDC.util.begin();
@@ -1049,14 +1046,14 @@ void loop()
 	readEverything();
 
 #if ApoGee
-	if(baroHasData) apg.calcAlt(baro.getPressure());
+	if(baroHasData) apg.calcHeight(baro.getPressure());
 	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
 	if (rec.getGlobalState())
 	{
 		apg.apgSigma();
 		apg.apgAlpha();
 		rec.sealApogee(apg.getApogeu(0.8f));
-		rec.putHeight(apg.getAltitude());
+		rec.putHeight(apg.getHeight());
 		rec.refresh();
 #if PapgM
 		Gutil.comparer(apg.getSigma());
@@ -1186,7 +1183,7 @@ inline void WaitUntil()
 			readEverything();
 
 	#if ApoGee
-			if(baroHasData) apg.calcAlt(baro.getPressure());
+			if(baroHasData) apg.calcHeight(baro.getPressure());
 			apg.apgSigma();
 			apg.apgAlpha();
 	#if PapgM
@@ -1244,7 +1241,7 @@ inline void WaitUntilFlight(float minHeight)
 #endif // BEEPING
 
 	}
-	while (abs(apg.getAltitude()) < minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
+	while (abs(apg.getHeight()) < minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
 #if MORSE_MSG
 	mensageiro.setQuiet();
 	Mutil.oneTimeReset();
@@ -1384,7 +1381,7 @@ inline void SerialSend()
 	Serial.print('|');
 #endif // Psep && PapgH
 #if PapgH
-	Serial.print(apg.getAltitude());
+	Serial.print(apg.getHeight());
 	Serial.print('\t');
 #endif // PapgH
 
@@ -1441,9 +1438,9 @@ inline void SerialSend()
 	Serial.print(GpS.getChars());
 	Serial.print('\t');
 	Serial.print(GpS.getYear());
-	Serial.print('/');
+	Serial.print('-');
 	Serial.print(GpS.getMonth());
-	Serial.print('/');
+	Serial.print('-');
 	Serial.print(GpS.getDay());
 	Serial.print('\t');
 	Serial.print(GpS.getHour());
@@ -1460,7 +1457,7 @@ inline void SerialSend()
 #if PapgW
 	if (Gutil.mem)
 	{
-		Serial.print(F("A: "));
+		Serial.print(F("H: "));
 		Serial.print(apg.getApgPt());
 		Serial.print(F(" m\tT:"));
 		Serial.print(apg.getApgTm());
@@ -1469,17 +1466,37 @@ inline void SerialSend()
 #if COMmode
 	if (rec.getGlobalState())
 	{
-		if (rec.mainN.getState(0)) transmit(F("Act MainN\t"));
+		if (rec.mainN.getState(0))
+		{
+			Serial.print(F("Act MainN @ "));
+			Serial.print(rec.mainN.getDeploymentHeight());
+			Serial.print(F("m\t"));
+		}
 
 #if DualDeploy
-		if (rec.drogN.getState(0)) transmit(F("Act DrogueN\t"));
+		if (rec.drogN.getState(0))
+		{
+			Serial.print(F("Act DrogueN @ "));
+			Serial.print(rec.drogN.getDeploymentHeight());
+			Serial.print(F("m\t"));
+		}
 #endif // DualDeploy
 
 #if DELAYED
-		if (rec.mainB.getState(0)) transmit(F("Act MainB\t"));
+		if (rec.mainB.getState(0))
+		{
+			Serial.print(F("Act MainB @ "));
+			Serial.print(rec.mainB.getDeploymentHeight());
+			Serial.print(F("m\t"));
+		}
 
 #if DualDeploy
-		if (rec.drogB.getState(0)) transmit(F("Act DrogueB\t"));
+		if (rec.drogB.getState(0))
+		{
+			Serial.print(F("Act DrogueB @ "));
+			Serial.print(rec.drogB.getDeploymentHeight());
+			Serial.print(F("m\t"));
+		}
 
 #endif // DualDeploy
 #endif // DELAYED
@@ -1517,7 +1534,7 @@ inline void SDSend()
 #if USE_BARO
 			for (short i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]);		SDC.tab(); }
 #if ApoGee
-			SDC.theFile.print(apg.getAltitude()); SDC.tab();
+			SDC.theFile.print(apg.getHeight()); SDC.tab();
 #endif // ApoGee
 
 #endif // USE_BARO
@@ -1549,7 +1566,7 @@ inline void SDSend()
 			{
 				if (SDC.util.oneTime())
 				{
-					SDC.theFile.print(F("A:"));
+					SDC.theFile.print(F("H:"));
 					SDC.theFile.print(apg.getApgPt());
 					SDC.theFile.print(F(" m\tT:"));
 					SDC.theFile.print(apg.getApgTm());
@@ -1557,17 +1574,37 @@ inline void SDSend()
 					SDC.tab();
 				}
 
-				if ( rec.mainN.getState(0) ) SDC.theFile.print(F("Act MainN\t"));
+				if (rec.mainN.getState(0))
+				{
+					SDC.theFile.print(F("Act MainN @ "));
+					SDC.theFile.print(rec.mainN.getDeploymentHeight());
+					SDC.theFile.print(F("m\t"));
+				}
 
 #if DualDeploy
-				if (rec.drogN.getState(0)) SDC.theFile.print(F("Act DrogueN\t"));
+				if (rec.drogN.getState(0))
+				{
+					SDC.theFile.print(F("Act DrogueN @ "));
+					SDC.theFile.print(rec.drogN.getDeploymentHeight());
+					SDC.theFile.print(F("m\t"));
+				}
 #endif // DualDeploy
 
 #if DELAYED
-				if (rec.mainB.getState(0)) SDC.theFile.print(F("Act MainB\t"));
+				if (rec.mainB.getState(0))
+				{
+					SDC.theFile.print(F("Act MainB @ "));
+					SDC.theFile.print(rec.mainB.getDeploymentHeight());
+					SDC.theFile.print(F("m\t"));
+				}
 
 #if DualDeploy
-				if (rec.drogB.getState(0)) SDC.theFile.print(F("Act DrogueB\t"));
+				if (rec.drogB.getState(0))
+				{
+					SDC.theFile.print(F("Act DrogueB @ "));
+					SDC.theFile.print(rec.drogB.getDeploymentHeight());
+					SDC.theFile.print(F("m\t"));
+				}
 #endif // DualDeploy
 
 #endif // DELAYED
@@ -1652,10 +1689,10 @@ inline void LoRaSend()
 		LoRa.print('\t');
 #endif // GPSmode
 #if ApoGee
-		LoRa.print(apg.getAltitude());
+		LoRa.print(apg.getHeight());
 		LoRa.print('\t');
-		LoRa.print(apg.getSigma(), 3);
-		LoRa.print('\t');
+		// LoRa.print(apg.getSigma(), 3);
+		// LoRa.print('\t');
 #endif // ApoGee
 #if SDCard
 		LoRa.print(!SDC.util.mem);
@@ -1664,28 +1701,62 @@ inline void LoRaSend()
 #if ApoGee
 		if (Gutil.mem)
 		{
-			LoRa.print(F("A:"));
+			LoRa.print(F("H:"));
 			LoRa.print(apg.getApgPt());
 			LoRa.print(F(" m\tT:"));
 			LoRa.print(apg.getApgTm());
 			LoRa.print(F(" s"));
 			LoRa.print('\t');
 		}
+#if USE_LoRa_CONTIGUOUS
+	else  LoRa.print(F("~\t~\t"));
+#endif // USE_LoRa_CONTIGUOUS
 #endif // ApoGee
 		//LRutil.oneTimeReset();
 	}
 
 #if ApoGee
-	if (rec.mainN.getState(0)) LoRa.print(F("Act MainN\t"));
+	if (rec.mainN.getState(0))
+	{
+		LoRa.print(F("Act MainN @ "));
+		LoRa.print(rec.mainN.getDeploymentHeight());
+		LoRa.print(F("m\t"));
+	}
+#if USE_LoRa_CONTIGUOUS
+	else  LoRa.print(F("~\t"));
+#endif // USE_LoRa_CONTIGUOUS
 
 #if DualDeploy
-	if (rec.drogN.getState(0)) LoRa.print(F("Act DrogueN\t"));
+	if (rec.drogN.getState(0))
+	{
+		LoRa.print(F("Act DrogueN @ "));
+		LoRa.print(rec.drogN.getDeploymentHeight());
+		LoRa.print(F("m\t"));
+	}
+#if USE_LoRa_CONTIGUOUS
+	else  LoRa.print(F("~\t"));
+#endif // USE_LoRa_CONTIGUOUS
 #endif // DualDeploy
 
 #if DELAYED
-	if (rec.mainB.getState(0)) LoRa.print(F("Act MainB\t"));
+	if (rec.mainB.getState(0))
+	{
+		LoRa.print(F("Act MainB @ "));
+		LoRa.print(rec.mainB.getDeploymentHeight());
+		LoRa.print(F("m\t"));
+	}
+#if USE_LoRa_CONTIGUOUS
+	else  LoRa.print(F("~\t"));
+#endif // USE_LoRa_CONTIGUOUS
 #if DualDeploy
-	if (rec.drogB.getState(0)) LoRa.print(F("Act DrogueB\t"));
+	if (rec.drogB.getState(0)) {
+		LoRa.print(F("Act DrogueB @ "));
+		LoRa.print(rec.drogB.getDeploymentHeight());
+		LoRa.print(F("m\t"));
+	}
+#if USE_LoRa_CONTIGUOUS
+	else  LoRa.print(F("~\t"));
+#endif // USE_LoRa_CONTIGUOUS
 #endif // DualDeploy
 #endif // DELAYED
 

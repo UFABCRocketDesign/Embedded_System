@@ -33,11 +33,15 @@ void MonoDeploy::putHeight(float H)
 	height = H;
 }
 
+float MonoDeploy::getDeploymentHeight()
+{
+	return deploymentHeight;
+}
+
 void MonoDeploy::setHeightCmd(float H)
 {
 	useH = true;
 	cmdHeight = H;
-
 }
 
 void MonoDeploy::setDelayCmd(float T)
@@ -120,6 +124,7 @@ void MonoDeploy::refresh()
 			{
 				cmdSeal = true;
 				Tcmd = Tnow;
+				deploymentHeight = height;
 			}
 			if ((Tnow - Tcmd < Tign) && cmdSeal) sPin = command;
 			else sPin = !command;
