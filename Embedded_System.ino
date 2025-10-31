@@ -20,7 +20,7 @@
 #define BaudRate 115200
 
 #define USE_GY80 (0)						//Use GY80 module
-#define USE_GY91 (1)						//Use GY91 module
+#define USE_GY91 (0)						//Use GY91 module
 
 #define SDCard (1)							//Use SD card
 #define GPSmode (1)							//Use GPS
@@ -34,15 +34,15 @@
 #define PROJECT_NAME "Arace"
 
 /**************************** GY80 ****************************/
-#define USE_BMP085 (USE_GY80 || 1)			//Use BMP085 sensor
+#define USE_BMP085 (USE_GY80 || 0)			//Use BMP085 sensor
 #define USE_ADXL345 (USE_GY80 || 0)			//Use ADXL345 sensor
 #define USE_L3G4200D (USE_GY80 || 0)		//Use L3G4200D sensor
 #define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
 
 /**************************** GY91 ****************************/
-#define USE_BMP280 (USE_GY91 || 0)			//Use BMP280 sensor
-#define USE_MPU9250_ACCEL (USE_GY91 || 0)	//Use MPU9250 sensor, accelerometer
-#define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
+#define USE_BMP280 (USE_GY91 || 1)			//Use BMP280 sensor
+#define USE_MPU9250_ACCEL (USE_GY91 || 1)	//Use MPU9250 sensor, accelerometer
+#define USE_MPU9250_GYRO (USE_GY91 || 1)	//Use MPU9250 sensor, gyroscope
 #define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
 
 /************************** 9DoF IMU **************************/
@@ -58,7 +58,7 @@
 #define USE_LoRa_DORJI (LoRamode && 0)		// Dorji LoRa Module (2019 and before)
 #define USE_LoRa_E32 (LoRamode && 1)		// E32 LoRa Module (2019 and before)
 
-#define USE_LoRa_E32_settable (USE_LoRa_E32 && 1)
+#define USE_LoRa_E32_settable (USE_LoRa_E32 && 0)
 
 /*************************** Others ***************************/
 
@@ -79,7 +79,7 @@
 #define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
 #define DELAYED (ApoGee && 1)				//Redundancy mode
 
-#define ELEVATOR (1)
+#define ELEVATOR (0)
 
 #define PbarT (PRINT && USE_BARO && 1)		//Print barometer temperature data
 #define PbarP (PRINT && USE_BARO && 1)		//Print barometer pressure data
@@ -130,7 +130,9 @@
 #include "src/lib/Classes.h"
 
 #if USE_BARO
-#if USE_BMP085
+#if 1 < ((USE_BMP085) + (USE_BMP280))
+#error: Múltiplos barômetros definidos
+#elif USE_BMP085
 #include "src/lib/BMP085/BMP085.h" // Barometro BMP085
 BMP085 baro;									//Barometer object declaration
 #elif USE_BMP280
@@ -343,7 +345,9 @@ MonoDeploy Recovery::drogB pins_drogB;
 #endif // WUPS
 
 #if USE_ACCEL
-#if USE_ADXL345
+#if 1 < ((USE_ADXL345) + (USE_MPU9250_ACCEL))
+#error: Múltiplos acelerômetros definidos
+#elif USE_ADXL345
 #include "src/lib/ADXL345/ADXL345.h" // Accelerometer ADXL345
 ADXL345 accel;									//Accelerometer object declaration
 #elif USE_MPU9250_ACCEL
@@ -355,7 +359,9 @@ float MM_accel[3]{};
 #endif // USE_ACCEL
 
 #if USE_GYRO
-#if USE_L3G4200D
+#if 1 < ((USE_L3G4200D) + (USE_MPU9250_GYRO))
+#error: Múltiplos gisroscópios definidos
+#elif USE_L3G4200D
 #include "src/lib/L3G4200D/L3G4200D.h" // Gyroscope L3G4200D
 L3G4200D giro(2000);							//Gyroscope object declaration
 #elif USE_MPU9250_GYRO
@@ -367,7 +373,9 @@ float MM_giro[3]{};
 #endif // USE_GYRO
 
 #if USE_MAGN
-#if USE_HMC5883
+#if 1 < ((USE_HMC5883) + (USE_AK8963))
+#error: Múltiplos magnetômetros definidos
+#elif USE_HMC5883
 #include "src/lib/HMC5883/HMC5883.h" // Magnetometer HMC5883
 HMC5883 magn;									//Magnetometer object declaration
 #elif USE_AK8963
@@ -393,7 +401,9 @@ GyGPS GpS(Serial1, 0);
 #endif // GPSmode
 
 #if LoRamode
-#if USE_LoRa_DORJI
+#if 1 < ((USE_LoRa_DORJI) + (USE_LoRa_E32))
+#error: Múltiplos LoRas definidos
+#elif USE_LoRa_DORJI
 #define LoRaDelay 2.5
 #elif USE_LoRa_E32
 #define LoRaDelay 2.5
@@ -412,7 +422,7 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define FREQUENCY_900
 #define LoRa_ADDL 0x17
 #define LoRa_ADDH 0x00
-#define LoRa_ADDL 0x37
+#define LoRa_CHAN 0x37
 
 #include "LoRa_E32.h"
 
@@ -420,33 +430,33 @@ LoRa_E32 LoRaConfig(&LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_P
 
 void LoRaSetConfig()
 {
-  ResponseStructContainer c = LoRaConfig.getConfiguration();
-  // It's important get configuration pointer before all other operation
-  Configuration configuration = *(Configuration*)c.data;
-  Serial.println(c.status.getResponseDescription());
-  Serial.println(c.status.code);
+	ResponseStructContainer c = LoRaConfig.getConfiguration();
+	// It's important get configuration pointer before all other operation
+	Configuration configuration = *(Configuration*)c.data;
+	Serial.println(c.status.getResponseDescription());
+	Serial.println(c.status.code);
 
-//   printParameters(configuration);
-  configuration.ADDL = LoRa_ADDL;
-  configuration.ADDH = LoRa_ADDH;
-  configuration.CHAN = LoRa_ADDL;
+	//   printParameters(configuration);
+	configuration.ADDL = LoRa_ADDL;
+	configuration.ADDH = LoRa_ADDH;
+	configuration.CHAN = LoRa_CHAN;
 
-  // configuration.OPTION.fec = FEC_0_OFF;
-  // configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
-  // configuration.OPTION.ioDriveMode = IO_D_MODE_PUSH_PULLS_PULL_UPS;
-  // configuration.OPTION.transmissionPower = POWER_17;
-  // configuration.OPTION.wirelessWakeupTime = WAKE_UP_1250;
+	// configuration.OPTION.fec = FEC_0_OFF;
+	// configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
+	// configuration.OPTION.ioDriveMode = IO_D_MODE_PUSH_PULLS_PULL_UPS;
+	// configuration.OPTION.transmissionPower = POWER_17;
+	// configuration.OPTION.wirelessWakeupTime = WAKE_UP_1250;
 
-  // configuration.SPED.airDataRate = AIR_DATA_RATE_011_48;
-  // configuration.SPED.uartBaudRate = UART_BPS_9600;
-  // configuration.SPED.uartParity = MODE_00_8N1;
+	// configuration.SPED.airDataRate = AIR_DATA_RATE_011_48;
+	// configuration.SPED.uartBaudRate = UART_BPS_9600;
+	// configuration.SPED.uartParity = MODE_00_8N1;
 
-  // Set configuration changed and set to not hold the configuration
-  ResponseStatus rs = LoRaConfig.setConfiguration(configuration, WRITE_CFG_PWR_DWN_SAVE);
-  Serial.println(rs.getResponseDescription());
-  Serial.println(rs.code);
-//   printParameters(configuration);
-  c.close();
+	// Set configuration changed and set to not hold the configuration
+	ResponseStatus rs = LoRaConfig.setConfiguration(configuration, WRITE_CFG_PWR_DWN_SAVE);
+	Serial.println(rs.getResponseDescription());
+	Serial.println(rs.code);
+	//   printParameters(configuration);
+	c.close();
 }
 
 #endif //USE_LoRa_E32_settable
@@ -641,7 +651,7 @@ void setup()
 #if PapgB
 		if(apg.getFixZero()){
 			Serial.print(F("(Using EEPROM Zero Ref @ < 0x"));
-  			Serial.print(apg.getEEAddress(), HEX);
+			Serial.print(apg.getEEAddress(), HEX);
 			Serial.print(F(" >!) "));
 		}
 
@@ -655,7 +665,7 @@ void setup()
 #if ApoGee
 		if(apg.getFixZero()) {
 			LoRa.print(F("(Using EEPROM Zero Ref @ < 0x"));
-  			LoRa.print(apg.getEEAddress(), HEX);
+			LoRa.print(apg.getEEAddress(), HEX);
 			LoRa.print(F(" >!) "));
 		}
 		LoRa.println(apg.getZero());
@@ -1468,7 +1478,7 @@ inline void SerialSend()
 	{
 		if (rec.mainN.getState(0))
 		{
-			Serial.print(F("Act MainN @ "));
+			Serial.print(F("Act MainN:"));
 			Serial.print(rec.mainN.getDeploymentHeight());
 			Serial.print(F("m\t"));
 		}
@@ -1476,7 +1486,7 @@ inline void SerialSend()
 #if DualDeploy
 		if (rec.drogN.getState(0))
 		{
-			Serial.print(F("Act DrogueN @ "));
+			Serial.print(F("Act DrogueN:"));
 			Serial.print(rec.drogN.getDeploymentHeight());
 			Serial.print(F("m\t"));
 		}
@@ -1485,7 +1495,7 @@ inline void SerialSend()
 #if DELAYED
 		if (rec.mainB.getState(0))
 		{
-			Serial.print(F("Act MainB @ "));
+			Serial.print(F("Act MainB:"));
 			Serial.print(rec.mainB.getDeploymentHeight());
 			Serial.print(F("m\t"));
 		}
@@ -1493,7 +1503,7 @@ inline void SerialSend()
 #if DualDeploy
 		if (rec.drogB.getState(0))
 		{
-			Serial.print(F("Act DrogueB @ "));
+			Serial.print(F("Act DrogueB:"));
 			Serial.print(rec.drogB.getDeploymentHeight());
 			Serial.print(F("m\t"));
 		}
@@ -1576,7 +1586,7 @@ inline void SDSend()
 
 				if (rec.mainN.getState(0))
 				{
-					SDC.theFile.print(F("Act MainN @ "));
+					SDC.theFile.print(F("Act MainN:"));
 					SDC.theFile.print(rec.mainN.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
@@ -1584,7 +1594,7 @@ inline void SDSend()
 #if DualDeploy
 				if (rec.drogN.getState(0))
 				{
-					SDC.theFile.print(F("Act DrogueN @ "));
+					SDC.theFile.print(F("Act DrogueN:"));
 					SDC.theFile.print(rec.drogN.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
@@ -1593,7 +1603,7 @@ inline void SDSend()
 #if DELAYED
 				if (rec.mainB.getState(0))
 				{
-					SDC.theFile.print(F("Act MainB @ "));
+					SDC.theFile.print(F("Act MainB:"));
 					SDC.theFile.print(rec.mainB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
@@ -1601,7 +1611,7 @@ inline void SDSend()
 #if DualDeploy
 				if (rec.drogB.getState(0))
 				{
-					SDC.theFile.print(F("Act DrogueB @ "));
+					SDC.theFile.print(F("Act DrogueB:"));
 					SDC.theFile.print(rec.drogB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
@@ -1682,7 +1692,7 @@ inline void LoRaSend()
 		LoRa.print(GpS.getLongitude(), 6);//Longitude
 		LoRa.print('\t');
 		LoRa.print(GpS.getHour());//Hora
-		LoRa.print(':');
+		LoRa.print('\t');
 		LoRa.print(GpS.getMinute());//Minuto
 		LoRa.print('\t');
 		LoRa.print(GpS.getPrecision());//Precisao
@@ -1718,7 +1728,7 @@ inline void LoRaSend()
 #if ApoGee
 	if (rec.mainN.getState(0))
 	{
-		LoRa.print(F("Act MainN @ "));
+		LoRa.print(F("Act MainN:"));
 		LoRa.print(rec.mainN.getDeploymentHeight());
 		LoRa.print(F("m\t"));
 	}
@@ -1729,7 +1739,7 @@ inline void LoRaSend()
 #if DualDeploy
 	if (rec.drogN.getState(0))
 	{
-		LoRa.print(F("Act DrogueN @ "));
+		LoRa.print(F("Act DrogueN:"));
 		LoRa.print(rec.drogN.getDeploymentHeight());
 		LoRa.print(F("m\t"));
 	}
@@ -1741,7 +1751,7 @@ inline void LoRaSend()
 #if DELAYED
 	if (rec.mainB.getState(0))
 	{
-		LoRa.print(F("Act MainB @ "));
+		LoRa.print(F("Act MainB:"));
 		LoRa.print(rec.mainB.getDeploymentHeight());
 		LoRa.print(F("m\t"));
 	}
@@ -1750,7 +1760,7 @@ inline void LoRaSend()
 #endif // USE_LoRa_CONTIGUOUS
 #if DualDeploy
 	if (rec.drogB.getState(0)) {
-		LoRa.print(F("Act DrogueB @ "));
+		LoRa.print(F("Act DrogueB:"));
 		LoRa.print(rec.drogB.getDeploymentHeight());
 		LoRa.print(F("m\t"));
 	}
