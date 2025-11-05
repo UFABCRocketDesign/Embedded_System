@@ -1775,6 +1775,10 @@ inline void LoRaSend()
 #endif // DELAYED
 
 #endif // ApoGee
+#if USE_BARO
+		LoRa.print(baro.getTemperature());
+		LoRa.print('\t');
+#endif // USE_BARO
   }
 }
 #endif // LoRamode
