@@ -29,7 +29,7 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
-#define PRINT (1)							//Print or not things on Serial
+#define PRINT (0)							//Print or not things on Serial
 
 #define PROJECT_NAME "Arace"
 
@@ -608,6 +608,7 @@ void setup()
 
 #if GPSmode
 	GpS.begin();
+	GpS.util.mem = false; // Auxiliar de primeira leitura
 	GpS.util.forT(60);
 	if (GpS)
 	{
@@ -1683,20 +1684,24 @@ inline void LoRaSend()
 	{
 		LoRa.println();
 		LoRa.print(LRutil.counter());
-		LoRa.print(F(":\t"));
+		LoRa.print('\t');
 		LoRa.print(LRutil.sinceBegin());
 		LoRa.print('\t');
 #if GPSmode
-		LoRa.print(GpS.getLatitude(), 6);//Latitude
-		LoRa.print('\t');
-		LoRa.print(GpS.getLongitude(), 6);//Longitude
-		LoRa.print('\t');
-		LoRa.print(GpS.getHour());//Hora
-		LoRa.print('\t');
-		LoRa.print(GpS.getMinute());//Minuto
-		LoRa.print('\t');
-		LoRa.print(GpS.getPrecision());//Precisao
-		LoRa.print('\t');
+		if(GpS.util.mem) { // Somente mandar dados validos apos primeira leitura bem sucedida
+			LoRa.print(GpS.getLatitude(), 6);//Latitude
+			LoRa.print('\t');
+			LoRa.print(GpS.getLongitude(), 6);//Longitude
+			LoRa.print('\t');
+			LoRa.print(GpS.getHour());//Hora
+			LoRa.print('\t');
+			LoRa.print(GpS.getMinute());//Minuto
+			LoRa.print('\t');
+			LoRa.print(GpS.getPrecision());//Precisao
+			LoRa.print('\t');
+		} else {
+			LoRa.print(F("~\t~\t~\t~\t~\t"));
+		}
 #endif // GPSmode
 #if ApoGee
 		LoRa.print(apg.getHeight());
@@ -1723,7 +1728,6 @@ inline void LoRaSend()
 #endif // USE_LoRa_CONTIGUOUS
 #endif // ApoGee
 		//LRutil.oneTimeReset();
-	}
 
 #if ApoGee
 	if (rec.mainN.getState(0))
@@ -1771,6 +1775,7 @@ inline void LoRaSend()
 #endif // DELAYED
 
 #endif // ApoGee
+  }
 }
 #endif // LoRamode
 
@@ -1886,6 +1891,7 @@ inline void readEverything()
 #endif // USE_MAGN
 #if GPSmode
 	if (GpS) GpS.util.forT(10);
+	if (!GpS.util.mem) if (GpS.isNew()) GpS.util.mem = true; // Auxiliar de primeira leitura bem sucedida
 	if (GpS.util.forT()) {
 #if RBF || WUF || ForceSysC
 		sysC++;
