@@ -77,7 +77,9 @@
 #define BlinkBuzzer (BuZZ && 0)
 #define RGB (0)								//RGB LED board
 #define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
-#define DELAYED (ApoGee && 1)				//Redundancy mode
+#define BackupDeploy (ApoGee && 1)				//Redundancy mode
+
+#define DELAYED_MAIN (ApoGee && 1)			//Aways delay main deployment
 
 #define ELEVATOR (0)
 
@@ -119,7 +121,7 @@
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)
-#define SYSTEM_n (uint8_t(SDCard)+uint8_t(USE_BARO)+uint8_t(USE_ACCEL)+uint8_t(USE_GYRO)+uint8_t(USE_MAGN)+uint8_t(GPSmode)+uint8_t(ApoGee)+uint8_t(DualDeploy)+uint8_t(DELAYED)+uint8_t(DualDeploy && DELAYED))
+#define SYSTEM_n (uint8_t(SDCard)+uint8_t(USE_BARO)+uint8_t(USE_ACCEL)+uint8_t(USE_GYRO)+uint8_t(USE_MAGN)+uint8_t(GPSmode)+uint8_t(ApoGee)+uint8_t(DualDeploy)+uint8_t(BackupDeploy)+uint8_t(DualDeploy && BackupDeploy))
 
 #pragma endregion
 
@@ -161,10 +163,13 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define EM_drogN_DELAY 10					// Seconds before forced deployment
 #endif // DualDeploy
 
-#if DELAYED
+#if BackupDeploy
 #define sysDelay 2.5
 #define EM_mainB_DELAY 65					// Seconds before forced deployment
 
+#if DELAYED_MAIN
+#define sysDelay_main 1.0
+#endif // DELAYED_MAIN
 
 #if DualDeploy
 #if ELEVATOR
@@ -176,7 +181,7 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define EM_drogB_DELAY 15					// Seconds before forced deployment
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 
 
 // #define pins_drogN (36, 68)  /*act1*/
@@ -204,14 +209,14 @@ struct Recovery
 	static MonoDeploy drogN;
 #endif // DualDeploy
 
-#if DELAYED
+#if BackupDeploy
 	static MonoDeploy mainB;
 
 #if DualDeploy
 	static MonoDeploy drogB;
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 	static bool begin()
 	{
 		bool aux = true;
@@ -222,14 +227,14 @@ struct Recovery
 #endif // DualDeploy
 
 
-#if DELAYED
+#if BackupDeploy
 		aux &= mainB.begin();
 
 #if DualDeploy
 		aux &= drogB.begin();
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 
 
 		return aux;
@@ -243,14 +248,14 @@ struct Recovery
 				drogN.emergency(state, EM_drogN_DELAY);
 		#endif // DualDeploy
 
-		#if DELAYED
+		#if BackupDeploy
 				mainB.emergency(state, EM_mainB_DELAY);
 
 		#if DualDeploy
 				drogB.emergency(state, EM_drogB_DELAY);
 		#endif // DualDeploy
 
-		#endif // DELAYED
+		#endif // BackupDeploy
 	}
 	static bool getGlobalState()
 	{
@@ -261,14 +266,14 @@ struct Recovery
 		aux |= drogN.getGlobalState();
 #endif // DualDeploy
 
-#if DELAYED
+#if BackupDeploy
 		aux |= mainB.getGlobalState();
 
 #if DualDeploy
 		aux |= drogB.getGlobalState();
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 		return aux;
 	}
 	static void refresh()
@@ -279,14 +284,14 @@ struct Recovery
 		drogN.refresh();
 #endif // DualDeploy
 
-#if DELAYED
+#if BackupDeploy
 		mainB.refresh();
 
 #if DualDeploy
 		drogB.refresh();
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 	}
 	static void resetTimer()
 	{
@@ -313,14 +318,14 @@ MonoDeploy Recovery::drogN pins_drogN;
 #endif // DualDeploy
 
 
-#if DELAYED
+#if BackupDeploy
 MonoDeploy Recovery::mainB pins_mainB;
 
 #if DualDeploy
 MonoDeploy Recovery::drogB pins_drogB;
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 
 #endif // ApoGee
 
@@ -553,21 +558,31 @@ void setup()
 #if DualDeploy
 	rec.mainN.setHeightCmd(p2h);
 #endif // DualDeploy
+#if DELAYED_MAIN
+	rec.mainN.setDelayCmd(sysDelay_main);
+#endif // DELAYED_MAIN
 
 #endif // ApoGee
 
-#if DELAYED
+#if BackupDeploy
+
+// Main
 #if DualDeploy
 	rec.mainB.setHeightCmd(p2h_D);
 #else
+#if DELAYED_MAIN
+	rec.mainB.setDelayCmd(sysDelay + sysDelay_main);
+#else
 	rec.mainB.setDelayCmd(sysDelay);
+#endif // DELAYED_MAIN
 #endif // !DualDeploy
 
+// Drogue
 #if DualDeploy
 	rec.drogB.setDelayCmd(sysDelay);
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 
 
 #if ACT_BUZZER
@@ -738,14 +753,14 @@ void setup()
 	transmit(rec.drogN.info() ? F("\nIgnDrogN ok") : F("\nIgnDrogN err"));
 #endif // DualDeploy
 
-#if DELAYED
+#if BackupDeploy
 	transmit(rec.mainB.info() ? F("\nIgnMainB ok") : F("\nIgnMainB err"));
 
 #if DualDeploy
 	transmit(rec.drogB.info() ? F("\nIgnDrogB ok") : F("\nIgnDrogB err"));
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 
 #endif // ApoGee && COMmode
 
@@ -1493,7 +1508,7 @@ inline void SerialSend()
 		}
 #endif // DualDeploy
 
-#if DELAYED
+#if BackupDeploy
 		if (rec.mainB.getState(0))
 		{
 			Serial.print(F("Act MainB:"));
@@ -1510,7 +1525,7 @@ inline void SerialSend()
 		}
 
 #endif // DualDeploy
-#endif // DELAYED
+#endif // BackupDeploy
 	}
 #endif // COMmode
 
@@ -1601,7 +1616,7 @@ inline void SDSend()
 				}
 #endif // DualDeploy
 
-#if DELAYED
+#if BackupDeploy
 				if (rec.mainB.getState(0))
 				{
 					SDC.theFile.print(F("Act MainB:"));
@@ -1618,7 +1633,7 @@ inline void SDSend()
 				}
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 
 
 
@@ -1752,7 +1767,7 @@ inline void LoRaSend()
 #endif // USE_LoRa_CONTIGUOUS
 #endif // DualDeploy
 
-#if DELAYED
+#if BackupDeploy
 	if (rec.mainB.getState(0))
 	{
 		LoRa.print(F("Act MainB:"));
@@ -1772,7 +1787,7 @@ inline void LoRaSend()
 	else  LoRa.print(F("~\t"));
 #endif // USE_LoRa_CONTIGUOUS
 #endif // DualDeploy
-#endif // DELAYED
+#endif // BackupDeploy
 
 #endif // ApoGee
 #if USE_BARO
@@ -1927,7 +1942,7 @@ inline void readEverything()
 #endif // DualDeploy
 
 
-#if DELAYED
+#if BackupDeploy
 	if (rec.mainB.info()) {
 		sysC++;
 	} else {
@@ -1946,7 +1961,7 @@ inline void readEverything()
 	}
 #endif // DualDeploy
 
-#endif // DELAYED
+#endif // BackupDeploy
 
 #endif // ApoGee && (RBF || WUF)
 }
