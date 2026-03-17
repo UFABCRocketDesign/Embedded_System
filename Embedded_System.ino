@@ -1494,6 +1494,9 @@ inline void SerialSend()
 	{
 		if (rec.mainN.getState(0))
 		{
+#if SDCard
+			rec.mainN.getStateReset(); // Serial -> SD -> LoRa
+#endif // SDCard
 			Serial.print(F("Act MainN:"));
 			Serial.print(rec.mainN.getDeploymentHeight());
 			Serial.print(F("m\t"));
@@ -1502,6 +1505,9 @@ inline void SerialSend()
 #if DualDeploy
 		if (rec.drogN.getState(0))
 		{
+#if SDCard
+			rec.drogN.getStateReset(); // Serial -> SD -> LoRa
+#endif // SDCard
 			Serial.print(F("Act DrogueN:"));
 			Serial.print(rec.drogN.getDeploymentHeight());
 			Serial.print(F("m\t"));
@@ -1511,6 +1517,9 @@ inline void SerialSend()
 #if BackupDeploy
 		if (rec.mainB.getState(0))
 		{
+#if SDCard
+			rec.mainB.getStateReset(); // Serial -> SD -> LoRa
+#endif // SDCard
 			Serial.print(F("Act MainB:"));
 			Serial.print(rec.mainB.getDeploymentHeight());
 			Serial.print(F("m\t"));
@@ -1519,6 +1528,9 @@ inline void SerialSend()
 #if DualDeploy
 		if (rec.drogB.getState(0))
 		{
+#if SDCard
+			rec.drogB.getStateReset(); // Serial -> SD -> LoRa
+#endif // SDCard
 			Serial.print(F("Act DrogueB:"));
 			Serial.print(rec.drogB.getDeploymentHeight());
 			Serial.print(F("m\t"));
@@ -1602,6 +1614,9 @@ inline void SDSend()
 
 				if (rec.mainN.getState(0))
 				{
+#if LoRamode
+					rec.mainN.getStateReset(); // Serial -> SD -> LoRa
+#endif // LoRamode
 					SDC.theFile.print(F("Act MainN:"));
 					SDC.theFile.print(rec.mainN.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
@@ -1610,6 +1625,9 @@ inline void SDSend()
 #if DualDeploy
 				if (rec.drogN.getState(0))
 				{
+#if LoRamode
+					rec.drogN.getStateReset(); // Serial -> SD -> LoRa
+#endif // LoRamode
 					SDC.theFile.print(F("Act DrogueN:"));
 					SDC.theFile.print(rec.drogN.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
@@ -1619,6 +1637,9 @@ inline void SDSend()
 #if BackupDeploy
 				if (rec.mainB.getState(0))
 				{
+#if LoRamode
+					rec.mainB.getStateReset(); // Serial -> SD -> LoRa
+#endif // LoRamode
 					SDC.theFile.print(F("Act MainB:"));
 					SDC.theFile.print(rec.mainB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
@@ -1627,6 +1648,9 @@ inline void SDSend()
 #if DualDeploy
 				if (rec.drogB.getState(0))
 				{
+#if LoRamode
+					rec.drogB.getStateReset(); // Serial -> SD -> LoRa
+#endif // LoRamode
 					SDC.theFile.print(F("Act DrogueB:"));
 					SDC.theFile.print(rec.drogB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
@@ -1747,6 +1771,7 @@ inline void LoRaSend()
 #if ApoGee
 	if (rec.mainN.getState(0))
 	{
+		// rec.mainN.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act MainN:"));
 		LoRa.print(rec.mainN.getDeploymentHeight());
 		LoRa.print(F("m\t"));
@@ -1758,6 +1783,7 @@ inline void LoRaSend()
 #if DualDeploy
 	if (rec.drogN.getState(0))
 	{
+		// rec.drogN.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act DrogueN:"));
 		LoRa.print(rec.drogN.getDeploymentHeight());
 		LoRa.print(F("m\t"));
@@ -1770,6 +1796,7 @@ inline void LoRaSend()
 #if BackupDeploy
 	if (rec.mainB.getState(0))
 	{
+		// rec.mainB.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act MainB:"));
 		LoRa.print(rec.mainB.getDeploymentHeight());
 		LoRa.print(F("m\t"));
@@ -1778,7 +1805,9 @@ inline void LoRaSend()
 	else  LoRa.print(F("~\t"));
 #endif // USE_LoRa_CONTIGUOUS
 #if DualDeploy
-	if (rec.drogB.getState(0)) {
+	if (rec.drogB.getState(0))
+	{
+		// rec.drogB.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act DrogueB:"));
 		LoRa.print(rec.drogB.getDeploymentHeight());
 		LoRa.print(F("m\t"));

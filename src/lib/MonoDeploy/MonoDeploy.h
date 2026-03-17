@@ -68,6 +68,7 @@ public:
 	bool begin();
 	bool info();
 	bool getState(bool type = 1);
+	void getStateReset();
 	bool getGlobalState();
 	void refresh();
 
