@@ -69,7 +69,7 @@ public:
 	bool info();
 	bool getState(bool type = 1);
 	void getStateReset();
-	bool getGlobalState();
+	bool getGlobalState(bool type = 0);
 	void refresh();
 
 	void emergency(bool state, float T_EM);

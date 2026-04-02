@@ -96,8 +96,9 @@ void MonoDeploy::getStateReset()
 	stateAux = false;
 }
 
-bool MonoDeploy::getGlobalState()
+bool MonoDeploy::getGlobalState(bool type)
 {
+	if(type) return globalState || globalStateAux;
 	return globalState;
 }
 

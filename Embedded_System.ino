@@ -1769,7 +1769,13 @@ inline void LoRaSend()
 		//LRutil.oneTimeReset();
 
 #if ApoGee
-	if (rec.mainN.getState(0))
+	if (
+#if USE_LoRa_CONTIGUOUS
+		rec.mainN.getGlobalState(1)
+#else
+		rec.mainN.getState(0)
+#endif // USE_LoRa_CONTIGUOUS
+	)
 	{
 		// rec.mainN.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act MainN:"));
@@ -1781,7 +1787,13 @@ inline void LoRaSend()
 #endif // USE_LoRa_CONTIGUOUS
 
 #if DualDeploy
-	if (rec.drogN.getState(0))
+	if (
+#if USE_LoRa_CONTIGUOUS
+		rec.drogN.getGlobalState(1)
+#else
+		rec.drogN.getState(0)
+#endif // USE_LoRa_CONTIGUOUS
+	)
 	{
 		// rec.drogN.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act DrogueN:"));
@@ -1794,7 +1806,13 @@ inline void LoRaSend()
 #endif // DualDeploy
 
 #if BackupDeploy
-	if (rec.mainB.getState(0))
+	if (
+#if USE_LoRa_CONTIGUOUS
+		rec.mainB.getGlobalState(1)
+#else
+		rec.mainB.getState(0)
+#endif // USE_LoRa_CONTIGUOUS
+	)
 	{
 		// rec.mainB.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act MainB:"));
@@ -1805,7 +1823,13 @@ inline void LoRaSend()
 	else  LoRa.print(F("~\t"));
 #endif // USE_LoRa_CONTIGUOUS
 #if DualDeploy
-	if (rec.drogB.getState(0))
+	if (
+#if USE_LoRa_CONTIGUOUS
+		rec.drogB.getGlobalState(1)
+#else
+		rec.drogB.getState(0)
+#endif // USE_LoRa_CONTIGUOUS
+	)
 	{
 		// rec.drogB.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act DrogueB:"));
