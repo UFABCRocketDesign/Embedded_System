@@ -27,7 +27,7 @@ bool IMU20948::begin() {
   Wire.endTransmission();
 
   Wire.beginTransmission(address);
-  Wire.write(GYRO_CONFIG);
+  Wire.write(GYRO_CONFIG_1);
   Wire.write(0x1F);
   Wire.endTransmission();
 
@@ -56,7 +56,7 @@ bool IMU20948::begin() {
   Wire.write((0x00 & 0x03) << 4);                
   Wire.endTransmission();
 
-  Wire.beginTransmission(aaddress);
+  Wire.beginTransmission(address);
   Wire.write(INT_PIN_CFG);
   Wire.write(0x30);
   Wire.endTransmission();

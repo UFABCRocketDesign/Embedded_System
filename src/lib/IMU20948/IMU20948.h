@@ -30,5 +30,5 @@ public:
   float readAccel();
   float readGyro();
   float readMagn();
-}
+};
 #endif
