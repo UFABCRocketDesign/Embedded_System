@@ -60,6 +60,8 @@
 
 #define USE_LoRa_E32_settable (USE_LoRa_E32 && 0)
 
+#define USE_LoRa_KEYVALUE (LoRamode && 1)	// Send LoRa data Using Key-value pair
+
 /*************************** Others ***************************/
 
 #define ApoGee (USE_BARO && 1)				//Detection of apogee
@@ -466,6 +468,28 @@ void LoRaSetConfig()
 
 #endif //USE_LoRa_E32_settable
 #endif // USE_LoRa_E32
+
+#if USE_LoRa_KEYVALUE
+
+#define LoRa_KEY_LINE			"L" // Line
+#define LoRa_KEY_TIME			"T" // Time
+#define LoRa_KEY_LAT			"A" // Latitude
+#define LoRa_KEY_LON			"O" // Longitude
+#define LoRa_KEY_HOUR			"h" // horas
+#define LoRa_KEY_MIN			"n" // minutos
+#define LoRa_KEY_PREC			"g" // precisão
+#define LoRa_KEY_HEIGTH			"H" // altura atual
+#define LoRa_KEY_SD				"s" // SD
+#define LoRa_KEY_APG_HEIGHT		"a" // altura Apogeu
+#define LoRa_KEY_APG_TIME		"t" // tempo Apogeu
+#define LoRa_KEY_MAIN_NORMAL	"M" // Main Normal
+#define LoRa_KEY_DROGUE_NORMAL	"D" // Drogue Normal
+#define LoRa_KEY_MAIN_BACKUP	"m" // Main Backup
+#define LoRa_KEY_DROGUE_BACKUP	"d" // Drogue Backup
+#define LoRa_KEY_TEMPERATURE	"c" // Temperatura
+
+#endif // USE_LoRa_KEYVALUE
+
 #endif // LoRamode
 
 #if TalkingBoard
@@ -1719,23 +1743,62 @@ inline void beep()
 #if LoRamode
 inline void LoRaSend()
 {
+	/*
+	L - Line
+	T - Time
+	A - Latitude
+	O - Longitude
+	h - horas
+	n - minutos
+	g - precisão
+	H - altura atual
+	s - SD
+	a - altura Apogeu
+	t - tempo Apogeu
+	M - Main Normal
+	D - Drogue Normal
+	m - Main Backup
+	d - Drogue Backup
+	c - Temperatura
+	*/
 	if (LRutil.eachT(LoRaDelay))
 	{
 		LoRa.println();
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_LINE)); // >>L<<ine
+#endif // USE_LoRa_KEYVALUE
 		LoRa.print(LRutil.counter());
 		LoRa.print('\t');
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_TIME)); // >>T<<ime
+#endif // USE_LoRa_KEYVALUE
 		LoRa.print(LRutil.sinceBegin());
 		LoRa.print('\t');
 #if GPSmode
 		if(GpS.util.mem) { // Somente mandar dados validos apos primeira leitura bem sucedida
+#if USE_LoRa_KEYVALUE
+			LoRa.print(F(LoRa_KEY_LAT)); // l>A<titude
+#endif // USE_LoRa_KEYVALUE
 			LoRa.print(GpS.getLatitude(), 6);//Latitude
 			LoRa.print('\t');
+#if USE_LoRa_KEYVALUE
+			LoRa.print(F(LoRa_KEY_LON)); // l>O<ngitude
+#endif // USE_LoRa_KEYVALUE
 			LoRa.print(GpS.getLongitude(), 6);//Longitude
 			LoRa.print('\t');
+#if USE_LoRa_KEYVALUE
+			LoRa.print(F(LoRa_KEY_HOUR)); // >>h<<ora
+#endif // USE_LoRa_KEYVALUE
 			LoRa.print(GpS.getHour());//Hora
 			LoRa.print('\t');
+#if USE_LoRa_KEYVALUE
+			LoRa.print(F(LoRa_KEY_MIN)); // mi>>n<<uto
+#endif // USE_LoRa_KEYVALUE
 			LoRa.print(GpS.getMinute());//Minuto
 			LoRa.print('\t');
+#if USE_LoRa_KEYVALUE
+			LoRa.print(F(LoRa_KEY_PREC)); // Presicão >>g<<
+#endif // USE_LoRa_KEYVALUE
 			LoRa.print(GpS.getPrecision());//Precisao
 			LoRa.print('\t');
 		} else {
@@ -1743,23 +1806,28 @@ inline void LoRaSend()
 		}
 #endif // GPSmode
 #if ApoGee
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_HEIGTH)); // >>H<<eight
+#endif // USE_LoRa_KEYVALUE
 		LoRa.print(apg.getHeight());
 		LoRa.print('\t');
 		// LoRa.print(apg.getSigma(), 3);
 		// LoRa.print('\t');
 #endif // ApoGee
 #if SDCard
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_SD)); // >>s<<D
+#endif // USE_LoRa_KEYVALUE
 		LoRa.print(!SDC.util.mem);
 		LoRa.print('\t');
 #endif // SDCard
 #if ApoGee
 		if (Gutil.mem)
 		{
-			LoRa.print(F("H:"));
+			LoRa.print(F(LoRa_KEY_APG_HEIGHT)); // >>a<<pogee height
 			LoRa.print(apg.getApgPt());
-			LoRa.print(F(" m\tT:"));
+			LoRa.print(F("\t" LoRa_KEY_APG_TIME)); // apogee >>t<<ime
 			LoRa.print(apg.getApgTm());
-			LoRa.print(F(" s"));
 			LoRa.print('\t');
 		}
 #if USE_LoRa_CONTIGUOUS
@@ -1778,9 +1846,14 @@ inline void LoRaSend()
 	)
 	{
 		// rec.mainN.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_MAIN_NORMAL)); // >>M<<ain normal
+		LoRa.print(rec.mainN.getDeploymentHeight());
+#else
 		LoRa.print(F("Act MainN:"));
 		LoRa.print(rec.mainN.getDeploymentHeight());
 		LoRa.print(F("m\t"));
+#endif // USE_LoRa_KEYVALUE
 	}
 #if USE_LoRa_CONTIGUOUS
 	else  LoRa.print(F("~\t"));
@@ -1795,10 +1868,15 @@ inline void LoRaSend()
 #endif // USE_LoRa_CONTIGUOUS
 	)
 	{
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_DROGUE_NORMAL)); // >>D<<rogue normal
+		LoRa.print(rec.drogN.getDeploymentHeight());
+#else
 		// rec.drogN.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act DrogueN:"));
 		LoRa.print(rec.drogN.getDeploymentHeight());
 		LoRa.print(F("m\t"));
+#endif // USE_LoRa_KEYVALUE
 	}
 #if USE_LoRa_CONTIGUOUS
 	else  LoRa.print(F("~\t"));
@@ -1814,10 +1892,15 @@ inline void LoRaSend()
 #endif // USE_LoRa_CONTIGUOUS
 	)
 	{
-		// rec.mainB.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_MAIN_BACKUP)); // >>m<<ain backup
+		LoRa.print(rec.mainB.getDeploymentHeight());
+#else
+	// rec.mainB.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act MainB:"));
 		LoRa.print(rec.mainB.getDeploymentHeight());
 		LoRa.print(F("m\t"));
+#endif // USE_LoRa_KEYVALUE
 	}
 #if USE_LoRa_CONTIGUOUS
 	else  LoRa.print(F("~\t"));
@@ -1831,10 +1914,15 @@ inline void LoRaSend()
 #endif // USE_LoRa_CONTIGUOUS
 	)
 	{
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_DROGUE_BACKUP)); // >>d<<rogue Backup
+		LoRa.print(rec.drogB.getDeploymentHeight());
+#else
 		// rec.drogB.getStateReset(); // Serial -> SD -> LoRa // Último a ser realizado, não reseta
 		LoRa.print(F("Act DrogueB:"));
 		LoRa.print(rec.drogB.getDeploymentHeight());
 		LoRa.print(F("m\t"));
+#endif // USE_LoRa_KEYVALUE
 	}
 #if USE_LoRa_CONTIGUOUS
 	else  LoRa.print(F("~\t"));
@@ -1844,6 +1932,9 @@ inline void LoRaSend()
 
 #endif // ApoGee
 #if USE_BARO
+#if USE_LoRa_KEYVALUE
+		LoRa.print(F(LoRa_KEY_TEMPERATURE)); // >>c<< temperatura
+#endif // USE_LoRa_KEYVALUE
 		LoRa.print(baro.getTemperature());
 		LoRa.print('\t');
 #endif // USE_BARO
