@@ -5,6 +5,9 @@ bool MonoDeploy::apogee = false;
 unsigned long MonoDeploy::TimeZero = 0;
 unsigned long MonoDeploy::Tseal = 0;
 float MonoDeploy::height = 0;
+bool MonoDeploy::delaying = false;
+unsigned long MonoDeploy::delayingEndTime = 0;
+
 MonoDeploy::MonoDeploy(unsigned int commandPin, unsigned int infoPin, unsigned long actionTime, unsigned int systemMode): cPin(commandPin), iPin(infoPin), sysMode(systemMode), Tign((unsigned long)(actionTime * 1000000.0))
 {
 }
@@ -30,7 +33,7 @@ bool MonoDeploy::getApogee()
 
 void MonoDeploy::putHeight(float H)
 {
-	height = H;
+	if(!MonoDeploy::isDelaying()) height = H;
 }
 
 float MonoDeploy::getDeploymentHeight()
@@ -140,11 +143,15 @@ void MonoDeploy::refresh()
 #if SERVO_MODE
 	else if(sysMode == 1)
 	{
-		if (sPin) motor.write(90);
+		if (sPin == command) motor.write(90);
 		else motor.write(0);
 	}
 #endif
-	if (!globalStateAux && sPin == command)	globalStateAux = true;
+	if (!globalStateAux && sPin == command)
+	{
+		globalStateAux = true;
+		MonoDeploy::delayNextUpdate(); // Delay next update
+	}
 	else if (globalStateAux && sPin != command)	globalState = false;
 }
 
@@ -167,4 +174,25 @@ void MonoDeploy::emergency(bool state, float T_EM)
 		cmdDelay = cmdDelay_EM;
 	}
 	emergencyState = state;
+}
+
+void MonoDeploy::delayNextUpdate()
+{
+	if(!delaying)
+	{
+		delaying = true; // Set delaying
+		delayingEndTime = millis() + DELAYING_TIME_MS; // Set end of delaying time
+	}
+	// else if (delayingEndTime < millis())
+	// {
+	// 	delaying = false;
+	// }
+}
+
+bool MonoDeploy::isDelaying()
+{
+	if (delaying && delayingEndTime < millis()) { // Check end of delaying time
+		delaying = false; // Unset delaying
+	}
+	return delaying;
 }

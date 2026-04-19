@@ -15,6 +15,8 @@
 #include <Servo.h>
 #endif // SERVO_MODE
 
+#define DELAYING_TIME_MS 1500	// Time in ms to delay next deployment
+
 class MonoDeploy
 {
 	static const bool command = HIGH;	// Active state
@@ -23,10 +25,14 @@ class MonoDeploy
 	static unsigned long Tseal;			// Seal momment time
 	static float height;				// Internal representation of the height
 
+	static bool delaying;					// if it is waiting after deployment
+	static unsigned long delayingEndTime;	// When wait will finish
+
 	const unsigned long Tign;	// Active time
 	const unsigned int cPin;	// Command pin
 	const unsigned int iPin;	// Info pin
 	const unsigned int sysMode;	// system mode: Mode 0 - picotechnic; Mode 1 - servo motor
+
 #if SERVO_MODE
 	Servo motor;
 #endif
@@ -43,7 +49,7 @@ class MonoDeploy
 	bool useH_A = false; // Conditional height reached
 	bool useT_A = false; // Conditional time reached
 	bool cmdSeal = false; // Command seal, to avoid reprocessing
-	bool stateAux = false; // Current deplyment state
+	bool stateAux = false; // Current deployment state
 	bool globalState = true; // Current global deployment state (true after deployment)
 	bool globalStateAux = false; // Aux to processe Current global deployment state
 	bool sPin = !command; // Current output sate
@@ -73,6 +79,10 @@ public:
 	void refresh();
 
 	void emergency(bool state, float T_EM);
+
+private:
+	static void delayNextUpdate(); // Wait a while before analyzing the current height for the next deployment
+	static bool isDelaying(); // checks if it is waiting after deployment
 };
 
 #endif
