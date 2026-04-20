@@ -13,6 +13,20 @@
 
 #pragma endregion
 
+//////////////////////////////////////////////////CHOOSE MODE//////////////////////////////////////////////////
+
+#pragma region ModeSelection
+
+#include "src/lib/modes.h"
+
+#define USING_MODE MODE_LANCAMENTO
+// #define USING_MODE MODE_ELEVADOR
+// #define USING_MODE MODE_ASPIRADOR
+
+#include "src/lib/pressets.h"
+
+#pragma endregion
+
 /////////////////////////////////////////////////CONFIGURATION/////////////////////////////////////////////////
 
 #pragma region Configurations
@@ -31,7 +45,7 @@
 
 #define PRINT (0)							//Print or not things on Serial
 
-#define PROJECT_NAME "Arace"
+// #define PROJECT_NAME CURRENT_MODE_PROJECT_NAME
 
 /**************************** GY80 ****************************/
 #define USE_BMP085 (USE_GY80 || 0)			//Use BMP085 sensor
@@ -83,7 +97,9 @@
 
 #define DELAYED_MAIN (ApoGee && 1)			//Aways delay main deployment
 
+/*
 #define ELEVATOR (0)
+*/
 
 #define PbarT (PRINT && USE_BARO && 1)		//Print barometer temperature data
 #define PbarP (PRINT && USE_BARO && 1)		//Print barometer pressure data
@@ -156,13 +172,16 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define EM_mainN_DELAY 60					// Seconds before forced deployment
 
 #if DualDeploy
+/*
 #if ELEVATOR
 #define p2h 15								//Height to main parachute
 #else
 #define p2h 450								//Height to main parachute
 #endif // ELEVATOR
+*/
 
 #define EM_drogN_DELAY 10					// Seconds before forced deployment
+
 #endif // DualDeploy
 
 #if BackupDeploy
@@ -174,11 +193,13 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #endif // DELAYED_MAIN
 
 #if DualDeploy
+/*
 #if ELEVATOR
 #define p2h_D 10							//Height to main parachute on redundance mode
 #else
 #define p2h_D 400							//Height to main parachute on redundance mode
 #endif // ELEVATOR
+*/
 
 #define EM_drogB_DELAY 15					// Seconds before forced deployment
 #endif // DualDeploy
@@ -331,6 +352,7 @@ MonoDeploy Recovery::drogB pins_drogB;
 
 #endif // ApoGee
 
+/*
 #if WUF
 
 #if ELEVATOR
@@ -340,7 +362,9 @@ MonoDeploy Recovery::drogB pins_drogB;
 #endif // ELEVATOR
 
 #endif // WUF
+*/
 
+/*
 #if WUPS
 
 #if ELEVATOR
@@ -350,6 +374,7 @@ MonoDeploy Recovery::drogB pins_drogB;
 #endif // ELEVATOR
 
 #endif // WUPS
+*/
 
 #if USE_ACCEL
 #if 1 < ((USE_ADXL345) + (USE_MPU9250_ACCEL))
@@ -399,7 +424,7 @@ float MM_magn[3]{};
 #include <SD.h>
 #include "src/lib/SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
 
-SDCH SDC(SD_CS_PIN, PROJECT_NAME);						//Declaration of object to help SD card file management
+SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to help SD card file management
 #endif // SDCard
 
 #if GPSmode
@@ -529,7 +554,7 @@ MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
 // MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . = . > . [ . ] . { . }");
 #elif PSS_BUZZER
 Morse mensageiro(buzzPin, "~ ");
-// Morse mensageiro(buzzPin, PROJECT_NAME);
+// Morse mensageiro(buzzPin, CURRENT_MODE_PROJECT_NAME);
 #endif  // ACT_BUZZER / PSS_BUZZER
 Helpful Mutil;
 #endif // MORSE_MSG
@@ -580,7 +605,7 @@ void setup()
 #if ApoGee
 	rec.begin();
 #if DualDeploy
-	rec.mainN.setHeightCmd(p2h);
+	rec.mainN.setHeightCmd(CURRENT_MODE_P2H_NORMAL);
 #endif // DualDeploy
 #if DELAYED_MAIN
 	rec.mainN.setDelayCmd(sysDelay_main);
@@ -592,7 +617,7 @@ void setup()
 
 // Main
 #if DualDeploy
-	rec.mainB.setHeightCmd(p2h_D);
+	rec.mainB.setHeightCmd(CURRENT_MODE_P2H_BACKUP);
 #else
 #if DELAYED_MAIN
 	rec.mainB.setDelayCmd(sysDelay + sysDelay_main);
@@ -1054,7 +1079,7 @@ void setup()
 	////////////////WUF directive////////////////
 
 #if WUF
-	WaitUntilFlight(WUFheigh);
+	WaitUntilFlight(CURRENT_MODE_WUFheigh);
 #if COMmode
 	transmit(F("LiftOff confirmed"));
 #endif // COMmode
@@ -1074,7 +1099,7 @@ void setup()
 #endif // ApoGee
 
 #if WUPS
-	WaitUntilPressureStabilize(WUPSdelay);
+	WaitUntilPressureStabilize(CURRENT_MODE_WUPSdelay);
 #if COMmode
 	transmit(F("Pressure Stabilize timer expired"));
 #endif // COMmode
