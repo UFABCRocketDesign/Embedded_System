@@ -1802,7 +1802,28 @@ inline void LoRaSend()
 			LoRa.print(GpS.getPrecision());//Precisao
 			LoRa.print('\t');
 		} else {
-			LoRa.print(F("~\t~\t~\t~\t~\t"));
+			LoRa.print(F(
+#if USE_LoRa_KEYVALUE
+				LoRa_KEY_LAT
+#endif // USE_LoRa_KEYVALUE
+				"~\t"
+#if USE_LoRa_KEYVALUE
+				LoRa_KEY_LON
+#endif // USE_LoRa_KEYVALUE
+				"~\t"
+#if USE_LoRa_KEYVALUE
+				LoRa_KEY_HOUR
+#endif // USE_LoRa_KEYVALUE
+				"~\t"
+#if USE_LoRa_KEYVALUE
+				LoRa_KEY_MIN
+#endif // USE_LoRa_KEYVALUE
+				"~\t"
+#if USE_LoRa_KEYVALUE
+				LoRa_KEY_PREC
+#endif // USE_LoRa_KEYVALUE
+				"~\t"
+			));
 		}
 #endif // GPSmode
 #if ApoGee
@@ -1831,7 +1852,16 @@ inline void LoRaSend()
 			LoRa.print('\t');
 		}
 #if USE_LoRa_CONTIGUOUS
-	else  LoRa.print(F("~\t~\t"));
+	else  LoRa.print(F(
+#if USE_LoRa_KEYVALUE
+		LoRa_KEY_APG_HEIGHT
+#endif // USE_LoRa_KEYVALUE
+		"~\t"
+#if USE_LoRa_KEYVALUE
+		LoRa_KEY_APG_TIME
+#endif // USE_LoRa_KEYVALUE
+		"~\t"
+	));
 #endif // USE_LoRa_CONTIGUOUS
 #endif // ApoGee
 		//LRutil.oneTimeReset();
@@ -1856,7 +1886,12 @@ inline void LoRaSend()
 #endif // USE_LoRa_KEYVALUE
 	}
 #if USE_LoRa_CONTIGUOUS
-	else  LoRa.print(F("~\t"));
+	else  LoRa.print(F(
+#if USE_LoRa_KEYVALUE
+		LoRa_KEY_APG_HEIGHT
+#endif // FEYVALUE
+		"~\t"
+	));
 #endif // USE_LoRa_CONTIGUOUS
 
 #if DualDeploy
@@ -1879,7 +1914,12 @@ inline void LoRaSend()
 #endif // USE_LoRa_KEYVALUE
 	}
 #if USE_LoRa_CONTIGUOUS
-	else  LoRa.print(F("~\t"));
+	else  LoRa.print(F(
+#if USE_LoRa_KEYVALUE
+		LoRa_KEY_DROGUE_NORMAL
+#endif // USE_LoRa_KEYVALUE
+		"~\t"
+	));
 #endif // USE_LoRa_CONTIGUOUS
 #endif // DualDeploy
 
@@ -1903,7 +1943,12 @@ inline void LoRaSend()
 #endif // USE_LoRa_KEYVALUE
 	}
 #if USE_LoRa_CONTIGUOUS
-	else  LoRa.print(F("~\t"));
+	else  LoRa.print(F(
+#if USE_LoRa_KEYVALUE
+		LoRa_KEY_MAIN_BACKUP
+#endif // USE_LoRa_KEYVALUE
+		"~\t"
+	));
 #endif // USE_LoRa_CONTIGUOUS
 #if DualDeploy
 	if (
@@ -1925,7 +1970,12 @@ inline void LoRaSend()
 #endif // USE_LoRa_KEYVALUE
 	}
 #if USE_LoRa_CONTIGUOUS
-	else  LoRa.print(F("~\t"));
+	else  LoRa.print(F(
+#if USE_LoRa_KEYVALUE
+		LoRa_KEY_DROGUE_BACKUP
+#endif // USE_LoRa_KEYVALUE
+		"~\t"
+	));
 #endif // USE_LoRa_CONTIGUOUS
 #endif // DualDeploy
 #endif // BackupDeploy
