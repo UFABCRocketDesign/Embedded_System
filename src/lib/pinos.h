@@ -117,6 +117,9 @@
 #define SDA_I2C_ESP 8
 #define SCL_I2C_ESP 9
 
+#undef SD_CS_PIN
+#define SD_CS_PIN CS_SD_ESP
+
 #elif USING_SHIELD == ESP_MAIN_SMD_2026
 
 #define IGN_1 8	/*act1*/
@@ -150,6 +153,9 @@
 
 #define SDA_I2C_ESP 41
 #define SCL_I2C_ESP 42
+
+#undef SD_CS_PIN
+#define SD_CS_PIN CS_SD_ESP
 
 #else
 #error: Placa selecionada não está disponível
