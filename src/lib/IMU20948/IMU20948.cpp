@@ -2,15 +2,15 @@
 
 bool IMU20948::begin() {
 	Wire.beginTransmission(address);
-	Wire.write(REG_BANK_SEL);               
-	Wire.write((0x00 & 0x03) << 4);                
+	Wire.write(REG_BANK_SEL);
+	Wire.write((0x00 & 0x03) << 4);
 	Wire.endTransmission();
-  
+
   Wire.beginTransmission(address);
   Wire.write(PWR_MGMT_1);
   Wire.write(0x01);
   Wire.endTransmission();
-  
+
   Wire.beginTransmission(address);
   Wire.write(PWR_MGMT_2);
   Wire.write(0x00);
@@ -20,10 +20,10 @@ bool IMU20948::begin() {
   Wire.write(LP_CONFIG);
   Wire.write(0x00);
   Wire.endTransmission();
-  
+
   Wire.beginTransmission(address);
-  Wire.write(REG_BANK_SEL);               
-  Wire.write((0x02 & 0x03) << 4);                
+  Wire.write(REG_BANK_SEL);
+  Wire.write((0x02 & 0x03) << 4);
   Wire.endTransmission();
 
   Wire.beginTransmission(address);
@@ -52,13 +52,15 @@ bool IMU20948::begin() {
   Wire.endTransmission();
 
   Wire.beginTransmission(address);
-  Wire.write(REG_BANK_SEL);               
-  Wire.write((0x00 & 0x03) << 4);                
+  Wire.write(REG_BANK_SEL);
+  Wire.write((0x00 & 0x03) << 4);
   Wire.endTransmission();
 
   Wire.beginTransmission(address);
   Wire.write(INT_PIN_CFG);
   Wire.write(0x30);
   Wire.endTransmission();
+
+  return true;
 }
 

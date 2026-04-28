@@ -7,7 +7,9 @@
 #define USING_SHIELD MEGA_OCTA_PTH_MK_I
 // #define USING_SHIELD MEGA_STACK_DADOS_ACIONAMENTO_2019
 // #define USING_SHIELD MEGA_STACK_DADOS_ACIONAMENTO_2020
-// #define USING_SHIELD ESP_ESSENTIALS
+// #define USING_SHIELD ESP_ESSENTIALS_2025
+// #define USING_SHIELD ESP_ESSENTIALS_2026
+// #define USING_SHIELD ESP_MAIN_SMD_2026
 
 #include "src/lib/pinos.h"
 
@@ -422,6 +424,9 @@ float MM_magn[3]{};
 
 #include <SPI.h>
 #include <SD.h>
+#if ARDUINO_ARCH_ESP32
+	SPIClass SPI_SD(FSPI);
+#endif // ARDUINO_ARCH_ESP32
 #include "src/lib/SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
 
 SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to help SD card file management
@@ -429,7 +434,12 @@ SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to 
 
 #if GPSmode
 #include "src/lib/GyGPS/GyGPS.h" // Auxiliar para GPS
+#ifdef ARDUINO_ARCH_ESP32
+HardwareSerial GpSSerial(1);
+GyGPS GpS(GpSSerial, 0, SERIAL_8N1, RX_GPS_ESP, TX_GPS_ESP);
+#else
 GyGPS GpS(Serial1, 0);
+#endif // ARDUINO_ARCH_ESP32
 #endif // GPSmode
 
 #if LoRamode
@@ -442,7 +452,11 @@ GyGPS GpS(Serial1, 0);
 #else
 #define LoRaDelay 5
 #endif // USE_LoRa_DORJI || USE_LoRa_E32
+#ifdef ARDUINO_ARCH_ESP32
+HardwareSerial LoRa(2);
+#else
 HardwareSerial &LoRa(Serial3);
+#endif
 Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define LoRaBaudRate 9600
 #if USE_LoRa_E32
@@ -666,7 +680,11 @@ void setup()
 	pinMode(M0_LORA_PIN,OUTPUT); digitalWrite(M0_LORA_PIN,LOW);
 	pinMode(M1_LORA_PIN,OUTPUT); digitalWrite(M1_LORA_PIN,LOW);
 #endif // USE_LoRa_E32
+#ifdef ARDUINO_ARCH_ESP32
+	LoRa.begin(LoRaBaudRate, SERIAL_8N1, RX_LORA_ESP, TX_LORA_ESP);
+#else
 	LoRa.begin(LoRaBaudRate);
+#endif // ARDUINO_ARCH_ESP32
 #endif // LoRamode
 #endif  // USE_LoRa_E32_settable
 
@@ -695,7 +713,11 @@ void setup()
 #endif // GPSmode
 
 #if WIREmode
+#if ARDUINO_ARCH_ESP32
+	Wire.begin(SDA_I2C_ESP, SCL_I2C_ESP);
+#else
 	Wire.begin();
+#endif // ARDUINO_ARCH_ESP32
 #endif // WIREmode
 
 #if USE_BARO
@@ -815,6 +837,10 @@ void setup()
 
 
 #if SDCard
+
+#if ARDUINO_ARCH_ESP32
+	SPI_SD.begin(SCK_SD_ESP, MISO_SD_ESP, MOSI_SD_ESP, CS_SD_ESP);
+#endif // ARDUINO_ARCH_ESP32
 	SDC.begin();
 	if (SDC)
 	{

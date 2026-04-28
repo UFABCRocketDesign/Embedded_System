@@ -32,6 +32,11 @@ class GyGPS : public Sens
 	TinyGPS gps; // GPS object declaration
 #endif // USE_TINY_PLUS
 	const unsigned short GMT;
+
+	const uint32_t UARTconfig;
+	const int8_t UARTrxPin;
+	const int8_t UARTtxPin;
+
 	unsigned short sentences = 0; // GPS variables declaration
 	unsigned short failed = 0;
 	unsigned char satellites = 0;
@@ -51,7 +56,8 @@ class GyGPS : public Sens
 	byte second = 0;
 
 public:
-	GyGPS(HardwareSerial &S, short gmt = 0);
+	// GyGPS(HardwareSerial &S, short gmt = 0);
+	GyGPS(HardwareSerial &S, short gmt = 0, uint32_t config = SERIAL_8N1, int8_t rxPin = -1, int8_t txPin = -1);
 	Helpful util;				// Declaration of helpful object to GPS
 	unsigned short getFailed(); // Return functions
 	unsigned short getSentences();

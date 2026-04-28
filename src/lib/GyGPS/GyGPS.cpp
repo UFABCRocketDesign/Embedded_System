@@ -1,7 +1,13 @@
 #include "GyGPS.h"
 
 ///Dados do GPS
-GyGPS::GyGPS(HardwareSerial &S, short gmt) :GpSerial(S), GMT(gmt), Sens(0x0)
+GyGPS::GyGPS(HardwareSerial &S, short gmt, uint32_t config, int8_t rxPin, int8_t txPin) :
+GpSerial(S),
+GMT(gmt),
+UARTconfig(((rxPin == -1) && (txPin == -1)) ? 0x0 : config),
+UARTrxPin(rxPin),
+UARTtxPin(txPin),
+Sens(0x0)
 {
 }
 
@@ -92,7 +98,11 @@ byte GyGPS::getSecond()
 
 void GyGPS::begin()
 {
+#if ARDUINO_ARCH_ESP32
+	GpSerial.begin(9600, UARTconfig, UARTrxPin, UARTtxPin);
+#else
 	GpSerial.begin(9600);
+#endif // ARDUINO_ARCH_ESP32
 }
 
 bool GyGPS::readAll()
