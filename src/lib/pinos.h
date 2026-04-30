@@ -175,7 +175,7 @@
 				#define IGN_1 4	/*act1*/
 				#define IGN_2 6	/*act2*/
 				#define IGN_3 21	/*act3*/
-				#define IGN_4 48	/*act4*/
+				#define IGN_4 47	/*act4*/
 
 				#define HEAL_1 5	/*health 1*/
 				#define HEAL_2 7	/*health 2*/
