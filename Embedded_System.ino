@@ -1,15 +1,16 @@
-/////////////////////////////////////////////////CHOOSE SHIELD/////////////////////////////////////////////////
+/////////////////////////////////////////////////CHOOSE BOARD/////////////////////////////////////////////////
 
 #pragma region ShieldSelection
 
-#include "src/lib/shields.h"
+#include "src/lib/boards.h"
 
-#define USING_SHIELD MEGA_OCTA_PTH_MK_I
-// #define USING_SHIELD MEGA_STACK_DADOS_ACIONAMENTO_2019
-// #define USING_SHIELD MEGA_STACK_DADOS_ACIONAMENTO_2020
-// #define USING_SHIELD ESP_ESSENTIALS_2025
-// #define USING_SHIELD ESP_ESSENTIALS_2026
-// #define USING_SHIELD ESP_MAIN_SMD_2026
+#define USING_BOARD MEGA_OCTA_PTH_MK_I
+// #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
+// #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
+// #define USING_BOARD ESP_ESSENTIALS_2025
+// #define USING_BOARD ESP_ESSENTIALS_2026
+// #define USING_BOARD ESP_MAIN_SMD_2026
+// #define USING_BOARD ESP_JOHN_SI_SMD_2026
 
 #include "src/lib/pinos.h"
 
@@ -71,8 +72,8 @@
 
 #define USE_LoRa_CONTIGUOUS (LoRamode && 1)		// Force data columns to always exist
 
-#define USE_LoRa_DORJI (LoRamode && 0)		// Dorji LoRa Module (2019 and before)
-#define USE_LoRa_E32 (LoRamode && 1)		// E32 LoRa Module (2019 and before)
+#define USE_LoRa_DORJI (LoRamode && defined(BOARD_HAS_LoRa_DORJI))		// Dorji LoRa Module (2019 and before)
+#define USE_LoRa_E32 (LoRamode && defined(BOARD_HAS_LoRa_E32))		// E32 LoRa Module (2019 and before)
 
 #define USE_LoRa_E32_settable (USE_LoRa_E32 && 0)
 
@@ -94,10 +95,12 @@
 
 #define BlinkBuzzer (BuZZ && 0)
 #define RGB (0)								//RGB LED board
-#define DualDeploy (ApoGee && 1)			//Dual Parachute Deployment
-#define BackupDeploy (ApoGee && 1)				//Redundancy mode
 
-#define DELAYED_MAIN (ApoGee && 1)			//Aways delay main deployment
+#define AnyDeploy (ApoGee && defined(BOARD_HAS_IGN_1) && 1)				//Any Parachute Deployment
+#define DualDeploy (AnyDeploy && defined(BOARD_HAS_IGN_2) && 1)			//Dual Parachute Deployment
+#define BackupDeploy (AnyDeploy && defined(BOARD_HAS_IGN_3) && defined(BOARD_HAS_IGN_4) && 1)				//Redundancy mode
+
+#define DELAYED_MAIN (AnyDeploy && 1)			//Aways delay main deployment
 
 /*
 #define ELEVATOR (0)
@@ -168,10 +171,14 @@ bool baroHasData = false;
 
 #if ApoGee
 #include "src/lib/Apogeu/Apogeu.h" // Processamento de altitude e deteccao de apogeu
-#include "src/lib/MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
+
 Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)
 #define EM_mainN_DELAY 60					// Seconds before forced deployment
+
+
+#if AnyDeploy
+#include "src/lib/MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
 
 #if DualDeploy
 /*
@@ -352,6 +359,10 @@ MonoDeploy Recovery::drogB pins_drogB;
 
 #endif // BackupDeploy
 
+#else
+	#warning Essa compilacao nao realiza disparo de paraquedas
+#endif // AnyDeploy
+
 #endif // ApoGee
 
 /*
@@ -461,7 +472,7 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define LoRaBaudRate 9600
 #if USE_LoRa_E32
 #if !defined(M0_LORA_PIN) || !defined(M1_LORA_PIN) || !defined(AUX_LORA_PIN)
-#error: Placa selecionada não utiliza LoRa E32
+#error: Placa selecionada nao utiliza LoRa E32
 #endif
 #if USE_LoRa_E32_settable
 
@@ -616,7 +627,7 @@ void setup()
 	digitalWrite(bPin, !rgbCmd);
 #endif // RGB
 
-#if ApoGee
+#if AnyDeploy
 	rec.begin();
 #if DualDeploy
 	rec.mainN.setHeightCmd(CURRENT_MODE_P2H_NORMAL);
@@ -625,7 +636,7 @@ void setup()
 	rec.mainN.setDelayCmd(sysDelay_main);
 #endif // DELAYED_MAIN
 
-#endif // ApoGee
+#endif // AnyDeploy
 
 #if BackupDeploy
 
@@ -817,7 +828,7 @@ void setup()
 	}
 #endif // USE_MAGN
 
-#if ApoGee && COMmode
+#if AnyDeploy && COMmode
 	transmit(rec.mainN.info() ? F("\nIgnMainN ok") : F("\nIgnMainN err"));
 
 #if DualDeploy
@@ -833,7 +844,7 @@ void setup()
 
 #endif // BackupDeploy
 
-#endif // ApoGee && COMmode
+#endif // AnyDeploy && COMmode
 
 
 #if SDCard
@@ -1121,8 +1132,10 @@ void setup()
 
 #if ApoGee
 	apg.resetTimer();
-	rec.resetTimer();
 #endif // ApoGee
+#if AnyDeploy
+	rec.resetTimer();
+#endif // AnyDeploy
 
 #if WUPS
 	WaitUntilPressureStabilize(CURRENT_MODE_WUPSdelay);
@@ -1148,6 +1161,7 @@ void loop()
 
 #if ApoGee
 	if(baroHasData) apg.calcHeight(baro.getPressure());
+#if AnyDeploy
 	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
 	if (rec.getGlobalState())
 	{
@@ -1177,6 +1191,7 @@ void loop()
 		beep(SYSTEM_n); //rec
 #endif // BEEPING
 	}
+#endif // AnyDeploy
 #endif // ApoGee
 #if PWMapg
 	analogWrite(PWMout, (char)(apg.getSigma() * 255));
@@ -1686,7 +1701,7 @@ inline void SDSend()
 					SDC.theFile.print(F(" s"));
 					SDC.tab();
 				}
-
+#if AnyDeploy
 				if (rec.mainN.getState(0))
 				{
 #if LoRamode
@@ -1734,7 +1749,7 @@ inline void SDSend()
 
 #endif // BackupDeploy
 
-
+#endif // AnyDeploy
 
 			}
 #endif // ApoGee
@@ -1917,7 +1932,7 @@ inline void LoRaSend()
 #endif // ApoGee
 		//LRutil.oneTimeReset();
 
-#if ApoGee
+#if AnyDeploy
 	if (
 #if USE_LoRa_CONTIGUOUS
 		rec.mainN.getGlobalState(1)
@@ -2031,7 +2046,7 @@ inline void LoRaSend()
 #endif // DualDeploy
 #endif // BackupDeploy
 
-#endif // ApoGee
+#endif // AnyDeploy
 #if USE_BARO
 #if USE_LoRa_KEYVALUE
 		LoRa.print(F(LoRa_KEY_TEMPERATURE)); // >>c<< temperatura
@@ -2167,7 +2182,7 @@ inline void readEverything()
 }
 
 #endif // GPSmode
-#if ApoGee && (RBF || WUF)
+#if AnyDeploy && (RBF || WUF)
 	if (rec.mainN.info()) {
 		sysC++;
 	} else {
@@ -2208,7 +2223,7 @@ inline void readEverything()
 
 #endif // BackupDeploy
 
-#endif // ApoGee && (RBF || WUF)
+#endif // AnyDeploy && (RBF || WUF)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
