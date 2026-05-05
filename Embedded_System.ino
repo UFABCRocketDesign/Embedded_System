@@ -1580,6 +1580,7 @@ inline void SerialSend()
 		Serial.print(F(" s\t"));
 	}
 #if COMmode
+#if AnyDeploy
 	if (rec.getGlobalState())
 	{
 		if (rec.mainN.getState(0))
@@ -1629,6 +1630,7 @@ inline void SerialSend()
 #endif // DualDeploy
 #endif // BackupDeploy
 	}
+#endif // AnyDeploy
 #endif // COMmode
 
 #endif // PapgW
