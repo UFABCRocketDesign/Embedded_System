@@ -4,12 +4,12 @@
 
 #include "src/lib/boards.h"
 
-#define USING_BOARD MEGA_OCTA_PTH_MK_I
+// #define USING_BOARD MEGA_OCTA_PTH_MK_I
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
 // #define USING_BOARD ESP_ESSENTIALS_2025
 // #define USING_BOARD ESP_ESSENTIALS_2026
-// #define USING_BOARD ESP_MAIN_SMD_2026
+#define USING_BOARD ESP_MAIN_SMD_2026
 // #define USING_BOARD ESP_JOHN_SI_SMD_2026
 
 #include "src/lib/pinos.h"
@@ -38,6 +38,7 @@
 
 #define USE_GY80 (0)						//Use GY80 module
 #define USE_GY91 (0)						//Use GY91 module
+#define USE_GY912 (0)						//Use GY912 module
 
 #define SDCard (1)							//Use SD card
 #define GPSmode (1)							//Use GPS
@@ -46,7 +47,7 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
-#define PRINT (0)							//Print or not things on Serial
+#define PRINT (1)							//Print or not things on Serial
 
 // #define PROJECT_NAME CURRENT_MODE_PROJECT_NAME
 
@@ -57,13 +58,19 @@
 #define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
 
 /**************************** GY91 ****************************/
-#define USE_BMP280 (USE_GY91 || 1)			//Use BMP280 sensor
-#define USE_MPU9250_ACCEL (USE_GY91 || 1)	//Use MPU9250 sensor, accelerometer
-#define USE_MPU9250_GYRO (USE_GY91 || 1)	//Use MPU9250 sensor, gyroscope
+#define USE_BMP280 (USE_GY91 || 0)			//Use BMP280 sensor
+#define USE_MPU9250_ACCEL (USE_GY91 || 0)	//Use MPU9250 sensor, accelerometer
+#define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
 #define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
 
+/**************************** GY912 ****************************/
+#define USE_BMP388 (USE_GY912 || 1)			//Use BMP280 sensor
+#define USE_MPU9250_ACCEL (USE_GY912 || 0)	//Use MPU9250 sensor, accelerometer
+#define USE_MPU9250_GYRO (USE_GY912 || 0)	//Use MPU9250 sensor, gyroscope
+#define USE_AK8963 (USE_GY912 || 0)			//Use AK8963 sensor
+
 /************************** 9DoF IMU **************************/
-#define USE_BARO (USE_BMP085 || USE_BMP280)				// Use any Barometer
+#define USE_BARO (USE_BMP085 || USE_BMP280 || USE_BMP388)				// Use any Barometer
 #define USE_ACCEL (USE_ADXL345 || USE_MPU9250_ACCEL)	// Use any Accelerometer
 #define USE_GYRO (USE_L3G4200D || USE_MPU9250_GYRO)		// Use any Gyroscope
 #define USE_MAGN (USE_HMC5883 || USE_AK8963)			// Use any Magnetometer
@@ -96,7 +103,7 @@
 #define BlinkBuzzer (BuZZ && 0)
 #define RGB (0)								//RGB LED board
 
-#define AnyDeploy (ApoGee && defined(BOARD_HAS_IGN_1) && 1)				//Any Parachute Deployment
+#define AnyDeploy (ApoGee && defined(BOARD_HAS_IGN_1) && 0)				//Any Parachute Deployment
 #define DualDeploy (AnyDeploy && defined(BOARD_HAS_IGN_2) && 1)			//Dual Parachute Deployment
 #define BackupDeploy (AnyDeploy && defined(BOARD_HAS_IGN_3) && defined(BOARD_HAS_IGN_4) && 1)				//Redundancy mode
 
@@ -163,6 +170,9 @@ BMP085 baro;									//Barometer object declaration
 #elif USE_BMP280
 #include "src/lib/BMP280/BMP280.h" // Barometro BMP280
 BMP280 baro;									//Barometer object declaration
+#elif USE_BMP388
+#include "src/lib/BMP388/BMP388.h" // Barometro BMP388
+BMP388 baro;									//Barometer object declaration
 #endif // USE_BMP085 / USE_BMP280
 //MovingAverage MM_baro[2]{ (2),(2) };		//Array declaration of the moving average filter objects
 float MM_baro[2]{};
