@@ -8,8 +8,8 @@
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
 // #define USING_BOARD ESP_ESSENTIALS_2025
-// #define USING_BOARD ESP_ESSENTIALS_2026
-#define USING_BOARD ESP_MAIN_SMD_2026
+#define USING_BOARD ESP_ESSENTIALS_2026
+// #define USING_BOARD ESP_MAIN_SMD_2026
 // #define USING_BOARD ESP_JOHN_SI_SMD_2026
 
 #include "src/lib/pinos.h"
@@ -40,7 +40,7 @@
 #define USE_GY91 (0)						//Use GY91 module
 #define USE_GY912 (0)						//Use GY912 module
 
-#define SDCard (0)							//Use SD card
+#define SDCard (1)							//Use SD card
 #define GPSmode (0)							//Use GPS
 #define LoRamode (0)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
@@ -66,14 +66,14 @@
 /**************************** GY912 ****************************/
 #define USE_BMP388 (USE_GY912 || 1)			//Use BMP280 sensor
 #define USE_ICM20948_ACCEL (USE_GY912 || 1)	//Use ICM20948 sensor, accelerometer
-#define USE_ICM20948_GYRO (USE_GY912 || 0)	//Use ICM20948 sensor, gyroscope
-// #define USE_AK8963 (USE_GY912 || 0)			//Use AK8963 sensor
+#define USE_ICM20948_GYRO (USE_GY912 || 1)	//Use ICM20948 sensor, gyroscope
+#define USE_AK09916 (USE_GY912 || 0)			//Use AK09916 sensor
 
 /************************** 9DoF IMU **************************/
 #define USE_BARO (USE_BMP085 || USE_BMP280 || USE_BMP388)				// Use any Barometer
 #define USE_ACCEL (USE_ADXL345 || USE_MPU9250_ACCEL || USE_ICM20948_ACCEL)	// Use any Accelerometer
-#define USE_GYRO (USE_L3G4200D || USE_MPU9250_GYRO)		// Use any Gyroscope
-#define USE_MAGN (USE_HMC5883 || USE_AK8963)			// Use any Magnetometer
+#define USE_GYRO (USE_L3G4200D || USE_MPU9250_GYRO || USE_ICM20948_GYRO)		// Use any Gyroscope
+#define USE_MAGN (USE_HMC5883 || USE_AK8963 || USE_AK09916)			// Use any Magnetometer
 
 /**************************** LoRa ****************************/
 
@@ -417,7 +417,7 @@ float MM_accel[3]{};
 #endif // USE_ACCEL
 
 #if USE_GYRO
-#if 1 < ((USE_L3G4200D) + (USE_MPU9250_GYRO))
+#if 1 < ((USE_L3G4200D) + (USE_MPU9250_GYRO) + (USE_ICM20948_GYRO))
 #error: Múltiplos gisroscópios definidos
 #elif USE_L3G4200D
 #include "src/lib/L3G4200D/L3G4200D.h" // Gyroscope L3G4200D
@@ -425,13 +425,16 @@ L3G4200D giro(2000);							//Gyroscope object declaration
 #elif USE_MPU9250_GYRO
 #include "src/lib/MPU9250_GYRO/MPU9250_GYRO.h" // Gyroscope MPU9250_GYRO
 MPU9250_GYRO giro(2000);							//Gyroscope object declaration
+#elif USE_ICM20948_GYRO
+#include "src/lib/ICM20948_GYRO/ICM20948_GYRO.h" // Gyroscope MPU9250_GYRO
+ICM20948_GYRO giro(2000);							//Gyroscope object declaration
 #endif // USE_L3G4200D / USE_MPU9250_GYRO
 //MovingAverage MM_giro[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_giro[3]{};
 #endif // USE_GYRO
 
 #if USE_MAGN
-#if 1 < ((USE_HMC5883) + (USE_AK8963))
+#if 1 < ((USE_HMC5883) + (USE_AK8963) + (USE_AK09916))
 #error: Múltiplos magnetômetros definidos
 #elif USE_HMC5883
 #include "src/lib/HMC5883/HMC5883.h" // Magnetometer HMC5883
@@ -439,6 +442,9 @@ HMC5883 magn;									//Magnetometer object declaration
 #elif USE_AK8963
 #include "src/lib/AK8963/AK8963.h" // Magnetometer AK8963
 AK8963 magn;									//Magnetometer object declaration
+#elif USE_USE_AK09916
+#include "src/lib/USE_AK09916/USE_AK09916.h" // Magnetometer USE_AK09916
+USE_AK09916 magn;									//Magnetometer object declaration
 #endif // USE_HMC5883 / USE_AK8963
 //MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_magn[3]{};
@@ -454,7 +460,7 @@ float MM_magn[3]{};
 #include "src/lib/SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
 
 #if ARDUINO_ARCH_ESP32
-SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME, "txt", SPI_SD);						//Declaration of object to help SD card file management
+SDCH SDC(SD_CS_PIN, "/" CURRENT_MODE_PROJECT_NAME, "txt", SPI_SD);						//Declaration of object to help SD card file management
 #else
 SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to help SD card file management
 #endif // ARDUINO_ARCH_ESP32
