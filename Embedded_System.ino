@@ -67,7 +67,7 @@
 #define USE_BMP388 (USE_GY912 || 1)			//Use BMP280 sensor
 #define USE_ICM20948_ACCEL (USE_GY912 || 1)	//Use ICM20948 sensor, accelerometer
 #define USE_ICM20948_GYRO (USE_GY912 || 1)	//Use ICM20948 sensor, gyroscope
-#define USE_AK09916 (USE_GY912 || 0)			//Use AK09916 sensor
+#define USE_AK09916 (USE_GY912 || 1)			//Use AK09916 sensor
 
 /************************** 9DoF IMU **************************/
 #define USE_BARO (USE_BMP085 || USE_BMP280 || USE_BMP388)				// Use any Barometer
@@ -442,9 +442,9 @@ HMC5883 magn;									//Magnetometer object declaration
 #elif USE_AK8963
 #include "src/lib/AK8963/AK8963.h" // Magnetometer AK8963
 AK8963 magn;									//Magnetometer object declaration
-#elif USE_USE_AK09916
-#include "src/lib/USE_AK09916/USE_AK09916.h" // Magnetometer USE_AK09916
-USE_AK09916 magn;									//Magnetometer object declaration
+#elif USE_AK09916
+#include "src/lib/AK09916/AK09916.h" // Magnetometer USE_AK09916
+AK09916 magn;									//Magnetometer object declaration
 #endif // USE_HMC5883 / USE_AK8963
 //MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_magn[3]{};
