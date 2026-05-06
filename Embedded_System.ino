@@ -8,8 +8,8 @@
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
 // #define USING_BOARD ESP_ESSENTIALS_2025
-#define USING_BOARD ESP_ESSENTIALS_2026
-// #define USING_BOARD ESP_MAIN_SMD_2026
+// #define USING_BOARD ESP_ESSENTIALS_2026
+#define USING_BOARD ESP_MAIN_SMD_2026
 // #define USING_BOARD ESP_JOHN_SI_SMD_2026
 
 #include "src/lib/pinos.h"
@@ -40,7 +40,7 @@
 #define USE_GY91 (0)						//Use GY91 module
 #define USE_GY912 (0)						//Use GY912 module
 
-#define SDCard (1)							//Use SD card
+#define SDCard (0)							//Use SD card
 #define GPSmode (0)							//Use GPS
 #define LoRamode (0)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
@@ -65,13 +65,13 @@
 
 /**************************** GY912 ****************************/
 #define USE_BMP388 (USE_GY912 || 1)			//Use BMP280 sensor
-#define USE_MPU9250_ACCEL (USE_GY912 || 0)	//Use MPU9250 sensor, accelerometer
-#define USE_MPU9250_GYRO (USE_GY912 || 0)	//Use MPU9250 sensor, gyroscope
-#define USE_AK8963 (USE_GY912 || 0)			//Use AK8963 sensor
+#define USE_ICM20948_ACCEL (USE_GY912 || 1)	//Use ICM20948 sensor, accelerometer
+#define USE_ICM20948_GYRO (USE_GY912 || 0)	//Use ICM20948 sensor, gyroscope
+// #define USE_AK8963 (USE_GY912 || 0)			//Use AK8963 sensor
 
 /************************** 9DoF IMU **************************/
 #define USE_BARO (USE_BMP085 || USE_BMP280 || USE_BMP388)				// Use any Barometer
-#define USE_ACCEL (USE_ADXL345 || USE_MPU9250_ACCEL)	// Use any Accelerometer
+#define USE_ACCEL (USE_ADXL345 || USE_MPU9250_ACCEL || USE_ICM20948_ACCEL)	// Use any Accelerometer
 #define USE_GYRO (USE_L3G4200D || USE_MPU9250_GYRO)		// Use any Gyroscope
 #define USE_MAGN (USE_HMC5883 || USE_AK8963)			// Use any Magnetometer
 
@@ -95,8 +95,8 @@
 #define WUF (WU && 1)						//Wait Until Flight
 #define WUPS (WU && 1)						//Wait Until Pressure Stabilize
 
-#define ACT_BUZZER (BuZZ && 0)				//Active buzzer in hardware
-#define PSS_BUZZER (BuZZ && 1)				//Passive buzzer in hardware
+#define ACT_BUZZER (BuZZ && 1)				//Active buzzer in hardware
+#define PSS_BUZZER (BuZZ && 0)				//Passive buzzer in hardware
 #define MORSE_MSG (BuZZ && 1)				//Morse beeping
 #define BEEPING (BuZZ && 0)					//Buzzer mode
 
@@ -162,7 +162,7 @@
 #include "src/lib/Classes.h"
 
 #if USE_BARO
-#if 1 < ((USE_BMP085) + (USE_BMP280))
+#if 1 < ((USE_BMP085) + (USE_BMP280) + (USE_BMP388))
 #error: Múltiplos barômetros definidos
 #elif USE_BMP085
 #include "src/lib/BMP085/BMP085.h" // Barometro BMP085
@@ -400,7 +400,7 @@ MonoDeploy Recovery::drogB pins_drogB;
 */
 
 #if USE_ACCEL
-#if 1 < ((USE_ADXL345) + (USE_MPU9250_ACCEL))
+#if 1 < ((USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
 #error: Múltiplos acelerômetros definidos
 #elif USE_ADXL345
 #include "src/lib/ADXL345/ADXL345.h" // Accelerometer ADXL345
@@ -408,6 +408,9 @@ ADXL345 accel;									//Accelerometer object declaration
 #elif USE_MPU9250_ACCEL
 #include "src/lib/MPU9250_ACCEL/MPU9250_ACCEL.h" // Accelerometer MPU9250_ACCEL
 MPU9250_ACCEL accel(16);									//Accelerometer object declaration
+#elif USE_ICM20948_ACCEL
+#include "src/lib/ICM20948_ACCEL/ICM20948_ACCEL.h" // Accelerometer MPU9250_ACCEL
+ICM20948_ACCEL accel(16);									//Accelerometer object declaration
 #endif // USE_ADXL345 / USE_MPU9250_ACCEL
 //MovingAverage MM_accel[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
 float MM_accel[3]{};
@@ -740,6 +743,8 @@ void setup()
 #if WIREmode
 #if ARDUINO_ARCH_ESP32
 	Wire.begin(SDA_I2C_ESP, SCL_I2C_ESP);
+	Wire.setClock(400000);
+	Wire.setTimeOut(3000);
 #else
 	Wire.begin();
 #endif // ARDUINO_ARCH_ESP32

@@ -1,17 +1,18 @@
 #include "BMP388.h"
 
-BMP388::BMP388(float recalT) : Baro(BMP388_ADDRESS_DEFAULT, recalT) {}
+BMP388::BMP388(float recalT, uint8_t addr) : Baro(addr, recalT) {}
 
 void BMP388::begin() {
   Wire.beginTransmission(address);
   Wire.write(BMP3_REG_CALIB_DATA);
   Wire.endTransmission();
+  
   Wire.requestFrom(address, uint8_t(21));
 
   unsigned long temp = micros();
   while (Wire.available() < 21)
   {
-    if (temp + 100 < micros())
+    if (temp + 10 < micros())
       break;
   }
 

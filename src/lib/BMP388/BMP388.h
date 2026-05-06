@@ -20,7 +20,7 @@ class BMP388 : public Baro
   double t_lin;
 
 public:
-  BMP388(float recalT = 1.0);
+  BMP388(float recalT = 0.1, uint8_t addr = BMP388_ADDRESS_DEFAULT);
   void begin();
   bool readAll();
 
