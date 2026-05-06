@@ -1,7 +1,7 @@
 #include "SDCH.h"
 
 ///Auxiliar para o uso do cartao SD
-SDCH::SDCH(uint8_t csPin, String name, String type) :CS(csPin), Fname0(name), Ftype((type.length() == 3) ? type : (String)"txt"), coef(8 - name.length()), nMax(pow(10, (name.length() < 8) ? 8 - name.length() : 0))
+SDCH::SDCH(uint8_t csPin, String name, String type, SPIClass &spi_sd) :CS(csPin), Fname0(name), Ftype((type.length() == 3) ? type : (String)"txt"), coef(8 - name.length()), nMax(pow(10, (name.length() < 8) ? 8 - name.length() : 0)), SPI_SD(spi_sd)
 {
 	newName();
 }
@@ -27,7 +27,11 @@ void SDCH::newName()
 }
 bool SDCH::begin()
 {
+#if defined(ARDUINO_ESP32S3_DEV)
+	if (!SD.begin(CS, SPI_SD)) return false;
+#else
 	if (!SD.begin(CS)) return false;
+#endif // defined(ARDUINO_ESP32S3_DEV)
 	else
 	{ //Inicializa o SD
 		for (unsigned long int i = 0; i < nMax; i++)

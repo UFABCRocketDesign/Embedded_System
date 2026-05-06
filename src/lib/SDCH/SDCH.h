@@ -23,11 +23,12 @@ class SDCH
 	const String Ftype;
 	const uint8_t coef;
 	const unsigned long nMax;
+	SPIClass &SPI_SD;
 	unsigned long number = 0;
 	String Fname;
 	void newName();
 public:
-	SDCH(uint8_t csPin, String name, String type = "txt");
+	SDCH(uint8_t csPin, String name, String type = "txt", SPIClass &spi_sd = SPI);
 	File theFile;
 	Helpful util;
 	bool begin();

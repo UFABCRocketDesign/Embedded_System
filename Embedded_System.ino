@@ -8,8 +8,8 @@
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
 // #define USING_BOARD ESP_ESSENTIALS_2025
-// #define USING_BOARD ESP_ESSENTIALS_2026
-#define USING_BOARD ESP_MAIN_SMD_2026
+#define USING_BOARD ESP_ESSENTIALS_2026
+// #define USING_BOARD ESP_MAIN_SMD_2026
 // #define USING_BOARD ESP_JOHN_SI_SMD_2026
 
 #include "src/lib/pinos.h"
@@ -41,10 +41,10 @@
 #define USE_GY912 (0)						//Use GY912 module
 
 #define SDCard (1)							//Use SD card
-#define GPSmode (1)							//Use GPS
-#define LoRamode (1)						//Serial mode for transmission on LoRa module
+#define GPSmode (0)							//Use GPS
+#define LoRamode (0)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
-#define BuZZ (1)							//Buzzer mode
+#define BuZZ (0)							//Buzzer mode
 #define ForceSysC (0)
 
 #define PRINT (1)							//Print or not things on Serial
@@ -450,7 +450,11 @@ float MM_magn[3]{};
 #endif // ARDUINO_ARCH_ESP32
 #include "src/lib/SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
 
+#if ARDUINO_ARCH_ESP32
+SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME, "txt", SPI_SD);						//Declaration of object to help SD card file management
+#else
 SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to help SD card file management
+#endif // ARDUINO_ARCH_ESP32
 #endif // SDCard
 
 #if GPSmode
