@@ -1,27 +1,55 @@
 #include "Morse.h"
 
 // For letters
-const char *const Morse::letters[] PROGMEM = {
+const char *const Morse::letters[]
+#if defined(ARDUINO_ARCH_AVR)
+PROGMEM
+#endif
+ = {
 	".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",	 // A-I
 	".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", // J-R
 	"...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."		 // S-Z
 };
 
 // For Numbers
-const char *const Morse::numbers[] PROGMEM = {
+const char *const Morse::numbers[]
+#if defined(ARDUINO_ARCH_AVR)
+PROGMEM
+#endif
+ = {
 	"-----", ".----", "..---", "...--", "....-",
 	".....", "-....", "--...", "---..", "----."};
 
 // For Space
-const char *const Morse::space[] PROGMEM = {"*"};
+const char *const Morse::space[]
+#if defined(ARDUINO_ARCH_AVR)
+PROGMEM
+#endif
+ = {"*"};
 
 // For Morse
-const char *const Morse::morse[] PROGMEM = {"-", "."};
+const char *const Morse::morse[]
+#if defined(ARDUINO_ARCH_AVR)
+PROGMEM
+#endif
+ = {"-", "."};
 
 // For Alarms
-const char *const Morse::tilde[] PROGMEM = {"{", "|", "}", "~"};
-const char *const Morse::zigzag[] PROGMEM = {"[", "\\", "]", "^", "_"};
-const char *const Morse::compare[] PROGMEM = {"<", "=", ">"};
+const char *const Morse::tilde[]
+#if defined(ARDUINO_ARCH_AVR)
+PROGMEM
+#endif
+ = {"{", "|", "}", "~"};
+const char *const Morse::zigzag[]
+#if defined(ARDUINO_ARCH_AVR)
+PROGMEM
+#endif
+ = {"[", "\\", "]", "^", "_"};
+const char *const Morse::compare[]
+#if defined(ARDUINO_ARCH_AVR)
+PROGMEM
+#endif
+ = {"<", "=", ">"};
 
 Morse::Morse(uint8_t pin, String msg, unsigned int fDot, unsigned int fDash, unsigned int fAlrmHi, unsigned int fAlrmLo)
 	: buzzerPin(pin),
@@ -63,23 +91,71 @@ bool Morse::playMorseChar(char c)
 	if (isDigit(c))
 	{
 		// seq = Morse::numbers[c - '0'];
-		seq = (const char*)(pgm_read_ptr_near(Morse::numbers + (c - '0')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::numbers + (c - '0'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::numbers[c - '0']
+#endif // defined(ARDUINO_ARCH_AVR)
+				);
 		numAux = true;
 	}
 	else if (isUpperCase(c))
-		seq = (const char*)(pgm_read_ptr_near(Morse::letters + (c - 'A')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::letters + (c - 'A'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::letters[c - 'A']
+#endif // defined(ARDUINO_ARCH_AVR)
+		);
 	else if (isLowerCase(c))
-		seq = (const char*)(pgm_read_ptr_near(Morse::letters + (c - 'a')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::letters + (c - 'a'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::letters[c - 'a']
+#endif // defined(ARDUINO_ARCH_AVR)
+		);
 	else if (c == '-' || c == '.')
-		seq = (const char*)(pgm_read_ptr_near(Morse::morse + (c - '-')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::morse + (c - '-'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::morse[c - '-']
+#endif // defined(ARDUINO_ARCH_AVR)
+		);
 	else if (c >= '{' && c <= '~')
-		seq = (const char*)(pgm_read_ptr_near(Morse::tilde + (c - '{')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::tilde + (c - '{'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::tilde[c - '{']
+#endif // defined(ARDUINO_ARCH_AVR)
+		);
 	else if (c >= '[' && c <= '_')
-		seq = (const char*)(pgm_read_ptr_near(Morse::zigzag + (c - '[')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::zigzag + (c - '['))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::zigzag[c - '[']
+#endif // defined(ARDUINO_ARCH_AVR)
+		);
 	else if (c >= '<' && c <= '>')
-		seq = (const char*)(pgm_read_ptr_near(Morse::compare + (c - '<')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::compare + (c - '<'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::compare[c - '<']
+#endif // defined(ARDUINO_ARCH_AVR)
+		);
 	else
-		seq = (const char*)(pgm_read_ptr_near(Morse::space + 0));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::space + 0)
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::space
+#endif // defined(ARDUINO_ARCH_AVR)
+		);
 
 	float currentMillis = millis();
 
@@ -138,9 +214,9 @@ bool Morse::playMorseChar(char c)
 			currentMarkIndex++;
 			if (alarmSteps < currentMarkIndex)
 			{
-	#if _MORSE_PRINT
+#if _MORSE_PRINT
 					Serial.print(currentMark);
-	#endif // _MORSE_PRINT
+#endif // _MORSE_PRINT
 				currentMark = '\0';
 			}
 			tone(buzzerPin, signal);
@@ -154,9 +230,9 @@ bool Morse::playMorseChar(char c)
 			currentMarkIndex++;
 			if (alarmSteps < currentMarkIndex)
 			{
-	#if _MORSE_PRINT
+#if _MORSE_PRINT
 				Serial.print(currentMark);
-	#endif // _MORSE_PRINT
+#endif // _MORSE_PRINT
 				currentMark = '\0';
 			}
 			tone(buzzerPin, signal);
@@ -344,23 +420,71 @@ bool MorseAtvBzz::playMorseChar(char c)
 	if (isDigit(c))
 	{
 		// seq = Morse::numbers[c - '0'];
-		seq = (const char*)(pgm_read_ptr_near(Morse::numbers + (c - '0')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::numbers + (c - '0'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::numbers[c - '0']
+#endif
+		);
 		numAux = true;
 	}
 	else if (isUpperCase(c))
-		seq = (const char*)(pgm_read_ptr_near(Morse::letters + (c - 'A')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::letters + (c - 'A'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::letters[c - 'A']
+#endif
+		);
 	else if (isLowerCase(c))
-		seq = (const char*)(pgm_read_ptr_near(Morse::letters + (c - 'a')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::letters + (c - 'a'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::letters[c - 'a']
+#endif
+		);
 	else if (c == '-' || c == '.')
-		seq = (const char*)(pgm_read_ptr_near(Morse::morse + (c - '-')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::morse + (c - '-'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::morse[c - '-']
+#endif
+		);
 	else if (c >= '{' && c <= '~')
-		seq = (const char*)(pgm_read_ptr_near(Morse::tilde + (c - '{')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::tilde + (c - '{'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::tilde[c - '{']
+#endif
+		);
 	else if (c >= '[' && c <= '_')
-		seq = (const char*)(pgm_read_ptr_near(Morse::zigzag + (c - '[')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::zigzag + (c - '['))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::zigzag[c - '[']
+#endif
+		);
 	else if (c >= '<' && c <= '>')
-		seq = (const char*)(pgm_read_ptr_near(Morse::compare + (c - '<')));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::compare + (c - '<'))
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::compare[c - '<']
+#endif
+		);
 	else
-		seq = (const char*)(pgm_read_ptr_near(Morse::space + 0));
+		seq = (const char*)(
+#if defined(ARDUINO_ARCH_AVR)
+			pgm_read_ptr_near(Morse::space + 0)
+#elif defined(ARDUINO_ARCH_ESP32)
+			Morse::space
+#endif
+		);
 
 	float currentMillis = millis();
 
@@ -419,9 +543,9 @@ bool MorseAtvBzz::playMorseChar(char c)
 			currentMarkIndex++;
 			if (alarmSteps < currentMarkIndex)
 			{
-	#if _MORSE_PRINT
+#if _MORSE_PRINT
 				Serial.print(currentMark);
-	#endif // _MORSE_PRINT
+#endif // _MORSE_PRINT
 				currentMark = '\0';
 			}
 			alarmState = !alarmState;
