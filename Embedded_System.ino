@@ -8,8 +8,8 @@
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
 // #define USING_BOARD ESP_ESSENTIALS_2025
-#define USING_BOARD ESP_ESSENTIALS_2026
-// #define USING_BOARD ESP_MAIN_SMD_2026
+// #define USING_BOARD ESP_ESSENTIALS_2026
+#define USING_BOARD ESP_MAIN_SMD_2026
 // #define USING_BOARD ESP_JOHN_SI_SMD_2026
 
 #include "src/lib/pinos.h"
@@ -460,7 +460,7 @@ float MM_magn[3]{};
 #include "src/lib/SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
 
 #if ARDUINO_ARCH_ESP32
-SDCH SDC(SD_CS_PIN, "/" CURRENT_MODE_PROJECT_NAME, "txt", SPI_SD);						//Declaration of object to help SD card file management
+SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME, "txt", SPI_SD);						//Declaration of object to help SD card file management
 #else
 SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to help SD card file management
 #endif // ARDUINO_ARCH_ESP32

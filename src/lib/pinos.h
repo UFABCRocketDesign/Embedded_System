@@ -225,7 +225,7 @@
 				#define HEAL_3 7	/*health 3*/
 				#define HEAL_4 5	/*health 4*/
 
-				#define buzzPin 42							//Pin that the buzzer is connected
+				#define buzzPin 2 						//Pin that the buzzer is connected
 
 				#define PWMout 35							//Pin that the LED who shows apogee state is connected
 
