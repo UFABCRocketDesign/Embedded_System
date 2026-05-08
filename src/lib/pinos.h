@@ -227,7 +227,7 @@
 
 				#define buzzPin 2 						//Pin that the buzzer is connected
 
-				#define PWMout 35							//Pin that the LED who shows apogee state is connected
+				#define PWMout 1							//Pin that the LED who shows apogee state is connected
 
 				#define M0_LORA_PIN 12 // Pinos adicionais do LoRa
 				#define M1_LORA_PIN 11 // Pinos adicionais do LoRa

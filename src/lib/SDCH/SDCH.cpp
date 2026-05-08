@@ -36,10 +36,10 @@ bool SDCH::begin()
 	{ //Inicializa o SD
 		for (unsigned long int i = 0; i < nMax; i++)
 		{ //Cria um arquivo com nome novo
-			if (!SD.exists(Fname)) break;
+			if (!SD.exists("/" + Fname)) break;
 			else newName();
 		}
-		theFile = SD.open(Fname, FILE_WRITE);
+		theFile = SD.open("/" + Fname, FILE_APPEND);
 		if (theFile)
 		{
 			theFile.close();
@@ -50,7 +50,7 @@ bool SDCH::begin()
 }
 bool SDCH::open()
 {
-	return theFile = SD.open(Fname, FILE_WRITE);
+	return theFile = SD.open("/" + Fname, FILE_APPEND);
 }
 size_t SDCH::tab()
 {
