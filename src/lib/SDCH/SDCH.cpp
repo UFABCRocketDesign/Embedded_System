@@ -39,7 +39,11 @@ bool SDCH::begin()
 			if (!SD.exists("/" + Fname)) break;
 			else newName();
 		}
+#if defined(ARDUINO_ARCH_AVR)
+		theFile = SD.open("/" + Fname, FILE_WRITE);
+#elif defined(ARDUINO_ARCH_ESP32)
 		theFile = SD.open("/" + Fname, FILE_APPEND);
+#endif
 		if (theFile)
 		{
 			theFile.close();
@@ -50,7 +54,11 @@ bool SDCH::begin()
 }
 bool SDCH::open()
 {
+#if defined(ARDUINO_ARCH_AVR)
+	return theFile = SD.open("/" + Fname, FILE_WRITE);
+#elif defined(ARDUINO_ARCH_ESP32)
 	return theFile = SD.open("/" + Fname, FILE_APPEND);
+#endif
 }
 size_t SDCH::tab()
 {
