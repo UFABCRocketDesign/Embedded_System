@@ -63,11 +63,11 @@
 #define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
 #define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
 
-/**************************** GY912 ****************************/
+/**************************** GY912 ***************************/
 #define USE_BMP388 (USE_GY912 || 1)			//Use BMP280 sensor
 #define USE_ICM20948_ACCEL (USE_GY912 || 1)	//Use ICM20948 sensor, accelerometer
 #define USE_ICM20948_GYRO (USE_GY912 || 1)	//Use ICM20948 sensor, gyroscope
-#define USE_AK09916 (USE_GY912 || 1)			//Use AK09916 sensor
+#define USE_AK09916 (USE_GY912 || 1)		//Use AK09916 sensor
 
 /************************** 9DoF IMU **************************/
 #define USE_BARO (USE_BMP085 || USE_BMP280 || USE_BMP388)				// Use any Barometer
@@ -101,7 +101,7 @@
 #define BEEPING (BuZZ && 0)					//Buzzer mode
 
 #define BlinkBuzzer (BuZZ && 0)
-#define RGB (0)								//RGB LED board
+#define RGB (defined(BOARD_HAS_RGB) && 0)								//RGB LED board
 
 #define AnyDeploy (ApoGee && defined(BOARD_HAS_IGN_1) && 0)				//Any Parachute Deployment
 #define DualDeploy (AnyDeploy && defined(BOARD_HAS_IGN_2) && 1)			//Dual Parachute Deployment
@@ -189,6 +189,8 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 
 #if AnyDeploy
 #include "src/lib/MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
+
+bool MonoDeploy::command = IGN_CMD;
 
 #if DualDeploy
 /*
@@ -589,7 +591,7 @@ unsigned short sysC = 0;
 #define buzzPin LED_BUILTIN
 #define buzzCmd HIGH
 #else
-#define buzzCmd LOW							//Buzzer is on in high state
+// #define buzzCmd LOW							//Buzzer is on in high state
 // #define buzzPin A0							//Pin that the buzzer is connected
 // #define buzzPin 49							//Pin that the buzzer is connected
 #endif // BlinkBuzzer
@@ -611,12 +613,12 @@ Helpful Mutil;
 Helpful beeper;
 #endif // BEEPING
 
-#if RGB
-#define rPin 7
-#define gPin 6
-#define bPin 5
-#define rgbCmd HIGH
-#endif // RGB
+// #if RGB
+// #define rPin 7
+// #define gPin 6
+// #define bPin 5
+// #define rgbCmd HIGH
+// #endif // RGB
 
 #if COMmode
 template <typename T> void transmit(T message);
@@ -642,12 +644,12 @@ void setup()
 #endif // RBF
 
 #if RGB
-	pinMode(rPin, OUTPUT);
-	pinMode(gPin, OUTPUT);
-	pinMode(bPin, OUTPUT);
-	digitalWrite(rPin, !rgbCmd);
-	digitalWrite(gPin, !rgbCmd);
-	digitalWrite(bPin, !rgbCmd);
+	pinMode(RGB_rPin, OUTPUT);
+	pinMode(RGB_gPin, OUTPUT);
+	pinMode(RGB_bPin, OUTPUT);
+	digitalWrite(RGB_rPin, !RGB_CMD);
+	digitalWrite(RGB_gPin, !RGB_CMD);
+	digitalWrite(RGB_bPin, !RGB_CMD);
 #endif // RGB
 
 #if AnyDeploy

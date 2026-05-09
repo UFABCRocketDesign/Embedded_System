@@ -34,7 +34,10 @@
 				#define HEAL_3 56	/*health 3*/
 				#define HEAL_4 58	/*health 4*/
 
+				#define IGN_CMD HIGH	/* State which ign is on */
+
 				#define buzzPin 54							//Pin that the buzzer is connected
+				#define buzzCmd LOW							//State which buzzer is on
 
 				#define PWMout 13							//Pin that the LED who shows apogee state is connected
 
@@ -59,7 +62,10 @@
 				#define HEAL_3 56	/*health 3*/
 				#define HEAL_4 58	/*health 4*/
 
+				#define IGN_CMD HIGH	/* State which ign is on */
+
 				#define buzzPin 22							//Pin that the buzzer is connected
+				#define buzzCmd LOW							//State which buzzer is on
 
 				#define PWMout 13							//Pin that the LED who shows apogee state is connected
 
@@ -86,7 +92,10 @@
 				#define HEAL_3 59	/*health 3*/
 				#define HEAL_4 61	/*health 4*/
 
+				#define IGN_CMD HIGH	/* State which ign is on */
+
 				#define buzzPin 22							//Pin that the buzzer is connected
+				#define buzzCmd LOW							//State which buzzer is on
 
 				#define PWMout 13							//Pin that the LED who shows apogee state is connected
 
@@ -139,6 +148,7 @@
 				// #define HEAL_4 	/*health 4*/
 
 				#define buzzPin 27							//Pin that the buzzer is connected
+				#define buzzCmd LOW							//State which buzzer is on
 
 				#define PWMout 12							//Pin that the LED who shows apogee state is connected
 
@@ -182,7 +192,18 @@
 				#define HEAL_3 2	/*health 3*/
 				#define HEAL_4 1	/*health 4*/
 
+				#define IGN_CMD HIGH	/* State which ign is on */
+
 				#define buzzPin 42							//Pin that the buzzer is connected
+				#define buzzCmd LOW							//State which buzzer is on
+
+				#define BOARD_HAS_RGB
+
+				#define RGB_rPin 35
+				#define RGB_gPin 36
+				#define RGB_bPin 37
+
+				#define RGB_CMD HIGH
 
 				#define PWMout 35							//Pin that the LED who shows apogee state is connected
 
@@ -225,7 +246,10 @@
 				#define HEAL_3 7	/*health 3*/
 				#define HEAL_4 5	/*health 4*/
 
+				#define IGN_CMD HIGH	/* State which ign is on */
+
 				#define buzzPin 2 						//Pin that the buzzer is connected
+				#define buzzCmd LOW							//State which buzzer is on
 
 				#define PWMout 1							//Pin that the LED who shows apogee state is connected
 
@@ -268,7 +292,10 @@
 				#define HEAL_3 9	/*health 3*/
 				#define HEAL_4 3	/*health 4*/
 
+				#define IGN_CMD HIGH	/* State which ign is on */
+
 				#define buzzPin 37							//Pin that the buzzer is connected
+				#define buzzCmd HIGH							//State which buzzer is on
 
 				#define PWMout 1							//Pin that the LED who shows apogee state is connected
 
