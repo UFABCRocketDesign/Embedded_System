@@ -4,12 +4,12 @@
 
 #include "src/lib/boards.h"
 
-// #define USING_BOARD MEGA_OCTA_PTH_MK_I
+#define USING_BOARD MEGA_OCTA_PTH_MK_I
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
 // #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
 // #define USING_BOARD ESP_ESSENTIALS_2025
 // #define USING_BOARD ESP_ESSENTIALS_2026
-#define USING_BOARD ESP_MAIN_SMD_2026
+// #define USING_BOARD ESP_MAIN_SMD_2026
 // #define USING_BOARD ESP_JOHN_SI_SMD_2026
 
 #include "src/lib/pinos.h"
@@ -25,6 +25,7 @@
 #define USING_MODE MODE_LANCAMENTO
 // #define USING_MODE MODE_ELEVADOR
 // #define USING_MODE MODE_ASPIRADOR
+// #define USING_MODE MODE_MANUAL
 
 #include "src/lib/pressets.h"
 
@@ -40,7 +41,7 @@
 #define USE_GY91 (0)						//Use GY91 module
 #define USE_GY912 (0)						//Use GY912 module
 
-#define SDCard (1)							//Use SD card
+#define SDCard (0)							//Use SD card
 #define GPSmode (0)							//Use GPS
 #define LoRamode (0)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
@@ -48,8 +49,6 @@
 #define ForceSysC (0)
 
 #define PRINT (1)							//Print or not things on Serial
-
-// #define PROJECT_NAME CURRENT_MODE_PROJECT_NAME
 
 /**************************** GY80 ****************************/
 #define USE_BMP085 (USE_GY80 || 0)			//Use BMP085 sensor
@@ -95,8 +94,8 @@
 #define WUF (WU && 1)						//Wait Until Flight
 #define WUPS (WU && 1)						//Wait Until Pressure Stabilize
 
-#define ACT_BUZZER (BuZZ && 1)				//Active buzzer in hardware
-#define PSS_BUZZER (BuZZ && 0)				//Passive buzzer in hardware
+#define ACT_BUZZER (BuZZ && 0)				//Active buzzer in hardware
+#define PSS_BUZZER (BuZZ && 1)				//Passive buzzer in hardware
 #define MORSE_MSG (BuZZ && 1)				//Morse beeping
 #define BEEPING (BuZZ && 0)					//Buzzer mode
 
@@ -104,14 +103,13 @@
 #define RGB (defined(BOARD_HAS_RGB) && 0)								//RGB LED board
 
 #define AnyDeploy (ApoGee && defined(BOARD_HAS_IGN_1) && 0)				//Any Parachute Deployment
-#define DualDeploy (AnyDeploy && defined(BOARD_HAS_IGN_2) && 1)			//Dual Parachute Deployment
-#define BackupDeploy (AnyDeploy && defined(BOARD_HAS_IGN_3) && defined(BOARD_HAS_IGN_4) && 1)				//Redundancy mode
+#define DualDeploy (AnyDeploy && defined(BOARD_HAS_IGN_3) && 1)			//Dual Parachute Deployment
+#define DrogueBackup (AnyDeploy && defined(BOARD_HAS_IGN_2) && DualDeploy && 1)	//Drogue Redundancy mode
+#define MainBackup (AnyDeploy && defined(BOARD_HAS_IGN_4) && 1)					//Main Redundancy mode
+
 
 #define DELAYED_MAIN (AnyDeploy && 1)			//Aways delay main deployment
 
-/*
-#define ELEVATOR (0)
-*/
 
 #define PbarT (PRINT && USE_BARO && 1)		//Print barometer temperature data
 #define PbarP (PRINT && USE_BARO && 1)		//Print barometer pressure data
@@ -151,7 +149,18 @@
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)
-#define SYSTEM_n (uint8_t(SDCard)+uint8_t(USE_BARO)+uint8_t(USE_ACCEL)+uint8_t(USE_GYRO)+uint8_t(USE_MAGN)+uint8_t(GPSmode)+uint8_t(ApoGee)+uint8_t(DualDeploy)+uint8_t(BackupDeploy)+uint8_t(DualDeploy && BackupDeploy))
+#define SYSTEM_n (
+		uint8_t(SDCard)+\
+		uint8_t(USE_BARO)+\
+		uint8_t(USE_ACCEL)+\
+		uint8_t(USE_GYRO)+\
+		uint8_t(USE_MAGN)+\
+		uint8_t(GPSmode)+\
+		uint8_t(AnyDeploy)+\
+		uint8_t(DualDeploy)+\
+		uint8_t(DrogueBackup)+\
+		uint8_t(MainBackup) \
+	) //Expected count of systems functioning for flight
 
 #pragma endregion
 
@@ -193,51 +202,25 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 bool MonoDeploy::command = IGN_CMD;
 
 #if DualDeploy
-/*
-#if ELEVATOR
-#define p2h 15								//Height to main parachute
-#else
-#define p2h 450								//Height to main parachute
-#endif // ELEVATOR
-*/
-
 #define EM_drogN_DELAY 10					// Seconds before forced deployment
-
 #endif // DualDeploy
 
-#if BackupDeploy
+#if DrogueBackup || MainBackup
 #define sysDelay 2.5
+#endif // DrogueBackup || MainBackup
+
+#if MainBackup
 #define EM_mainB_DELAY 65					// Seconds before forced deployment
+#endif // MainBackup
 
 #if DELAYED_MAIN
 #define sysDelay_main 1.0
 #endif // DELAYED_MAIN
 
-#if DualDeploy
-/*
-#if ELEVATOR
-#define p2h_D 10							//Height to main parachute on redundance mode
-#else
-#define p2h_D 400							//Height to main parachute on redundance mode
-#endif // ELEVATOR
-*/
-
+#if DrogueBackup
 #define EM_drogB_DELAY 15					// Seconds before forced deployment
-#endif // DualDeploy
+#endif // DrogueBackup
 
-#endif // BackupDeploy
-
-
-// #define pins_drogN (36, 68)  /*act1*/
-// #define pins_drogB (61, 62)  /*act2*/
-// //#define pins_mainN (8, 40, 20, 1)  /*act3*/
-// #define pins_mainN (46, 56)  /*act3*/
-// #define pins_mainB (55, 58)  /*act4*/
-
-// #define pins_drogN (A0, A1) /*act1*/
-// #define pins_drogB (A2, A3) /*act2*/
-// #define pins_mainN (A4, A5) /*act3*/
-// #define pins_mainB (A6, A7) /*act4*/
 
 #define pins_drogN (IGN_1, HEAL_1) /*act1*/
 #define pins_drogB (IGN_2, HEAL_2) /*act2*/
@@ -253,14 +236,14 @@ struct Recovery
 	static MonoDeploy drogN;
 #endif // DualDeploy
 
-#if BackupDeploy
+#if MainBackup
 	static MonoDeploy mainB;
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 	static MonoDeploy drogB;
-#endif // DualDeploy
+#endif // DrogueBackup
 
-#endif // BackupDeploy
 	static bool begin()
 	{
 		bool aux = true;
@@ -270,16 +253,13 @@ struct Recovery
 		aux &= drogN.begin();
 #endif // DualDeploy
 
-
-#if BackupDeploy
+#if MainBackup
 		aux &= mainB.begin();
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 		aux &= drogB.begin();
-#endif // DualDeploy
-
-#endif // BackupDeploy
-
+#endif // DrogueBackup
 
 		return aux;
 	}
@@ -292,14 +272,14 @@ struct Recovery
 				drogN.emergency(state, EM_drogN_DELAY);
 		#endif // DualDeploy
 
-		#if BackupDeploy
-				mainB.emergency(state, EM_mainB_DELAY);
+		#if MainBackup
+			mainB.emergency(state, EM_mainB_DELAY);
+		#endif // MainBackup
 
-		#if DualDeploy
+		#if DrogueBackup
 				drogB.emergency(state, EM_drogB_DELAY);
-		#endif // DualDeploy
+		#endif // DrogueBackup
 
-		#endif // BackupDeploy
 	}
 	static bool getGlobalState()
 	{
@@ -310,14 +290,14 @@ struct Recovery
 		aux |= drogN.getGlobalState();
 #endif // DualDeploy
 
-#if BackupDeploy
+#if MainBackup
 		aux |= mainB.getGlobalState();
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 		aux |= drogB.getGlobalState();
-#endif // DualDeploy
+#endif // DrogueBackup
 
-#endif // BackupDeploy
 		return aux;
 	}
 	static void refresh()
@@ -328,14 +308,14 @@ struct Recovery
 		drogN.refresh();
 #endif // DualDeploy
 
-#if BackupDeploy
+#if MainBackup
 		mainB.refresh();
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 		drogB.refresh();
-#endif // DualDeploy
+#endif // DrogueBackup
 
-#endif // BackupDeploy
 	}
 	static void resetTimer()
 	{
@@ -361,15 +341,13 @@ MonoDeploy Recovery::mainN pins_mainN;
 MonoDeploy Recovery::drogN pins_drogN;
 #endif // DualDeploy
 
-
-#if BackupDeploy
+#if MainBackup
 MonoDeploy Recovery::mainB pins_mainB;
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 MonoDeploy Recovery::drogB pins_drogB;
-#endif // DualDeploy
-
-#endif // BackupDeploy
+#endif // DrogueBackup
 
 #else
 	#warning Essa compilacao nao realiza disparo de paraquedas
@@ -590,12 +568,9 @@ unsigned short sysC = 0;
 #if BlinkBuzzer
 #define buzzPin LED_BUILTIN
 #define buzzCmd HIGH
-#else
-// #define buzzCmd LOW							//Buzzer is on in high state
-// #define buzzPin A0							//Pin that the buzzer is connected
-// #define buzzPin 49							//Pin that the buzzer is connected
 #endif // BlinkBuzzer
 #endif // BuZZ
+
 #if MORSE_MSG
 #include "src/lib/Morse/Morse.h"
 #define ALARM_DELAY 10					// Delay after alarm when all systems working properly
@@ -612,13 +587,6 @@ Helpful Mutil;
 #define holdT .1
 Helpful beeper;
 #endif // BEEPING
-
-// #if RGB
-// #define rPin 7
-// #define gPin 6
-// #define bPin 5
-// #define rgbCmd HIGH
-// #endif // RGB
 
 #if COMmode
 template <typename T> void transmit(T message);
@@ -663,9 +631,8 @@ void setup()
 
 #endif // AnyDeploy
 
-#if BackupDeploy
-
 // Main
+#if MainBackup
 #if DualDeploy
 	rec.mainB.setHeightCmd(CURRENT_MODE_P2H_BACKUP);
 #else
@@ -675,13 +642,13 @@ void setup()
 	rec.mainB.setDelayCmd(sysDelay);
 #endif // DELAYED_MAIN
 #endif // !DualDeploy
+#endif // MainBackup
 
 // Drogue
-#if DualDeploy
+#if DrogueBackup
 	rec.drogB.setDelayCmd(sysDelay);
-#endif // DualDeploy
+#endif // DrogueBackup
 
-#endif // BackupDeploy
 
 
 #if ACT_BUZZER
@@ -862,14 +829,14 @@ void setup()
 	transmit(rec.drogN.info() ? F("\nIgnDrogN ok") : F("\nIgnDrogN err"));
 #endif // DualDeploy
 
-#if BackupDeploy
+#if MainBackup
 	transmit(rec.mainB.info() ? F("\nIgnMainB ok") : F("\nIgnMainB err"));
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 	transmit(rec.drogB.info() ? F("\nIgnDrogB ok") : F("\nIgnDrogB err"));
-#endif // DualDeploy
+#endif // DrogueBackup
 
-#endif // BackupDeploy
 
 #endif // AnyDeploy && COMmode
 
@@ -1632,7 +1599,7 @@ inline void SerialSend()
 		}
 #endif // DualDeploy
 
-#if BackupDeploy
+#if MainBackup
 		if (rec.mainB.getState(0))
 		{
 #if SDCard
@@ -1642,8 +1609,9 @@ inline void SerialSend()
 			Serial.print(rec.mainB.getDeploymentHeight());
 			Serial.print(F("m\t"));
 		}
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 		if (rec.drogB.getState(0))
 		{
 #if SDCard
@@ -1654,8 +1622,7 @@ inline void SerialSend()
 			Serial.print(F("m\t"));
 		}
 
-#endif // DualDeploy
-#endif // BackupDeploy
+#endif // DrogueBackup
 	}
 #endif // AnyDeploy
 #endif // COMmode
@@ -1753,7 +1720,7 @@ inline void SDSend()
 				}
 #endif // DualDeploy
 
-#if BackupDeploy
+#if MainBackup
 				if (rec.mainB.getState(0))
 				{
 #if LoRamode
@@ -1763,8 +1730,9 @@ inline void SDSend()
 					SDC.theFile.print(rec.mainB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 				if (rec.drogB.getState(0))
 				{
 #if LoRamode
@@ -1774,9 +1742,8 @@ inline void SDSend()
 					SDC.theFile.print(rec.drogB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
-#endif // DualDeploy
+#endif // DrogueBackup
 
-#endif // BackupDeploy
 
 #endif // AnyDeploy
 
@@ -2018,7 +1985,7 @@ inline void LoRaSend()
 #endif // USE_LoRa_CONTIGUOUS
 #endif // DualDeploy
 
-#if BackupDeploy
+#if MainBackup
 	if (
 #if USE_LoRa_CONTIGUOUS
 		rec.mainB.getGlobalState(1)
@@ -2045,7 +2012,9 @@ inline void LoRaSend()
 		"~\t"
 	));
 #endif // USE_LoRa_CONTIGUOUS
-#if DualDeploy
+#endif // MainBackup
+
+#if DrogueBackup
 	if (
 #if USE_LoRa_CONTIGUOUS
 		rec.drogB.getGlobalState(1)
@@ -2072,8 +2041,7 @@ inline void LoRaSend()
 		"~\t"
 	));
 #endif // USE_LoRa_CONTIGUOUS
-#endif // DualDeploy
-#endif // BackupDeploy
+#endif // DrogueBackup
 
 #endif // AnyDeploy
 #if USE_BARO
@@ -2230,8 +2198,7 @@ inline void readEverything()
 	}
 #endif // DualDeploy
 
-
-#if BackupDeploy
+#if MainBackup
 	if (rec.mainB.info()) {
 		sysC++;
 	} else {
@@ -2239,8 +2206,9 @@ inline void readEverything()
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmb"; // .-. -- -...
 #endif  // MORSE_MSG
 	}
+#endif // MainBackup
 
-#if DualDeploy
+#if DrogueBackup
 	if (rec.drogB.info()) {
 		sysC++;
 	} else {
@@ -2248,9 +2216,7 @@ inline void readEverything()
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdb"; // .-. -.. -...
 #endif  // MORSE_MSG
 	}
-#endif // DualDeploy
-
-#endif // BackupDeploy
+#endif // DrogueBackup
 
 #endif // AnyDeploy && (RBF || WUF)
 }
