@@ -19,7 +19,7 @@
 
 class MonoDeploy
 {
-	static const bool command = HIGH;	// Active state
+	static const bool command;	// Active state
 	static bool apogee;					// Internal representation of the apogee state
 	static unsigned long TimeZero;		// Zero reference for timer (liftoff)
 	static unsigned long Tseal;			// Seal momment time

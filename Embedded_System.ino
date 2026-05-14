@@ -4,13 +4,18 @@
 
 #include "src/lib/boards.h"
 
-#define USING_BOARD MEGA_OCTA_PTH_MK_I
-// #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
-// #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
-// #define USING_BOARD ESP_ESSENTIALS_2025
-// #define USING_BOARD ESP_ESSENTIALS_2026
-// #define USING_BOARD ESP_MAIN_SMD_2026
-// #define USING_BOARD ESP_JOHN_SI_SMD_2026
+#if defined(ARDUINO_ARCH_AVR)
+	#define USING_BOARD MEGA_OCTA_PTH_MK_I
+	// #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2019
+	// #define USING_BOARD MEGA_STACK_DADOS_ACIONAMENTO_2020
+#elif defined(ARDUINO_ARCH_ESP32)
+	// #define USING_BOARD ESP_ESSENTIALS_2025
+	// #define USING_BOARD ESP_ESSENTIALS_2026
+	#define USING_BOARD ESP_MAIN_SMD_2026
+	// #define USING_BOARD ESP_JOHN_SI_SMD_2026
+#else
+	#error Nao existem placas para a arquitetura selecionada
+#endif
 
 #include "src/lib/pinos.h"
 
@@ -102,7 +107,7 @@
 #define BlinkBuzzer (BuZZ && 0)
 #define RGB (defined(BOARD_HAS_RGB) && 0)								//RGB LED board
 
-#define AnyDeploy (ApoGee && defined(BOARD_HAS_IGN_1) && 0)				//Any Parachute Deployment
+#define AnyDeploy (ApoGee && defined(BOARD_HAS_IGN_1) && 1)				//Any Parachute Deployment
 #define DualDeploy (AnyDeploy && defined(BOARD_HAS_IGN_3) && 1)			//Dual Parachute Deployment
 #define DrogueBackup (AnyDeploy && defined(BOARD_HAS_IGN_2) && DualDeploy && 1)	//Drogue Redundancy mode
 #define MainBackup (AnyDeploy && defined(BOARD_HAS_IGN_4) && 1)					//Main Redundancy mode
@@ -149,7 +154,7 @@
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)
-#define SYSTEM_n (
+#define SYSTEM_n ( \
 		uint8_t(SDCard)+\
 		uint8_t(USE_BARO)+\
 		uint8_t(USE_ACCEL)+\
@@ -199,7 +204,7 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #if AnyDeploy
 #include "src/lib/MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
 
-bool MonoDeploy::command = IGN_CMD;
+const bool MonoDeploy::command = IGN_CMD;
 
 #if DualDeploy
 #define EM_drogN_DELAY 10					// Seconds before forced deployment
@@ -572,7 +577,11 @@ unsigned short sysC = 0;
 #endif // BuZZ
 
 #if MORSE_MSG
+
+#define _MORSE_INTERRUPT 1				// Use interrupt to avoid beep bugs
+
 #include "src/lib/Morse/Morse.h"
+
 #define ALARM_DELAY 10					// Delay after alarm when all systems working properly
 #if ACT_BUZZER
 MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
@@ -580,6 +589,11 @@ MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
 #elif PSS_BUZZER
 Morse mensageiro(buzzPin, "~ ");
 // Morse mensageiro(buzzPin, CURRENT_MODE_PROJECT_NAME);
+
+#if _MORSE_INTERRUPT
+MORSE_INTERRPUT_PRESET(mensageiro);
+#endif _MORSE_INTERRUPT
+
 #endif  // ACT_BUZZER / PSS_BUZZER
 Helpful Mutil;
 #endif // MORSE_MSG
@@ -658,6 +672,11 @@ void setup()
 #if MORSE_MSG
 	mensageiro.setup();
 	mensageiro.updateMorse();
+
+#if _MORSE_INTERRUPT
+	morseInterruptionSetup();
+#endif _MORSE_INTERRUPT
+
 #endif // MORSE_MSG
 #if BEEPING
 	beep();
