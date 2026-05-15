@@ -50,7 +50,7 @@
 #define GPSmode (0)							//Use GPS
 #define LoRamode (0)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
-#define BuZZ (0)							//Buzzer mode
+#define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
 #define PRINT (1)							//Print or not things on Serial
@@ -101,7 +101,7 @@
 
 #define ACT_BUZZER (BuZZ && 0)				//Active buzzer in hardware
 #define PSS_BUZZER (BuZZ && 1)				//Passive buzzer in hardware
-#define MORSE_MSG (BuZZ && 1)				//Morse beeping
+#define MORSE_MSG  (BuZZ && 1)				//Morse beeping
 #define BEEPING (BuZZ && 0)					//Buzzer mode
 
 #define BlinkBuzzer (BuZZ && 0)
@@ -146,7 +146,7 @@
 #define Tcom (PRINT && 1)					//Print time counter
 #define Lcom (PRINT && 0)					//Print loop counter
 #define Ncom (PRINT && 0)					//Print eachN counter
-#define Ps_n (PRINT && 0)					//Print SYSTEM_n
+#define Ps_n (PRINT && 1)					//Print SYSTEM_n
 
 #define PWMapg (ApoGee && 1)				//Show the apogee coefficient in a LED
 
@@ -154,18 +154,38 @@
 
 #define COMmode (PRINT || LoRamode)
 #define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)
-#define SYSTEM_n ( \
-		uint8_t(SDCard)+\
-		uint8_t(USE_BARO)+\
-		uint8_t(USE_ACCEL)+\
-		uint8_t(USE_GYRO)+\
-		uint8_t(USE_MAGN)+\
-		uint8_t(GPSmode)+\
-		uint8_t(AnyDeploy)+\
-		uint8_t(DualDeploy)+\
-		uint8_t(DrogueBackup)+\
-		uint8_t(MainBackup) \
-	) //Expected count of systems functioning for flight
+constexpr uint8_t SYSTEM_n = ( 0
+	#if SDCard
+	+ 1
+	#endif // SDCard
+	#if USE_BARO
+	+ 1
+	#endif // USE_BARO
+	#if USE_ACCEL
+	+ 1
+	#endif // USE_ACCEL
+	#if USE_GYRO
+	+ 1
+	#endif // USE_GYRO
+	#if USE_MAGN
+	+ 1
+	#endif // USE_MAGN
+	#if GPSmode
+	+ 1
+	#endif // GPSmode
+	#if AnyDeploy
+	+ 1
+	#endif // AnyDeploy
+	#if DualDeploy
+	+ 1
+	#endif // DualDeploy
+	#if DrogueBackup
+	+ 1
+	#endif // DrogueBackup
+	#if MainBackup
+	+ 1
+		#endif // MainBackup
+); //Expected count of systems functioning for flight
 
 #pragma endregion
 
@@ -578,14 +598,14 @@ unsigned short sysC = 0;
 
 #if MORSE_MSG
 
-#define _MORSE_INTERRUPT 1				// Use interrupt to avoid beep bugs
+#define _MORSE_INTERRUPT (1)				// Use interrupt to avoid beep bugs
 
 #include "src/lib/Morse/Morse.h"
 
 #define ALARM_DELAY 10					// Delay after alarm when all systems working properly
 #if ACT_BUZZER
 MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
-// MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . = . > . [ . ] . { . }");
+// MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . # . > . [ . ] . { . }");
 #elif PSS_BUZZER
 Morse mensageiro(buzzPin, "~ ");
 // Morse mensageiro(buzzPin, CURRENT_MODE_PROJECT_NAME);
@@ -665,33 +685,38 @@ void setup()
 
 
 
+#if ((PRINT) || (PERF_Tcom_print))
+	Serial.begin(BaudRate);
+
+	#if defined(ARDUINO_ARCH_ESP32)
+	delay(ESP32_WAIT_TIME_MS); // Wait to ESP32 properly start
+	#endif // defined(ARDUINO_ARCH_ESP32)
+
+	Serial.println();
+#if Ps_n
+	Serial.print(F("System number: "));
+	Serial.println(SYSTEM_n);
+#endif // Ps_n
+#endif // ((PRINT) || (PERF_Tcom_print))
+
+
 #if ACT_BUZZER
 	pinMode(buzzPin, OUTPUT);
 	digitalWrite(buzzPin, !buzzCmd);
 #endif // ACT_BUZZER
 #if MORSE_MSG
 	mensageiro.setup();
-	mensageiro.updateMorse();
 
 #if _MORSE_INTERRUPT
 	morseInterruptionSetup();
-#endif _MORSE_INTERRUPT
+#endif // _MORSE_INTERRUPT
+
+	mensageiro.updateMorse();
 
 #endif // MORSE_MSG
 #if BEEPING
 	beep();
 #endif // BEEPING
-
-
-#if ((PRINT) || (PERF_Tcom_print))
-	Serial.begin(BaudRate);
-	Serial.println();
-#if Ps_n
-	Serial.print(F("System number: "));
-	Serial.println(SYSTEM_n);
-#endif // Ps_n
-
-#endif // Serial
 
 #if LoRamode
 #if USE_LoRa_E32_settable
@@ -1192,13 +1217,18 @@ void loop()
 #if MORSE_MSG
 		if(Mutil.oneTime())
 		{
-			mensageiro.msgAux = F(". ~ . ^ . < . = . > . [ . ] . { . } A ");
+			mensageiro.msgAux = F(". ~ . ^ . < . # . > . [ . ] . { . } A ");
 			mensageiro.msgAux += String(apg.getApgPt());
 			mensageiro.msgAux += F(" m");
 			mensageiro.setNextMessage(mensageiro.msgAux);
 			mensageiro.msgAux = "";
+			#if _MORSE_INTERRUPT
+			mensageiro.unsetQuiet();
+			#endif // _MORSE_INTERRUPT
 		}
+		#if !_MORSE_INTERRUPT
 		mensageiro.updateMorse();
+		#endif // !_MORSE_INTERRUPT
 #endif // MORSE_MSG
 #if BEEPING
 		beep(SYSTEM_n); //rec
@@ -1222,9 +1252,9 @@ void loop()
 	LoRaSend();
 #endif // LoRamode
 
-#if MORSE_MSG && ForceSysC
+#if MORSE_MSG && ForceSysC && (!_MORSE_INTERRUPT)
 	mensageiro.updateMorse();
-#endif // MORSE_MSG
+#endif // MORSE_MSG  && ForceSysC && (!_MORSE_INTERRUPT)
 #if BEEPING && ForceSysC
 	beep(sysC);
 #elif BEEPING && !WUF && !RBF && !ApoGee
@@ -1233,6 +1263,7 @@ void loop()
 }
 #pragma endregion
 
+#pragma region Modules
 //////////////////////////////////////////////////////RBF//////////////////////////////////////////////////////
 
 #if RBF
@@ -1345,23 +1376,37 @@ inline void WaitUntilFlight(float minHeight)
 		WaitUntil();
 
 #if MORSE_MSG
-		// if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("= "+mensageiro.msgAux);
+		// if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("# "+mensageiro.msgAux);
 		// if(mensageiro.updateMorse()) Mutil.oneTimeReset();
 
 		if(mensageiro.msgAux.length() > 0) { // Any system failed
-			if(Mutil.oneTime()) mensageiro.setNextMessage("= "+mensageiro.msgAux);
-			if(mensageiro.updateMorse()) Mutil.oneTimeReset();
+			if(Mutil.oneTime()) mensageiro.setNextMessage("# "+mensageiro.msgAux);
+			#if _MORSE_INTERRUPT
+			mensageiro.unsetQuiet();
+			#else
+			mensageiro.updateMorse();
+			#endif // !_MORSE_INTERRUPT
+			if(mensageiro.getMessageComplete()) Mutil.oneTimeReset();
 		} else { // No system failed
 			if(!mensageiro.getQuiet())
 			{
-				if(mensageiro.updateMorse()) // After sound sequence completed
+				#if !_MORSE_INTERRUPT
+				mensageiro.updateMorse();
+				#endif // !_MORSE_INTERRUPT
+				if(mensageiro.getMessageComplete()) // After sound sequence completed
 				{
 					mensageiro.setQuiet(); // Mute sound
 					Mutil.forT(ALARM_DELAY); // Wait some time
 				}
 			}
 			else {
-				if(!Mutil.forT()) mensageiro.updateMorse(); // Restart sound
+				if(!Mutil.forT()) {
+					#if _MORSE_INTERRUPT
+					mensageiro.unsetQuiet();
+					#else
+					mensageiro.updateMorse(); // Restart sound
+					#endif // _MORSE_INTERRUPT
+				}
 			}
 		}
 #endif // MORSE_MSG
@@ -2239,6 +2284,7 @@ inline void readEverything()
 
 #endif // AnyDeploy && (RBF || WUF)
 }
+#pragma endregion
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

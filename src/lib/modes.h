@@ -1,6 +1,6 @@
 // modes.h
 
-#pragma onde
+#pragma once
 
 #ifndef _MODES_H
 #define _MODES_H

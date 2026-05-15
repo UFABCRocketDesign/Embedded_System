@@ -119,6 +119,7 @@ void Morse::setNextMessage(String message)
 
 void Morse::setQuiet()
 {
+	messageComplete = false;
 	#if defined(ARDUINO_ARCH_AVR)
 	noTone(buzzerPin);
 	#elif defined(ARDUINO_ARCH_ESP32)
@@ -139,9 +140,29 @@ void Morse::setQuiet()
 	#endif // _MORSE_INTERRUPT
 }
 
+void Morse::unsetQuiet()
+{
+	#if _MORSE_INTERRUPT
+	if(quiet){
+		#if defined(ARDUINO_ARCH_AVR)
+		TIMSKn |= (1 << OCIEnA);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		timerAlarmEnable(_morseTimer);
+		#endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
+	}
+	#endif // _MORSE_INTERRUPT
+	// ets_printf("updateMorse0\n");
+	quiet = false;
+}
+
 bool Morse::getQuiet()
 {
 	return quiet;
+}
+
+bool Morse::getMessageComplete()
+{
+	return messageComplete;
 }
 
 char const* Morse::selectSeq(char c){
@@ -510,17 +531,18 @@ bool Morse::playMorseChar(char c)
 
 bool Morse::updateMorse()
 {
-	#if _MORSE_INTERRUPT
-	if(quiet){
-		#if defined(ARDUINO_ARCH_AVR)
-		TIMSKn |= (1 << OCIEnA);
-		#elif defined(ARDUINO_ARCH_ESP32)
-		timerAlarmEnable(_morseTimer);
-		#endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
-	}
-	#endif // _MORSE_INTERRUPT
-	// ets_printf("updateMorse0\n");
-	quiet = false;
+	// #if _MORSE_INTERRUPT
+	// if(quiet){
+	// 	#if defined(ARDUINO_ARCH_AVR)
+	// 	TIMSKn |= (1 << OCIEnA);
+	// 	#elif defined(ARDUINO_ARCH_ESP32)
+	// 	timerAlarmEnable(_morseTimer);
+	// 	#endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
+	// }
+	// #endif // _MORSE_INTERRUPT
+	// // ets_printf("updateMorse0\n");
+	// quiet = false;
+	unsetQuiet();
 	if (currentCharIndex == 0 && newMessage)
 	{
 		// currentMessage = nextMessage;
@@ -542,6 +564,7 @@ bool Morse::updateMorse()
 	else
 	{
 		currentCharIndex = 0;
+		messageComplete = true;
 		#if _MORSE_PRINT
 		Serial.println();
 		#endif // _MORSE_PRINT
@@ -565,10 +588,21 @@ void MorseAtvBzz::setup()
 
 void MorseAtvBzz::setQuiet()
 {
+	messageComplete = false;
 	digitalWrite(buzzerPin, !buzzerCmd);
 	currentCharIndex = 0;
 	currentMarkIndex = 0;
 	quiet = true;
+
+	#if _MORSE_INTERRUPT
+
+	#if defined(ARDUINO_ARCH_AVR)
+	TIMSKn &= ~(1 << OCIEnA);
+	#elif defined(ARDUINO_ARCH_ESP32)
+	timerAlarmDisable(_morseTimer);
+	#endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
+
+	#endif // _MORSE_INTERRUPT
 }
 
 bool MorseAtvBzz::playMorseChar(char c)

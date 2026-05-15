@@ -116,6 +116,7 @@ protected:
 	// String nextMessage = "";
 	bool newMessage = false;
 	bool quiet = false;
+	bool messageComplete = false; // verdadeiro após a mensagem ser concluida pelo menos uma vez, setQuiet() resseta este valor
 
 	char const* _MORSE_FUNCTION_ATTR selectSeq(char c);
 	virtual bool _MORSE_FUNCTION_ATTR playMorseChar(char c);
@@ -129,7 +130,9 @@ public:
 	void setNextMessage(String message); // Configura a próxima mensagem (só vai tocar quando a atual acabar)
 	bool _MORSE_FUNCTION_ATTR updateMorse(); // Toca a mensagem e retorna verdadeiro toda vez que acaba
 	virtual void setQuiet(); // Silencia o sistema
+	void unsetQuiet(); // Reativa o sistema
 	bool getQuiet(); // Verifica se o sistema está silenciado
+	bool getMessageComplete(); // Retorna verdadeiro após a mensagem ser concluida pelo menos uma vez, setQuiet() resseta este valor
 };
 
 class MorseAtvBzz : public Morse
@@ -257,6 +260,9 @@ void ARDUINO_ISR_ATTR InterruptServiceRoutine() { \
 
 void morseInterruptionSetup()
 {
+	#if _MORSE_PRINT
+	Serial.println("ISR config ini");
+	#endif // _MORSE_PRINT
 
 	#if defined(ARDUINO_ARCH_AVR)
 	cli();  // Disable interrupts
@@ -291,6 +297,9 @@ void morseInterruptionSetup()
 
 	#endif // define(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_ESP32)
 
+	#if _MORSE_PRINT
+	Serial.println("ISR config fin");
+	#endif // _MORSE_PRINT
 }
 
 #endif // _MORSE_INTERRUPT

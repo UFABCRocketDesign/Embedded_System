@@ -131,6 +131,8 @@
 
 		#warning Utilizando placa em arquitetura ESP32
 
+		#define ESP32_WAIT_TIME_MS 50
+
 		#if defined(ARDUINO_ESP32S3_DEV)
 
 			#if USING_BOARD == ESP_ESSENTIALS_2025
