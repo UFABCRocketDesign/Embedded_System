@@ -598,25 +598,27 @@ unsigned short sysC = 0;
 
 #if MORSE_MSG
 
-#define _MORSE_INTERRUPT (1)				// Use interrupt to avoid beep bugs
+// #define MORSE_INTERRUPT (1)				// Use interrupt to avoid beep bugs
 
 #include "src/lib/Morse/Morse.h"
 
 #define ALARM_DELAY 10					// Delay after alarm when all systems working properly
+
 #if ACT_BUZZER
 MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
 // MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . # . > . [ . ] . { . }");
 #elif PSS_BUZZER
 Morse mensageiro(buzzPin, "~ ");
 // Morse mensageiro(buzzPin, CURRENT_MODE_PROJECT_NAME);
-
-#if _MORSE_INTERRUPT
-MORSE_INTERRPUT_PRESET(mensageiro);
-#endif _MORSE_INTERRUPT
-
 #endif  // ACT_BUZZER / PSS_BUZZER
+
+#if MORSE_INTERRUPT
+MORSE_INTERRPUT_PRESET(mensageiro);
+#endif // MORSE_INTERRUPT
+
 Helpful Mutil;
 #endif // MORSE_MSG
+
 #if BEEPING
 #define holdT .1
 Helpful beeper;
@@ -707,9 +709,9 @@ void setup()
 #if MORSE_MSG
 	mensageiro.setup();
 
-#if _MORSE_INTERRUPT
+#if MORSE_INTERRUPT
 	morseInterruptionSetup();
-#endif // _MORSE_INTERRUPT
+#endif // MORSE_INTERRUPT
 
 	mensageiro.updateMorse();
 
@@ -1217,18 +1219,18 @@ void loop()
 #if MORSE_MSG
 		if(Mutil.oneTime())
 		{
-			mensageiro.msgAux = F(". ~ . ^ . < . # . > . [ . ] . { . } A ");
+			mensageiro.msgAux = F("| ~ | # | ^ | < | > | [ | ] | { | } | _ | $ | % A ");
 			mensageiro.msgAux += String(apg.getApgPt());
 			mensageiro.msgAux += F(" m");
 			mensageiro.setNextMessage(mensageiro.msgAux);
 			mensageiro.msgAux = "";
-			#if _MORSE_INTERRUPT
+			#if MORSE_INTERRUPT
 			mensageiro.unsetQuiet();
-			#endif // _MORSE_INTERRUPT
+			#endif // MORSE_INTERRUPT
 		}
-		#if !_MORSE_INTERRUPT
+		#if !MORSE_INTERRUPT
 		mensageiro.updateMorse();
-		#endif // !_MORSE_INTERRUPT
+		#endif // !MORSE_INTERRUPT
 #endif // MORSE_MSG
 #if BEEPING
 		beep(SYSTEM_n); //rec
@@ -1252,9 +1254,9 @@ void loop()
 	LoRaSend();
 #endif // LoRamode
 
-#if MORSE_MSG && ForceSysC && (!_MORSE_INTERRUPT)
+#if MORSE_MSG && ForceSysC && (!MORSE_INTERRUPT)
 	mensageiro.updateMorse();
-#endif // MORSE_MSG  && ForceSysC && (!_MORSE_INTERRUPT)
+#endif // MORSE_MSG  && ForceSysC && (!MORSE_INTERRUPT)
 #if BEEPING && ForceSysC
 	beep(sysC);
 #elif BEEPING && !WUF && !RBF && !ApoGee
@@ -1381,18 +1383,18 @@ inline void WaitUntilFlight(float minHeight)
 
 		if(mensageiro.msgAux.length() > 0) { // Any system failed
 			if(Mutil.oneTime()) mensageiro.setNextMessage("# "+mensageiro.msgAux);
-			#if _MORSE_INTERRUPT
+			#if MORSE_INTERRUPT
 			mensageiro.unsetQuiet();
 			#else
 			mensageiro.updateMorse();
-			#endif // !_MORSE_INTERRUPT
+			#endif // !MORSE_INTERRUPT
 			if(mensageiro.getMessageComplete()) Mutil.oneTimeReset();
 		} else { // No system failed
 			if(!mensageiro.getQuiet())
 			{
-				#if !_MORSE_INTERRUPT
+				#if !MORSE_INTERRUPT
 				mensageiro.updateMorse();
-				#endif // !_MORSE_INTERRUPT
+				#endif // !MORSE_INTERRUPT
 				if(mensageiro.getMessageComplete()) // After sound sequence completed
 				{
 					mensageiro.setQuiet(); // Mute sound
@@ -1401,11 +1403,11 @@ inline void WaitUntilFlight(float minHeight)
 			}
 			else {
 				if(!Mutil.forT()) {
-					#if _MORSE_INTERRUPT
+					#if MORSE_INTERRUPT
 					mensageiro.unsetQuiet();
 					#else
 					mensageiro.updateMorse(); // Restart sound
-					#endif // _MORSE_INTERRUPT
+					#endif // MORSE_INTERRUPT
 				}
 			}
 		}

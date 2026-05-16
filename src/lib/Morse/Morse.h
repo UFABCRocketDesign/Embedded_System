@@ -31,13 +31,74 @@
 #define _MORSE_PRINT 0
 #endif // _MORSE_PRINT
 
-#if !defined(_MORSE_INTERRUPT)
-#define _MORSE_INTERRUPT 0
-#endif // _MORSE_INTERRUPT
+#ifndef MORSE_INTERRUPT
+#define MORSE_INTERRUPT (0)
+#endif // MORSE_INTERRUPT
 
 
 #define _MORSE_MESSAGE_MAX_LENGTH 100
 #define _MORSE_ALARM_STEPS 200
+
+#define _MORSE_DEFAULT_ALARM_LOW 62
+#define _MORSE_DEFAULT_ALARM_HIGH 1976
+
+#define _MORSE_DEFAULT_ALARM_FAST 5
+#define _MORSE_DEFAULT_ALARM_SLOW 100
+
+
+
+
+
+
+#define ALARM_FUNC_(LOW, HIGH, STEP) \
+(long(LOW) + long(HIGH - LOW) * ())
+
+
+#define ALARM_FUNC_SIGMOID(STEP, WIDTH, ADJUST) \
+(1.0/(1.0+exp(-(1.0/ADJUST)*(STEP/(WIDTH/2.0f)))))
+
+
+#define ALARM_FUNC_TILDE(LOW, HIGH, STEP) \
+(long(LOW) + long(HIGH - LOW) * (-cos(M_PI * STEP / 50.0) * 0.5 + 0.5))
+
+#define ALARM_FUNC_HAT(LOW, HIGH, STEP, WIDTH) \
+(long(LOW) + long(HIGH - LOW) * (1- abs((2*STEP - float(WIDTH) - 1.0) / (float(WIDTH) - 1.0))))
+
+#define ALARM_FUNC_LT(LOW, HIGH, STEP, WIDTH) \
+(long(LOW) + long(HIGH - LOW) * (STEP / float(WIDTH)))
+
+#define ALARM_FUNC_GT(LOW, HIGH, STEP, WIDTH) \
+(long(LOW) + long(HIGH - LOW) * ((WIDTH - STEP) / float(WIDTH)))
+
+#define ALARM_FUNC_NUM(LOW, HIGH, STEP) \
+(((STEP / 50) % 2) ? LOW : HIGH)
+
+#define ALARM_FUNC_LSQB(LOW, HIGH, STEP, WIDTH) \
+(long(LOW) + long(HIGH - LOW) * (pow((STEP - 1.0) / (float(WIDTH) - 1.0), 8)))
+
+#define ALARM_FUNC_RSQB(LOW, HIGH, STEP, WIDTH) \
+(long(LOW) + long(HIGH - LOW) * (pow(1.0 - (STEP - 1.0) / (float(WIDTH) - 1.0), 3)))
+
+#define ALARM_FUNC_LCUB(LOW, HIGH, STEP, WIDTH) \
+(long(LOW) + long(HIGH - LOW) * (1.0 - pow(1.0 - (STEP - 1.0) / (float(WIDTH) - 1.0), 3)))
+
+#define ALARM_FUNC_RCUB(LOW, HIGH, STEP, WIDTH) \
+(long(LOW) + long(HIGH - LOW) * (1.0 - pow((STEP - 1.0) / (float(WIDTH) - 1.0), 3)))
+
+#define ALARM_FUNC_CIFRAO(LOW, HIGH, STEP) \
+(long(LOW) + long(HIGH - LOW) * ((((STEP / 25) % 2) ? 0 : 1) - 1.5 * sin(M_PI * STEP / 25.0) * 0.5))
+
+#define ALARM_FUNC_PERCENT(LOW, HIGH, STEP, ADJUST_A, ADJUST_B) \
+(long(LOW) + long(HIGH - LOW) * ((sin(M_PI * STEP / 50.0) + sin(ADJUST_B*M_PI * STEP / 50.0)/ADJUST_A)/(1.0+1.0/ADJUST_A)+1) / 2.0)
+
+#define ALARM_FUNC_PIPE(LOW, HIGH, STEP, ADJUST) \
+(long(LOW) + long(HIGH - LOW) * (1+sin(M_PI * STEP / 50.0)*(sin(ADJUST * M_PI * STEP / 50.0))))
+
+#define ALARM_FUNC_UNDER(LOW, HIGH, STEP, ADJUST) \
+(long(LOW) + long(HIGH - LOW) * ((((STEP / 50) % 2) ? -1 : 1)*(1/(2+cos(M_PI+ADJUST * M_PI * STEP / 50.0)))+1))
+
+
+
 
 #if defined(ARDUINO_ARCH_ESP32)
 namespace MorseAlarm {
@@ -51,26 +112,34 @@ namespace MorseAlarm {
 		uint16_t rsqb[_MORSE_ALARM_STEPS]; // ]
 		uint16_t lcub[_MORSE_ALARM_STEPS]; // {
 		uint16_t rcub[_MORSE_ALARM_STEPS]; // }
+		uint16_t cifrao[_MORSE_ALARM_STEPS]; // $
+		uint16_t percent[_MORSE_ALARM_STEPS]; // %
+		uint16_t pipe[_MORSE_ALARM_STEPS]; // |
+		uint16_t under[_MORSE_ALARM_STEPS]; // _
 	};
 
 	// Função que calcula os valores (roda apenas no seu PC durante o upload)
 	static constexpr AlarmTable generateAlarmTable() {
 		AlarmTable table = {};
 
-		const int ALARM_LOW = 62;
-		const int ALARM_HIGH = 1976;
+		const int ALARM_LOW = _MORSE_DEFAULT_ALARM_LOW;
+		const int ALARM_HIGH = _MORSE_DEFAULT_ALARM_HIGH;
 		const int alarmSteps = _MORSE_ALARM_STEPS;
 
 		for (int currentMarkIndex = 0; currentMarkIndex < alarmSteps; currentMarkIndex++) {
-			table.tilde[currentMarkIndex]	= (int16_t)(long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (-cos(M_PI * currentMarkIndex / 50.0) * 0.5 + 0.5));
-			table.hat[currentMarkIndex]		= (int16_t)(long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1- abs((2*currentMarkIndex - float(alarmSteps) - 1.0) / (float(alarmSteps) - 1.0))));
-			table.lt[currentMarkIndex]		= (int16_t)(long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (currentMarkIndex / float(alarmSteps)));
-			table.num[currentMarkIndex]		= (int16_t)(((currentMarkIndex / 50) % 2) ? ALARM_LOW : ALARM_HIGH);
-			table.gt[currentMarkIndex]		= (int16_t)(long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * ((alarmSteps - currentMarkIndex) / float(alarmSteps)));
-			table.lsqb[currentMarkIndex]	= (int16_t)(long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (pow((currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8)));
-			table.rsqb[currentMarkIndex]	= (int16_t)(long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (pow(1.0 - (currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8)));
-			table.lcub[currentMarkIndex]	= (int16_t)(long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1.0 - pow(1.0 - (currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8)));
-			table.rcub[currentMarkIndex]	= (int16_t)(long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1.0 - pow((currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8)));
+			table.tilde[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_TILDE(ALARM_LOW, ALARM_HIGH, currentMarkIndex));
+			table.hat[currentMarkIndex]		= (uint16_t)(ALARM_FUNC_HAT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
+			table.lt[currentMarkIndex]		= (uint16_t)(ALARM_FUNC_LT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
+			table.num[currentMarkIndex]		= (uint16_t)(ALARM_FUNC_NUM(ALARM_LOW, ALARM_HIGH, currentMarkIndex));
+			table.gt[currentMarkIndex]		= (uint16_t)(ALARM_FUNC_GT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
+			table.lsqb[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_LSQB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
+			table.rsqb[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_RSQB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
+			table.lcub[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_LCUB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
+			table.rcub[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_RCUB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
+			table.cifrao[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_CIFRAO(ALARM_LOW, ALARM_HIGH, currentMarkIndex));
+			table.percent[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_PERCENT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 2.0, 5));
+			table.pipe[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_PIPE(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 10));
+			table.under[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_UNDER(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 6));
 		}
 		return table;
 	}
@@ -97,8 +166,8 @@ protected:
 
 	const unsigned int FREQ_DOT = 523;
 	const unsigned int FREQ_DASH = 784;
-	const unsigned int ALARM_LOW = 62;
-	const unsigned int ALARM_HIGH = 1976;
+	const unsigned int ALARM_LOW = _MORSE_DEFAULT_ALARM_LOW;
+	const unsigned int ALARM_HIGH = _MORSE_DEFAULT_ALARM_HIGH;
 
 	const unsigned int dotDelay = 150;
 	const unsigned int dashDelay = 3 * dotDelay;
@@ -120,12 +189,14 @@ protected:
 
 	char const* _MORSE_FUNCTION_ATTR selectSeq(char c);
 	virtual bool _MORSE_FUNCTION_ATTR playMorseChar(char c);
+	void _MORSE_FUNCTION_ATTR playMorseAlarm(long currentMillis);
+	virtual void _MORSE_FUNCTION_ATTR alarmAppendix(unsigned int signal, long currentMillis);
 
 public:
 
 	String msgAux = "";
 
-	Morse(uint8_t pin, String msg = "", unsigned int fDot = 523, unsigned int fDash = 784, unsigned int fAlrmHi = 62, unsigned int fAlrmLo = 1976);
+	Morse(uint8_t pin, String msg = "", unsigned int fDot = 523, unsigned int fDash = 784, unsigned int fAlrmHi = _MORSE_DEFAULT_ALARM_LOW, unsigned int fAlrmLo = _MORSE_DEFAULT_ALARM_HIGH);
 	virtual void setup(); // Inicializa pinos
 	void setNextMessage(String message); // Configura a próxima mensagem (só vai tocar quando a atual acabar)
 	bool _MORSE_FUNCTION_ATTR updateMorse(); // Toca a mensagem e retorna verdadeiro toda vez que acaba
@@ -133,6 +204,7 @@ public:
 	void unsetQuiet(); // Reativa o sistema
 	bool getQuiet(); // Verifica se o sistema está silenciado
 	bool getMessageComplete(); // Retorna verdadeiro após a mensagem ser concluida pelo menos uma vez, setQuiet() resseta este valor
+
 };
 
 class MorseAtvBzz : public Morse
@@ -142,9 +214,10 @@ class MorseAtvBzz : public Morse
 	uint8_t alarmState = !buzzerCmd;
 
 	bool _MORSE_FUNCTION_ATTR playMorseChar(char c);
+	void _MORSE_FUNCTION_ATTR alarmAppendix(unsigned int signal, long currentMillis);
 
 	public:
-	MorseAtvBzz(uint8_t pin, bool cmd = LOW, String msg = "", unsigned int fAlrmFs = 5, unsigned int fAlrmSl = 100);
+	MorseAtvBzz(uint8_t pin, bool cmd = LOW, String msg = "", unsigned int fAlrmFs = _MORSE_DEFAULT_ALARM_FAST, unsigned int fAlrmSl = _MORSE_DEFAULT_ALARM_SLOW);
 	void setup();
 	void setQuiet();
 };
@@ -188,7 +261,7 @@ H	....
 5	.....
 */
 
-#if _MORSE_INTERRUPT
+#if MORSE_INTERRUPT
 
 #if defined(ARDUINO_ARCH_AVR)
 
@@ -231,7 +304,7 @@ H	....
 
 	#define TIMER_INTERVAL_MS 5
 
-	hw_timer_t * _morseTimer = NULL;
+	extern hw_timer_t * _morseTimer;
 
 
 #endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
@@ -250,6 +323,8 @@ ISR(TIMERn_COMPA_vect) { \
 
 #elif defined(ARDUINO_ARCH_ESP32)
 
+void ARDUINO_ISR_ATTR InterruptServiceRoutine();
+
 #define MORSE_INTERRPUT_PRESET(MORSE_OBJECT) \
 void ARDUINO_ISR_ATTR InterruptServiceRoutine() { \
 	MORSE_OBJECT.updateMorse(); \
@@ -257,51 +332,8 @@ void ARDUINO_ISR_ATTR InterruptServiceRoutine() { \
 
 #endif // define(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_ESP32)
 
+void morseInterruptionSetup();
 
-void morseInterruptionSetup()
-{
-	#if _MORSE_PRINT
-	Serial.println("ISR config ini");
-	#endif // _MORSE_PRINT
-
-	#if defined(ARDUINO_ARCH_AVR)
-	cli();  // Disable interrupts
-
-	// Configure Timer3 for CTC mode
-	TCCRnA = 0; // Clear TCCR3A register
-	TCCRnB = 0; // Clear TCCR3B register
-
-	// Set CTC mode (Clear Timer on Compare Match)
-	TCCRnB |= (1 << WGMn2);
-	// Set prescaler to 8
-	TCCRnB |= TCCRnB_SET;
-	// TCCR3B |= (1 << CS31);
-
-	TCNTn = 0; // Initialize timer counter to 0
-
-	// Calculate OCR3A for 50Hz interrupt (16MHz / (50Hz * 8 prescaler) - 1)
-	OCRnA = TCNTn_VALUE;
-	// OCR3A = 39999;
-
-	// Enable Timer3 Compare Match A interrupt
-	TIMSKn |= (1 << OCIEnA);
-
-	sei();  // Enable interrupts
-	#elif defined(ARDUINO_ARCH_ESP32)
-
-	extern void InterruptServiceRoutine();
-
-	_morseTimer = timerBegin(1000000);
-	timerAttachInterrupt(_morseTimer, &InterruptServiceRoutine);
-	timerAlarm(_morseTimer, TIMER_INTERVAL_MS * 1000, true, 0);
-
-	#endif // define(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_ESP32)
-
-	#if _MORSE_PRINT
-	Serial.println("ISR config fin");
-	#endif // _MORSE_PRINT
-}
-
-#endif // _MORSE_INTERRUPT
+#endif // MORSE_INTERRUPT
 
 #endif

@@ -50,8 +50,8 @@ const char *const Morse::sign1[] _MORSE_MEMORY_ATTR = {
 		"-.-.--", // !
 		".-..-.", // "
 		"#", // #
-		"%", // %
 		"$", // $
+		"%", // %
 		".-...", // &
 		".----.", // '
 		"-.--.", // (
@@ -129,29 +129,28 @@ void Morse::setQuiet()
 	currentMarkIndex = 0;
 	quiet = true;
 
-	#if _MORSE_INTERRUPT
+	#if MORSE_INTERRUPT
 
 	#if defined(ARDUINO_ARCH_AVR)
 	TIMSKn &= ~(1 << OCIEnA);
 	#elif defined(ARDUINO_ARCH_ESP32)
-	timerAlarmDisable(_morseTimer);
+	timerStop(_morseTimer);
 	#endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
 
-	#endif // _MORSE_INTERRUPT
+	#endif // MORSE_INTERRUPT
 }
 
 void Morse::unsetQuiet()
 {
-	#if _MORSE_INTERRUPT
+	#if MORSE_INTERRUPT
 	if(quiet){
 		#if defined(ARDUINO_ARCH_AVR)
 		TIMSKn |= (1 << OCIEnA);
 		#elif defined(ARDUINO_ARCH_ESP32)
-		timerAlarmEnable(_morseTimer);
+		timerStart(_morseTimer);    // Liga o contador novamente
 		#endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
 	}
-	#endif // _MORSE_INTERRUPT
-	// ets_printf("updateMorse0\n");
+	#endif // MORSE_INTERRUPT
 	quiet = false;
 }
 
@@ -245,16 +244,16 @@ bool Morse::playMorseChar(char c)
 
 	if (currentMillis >= nextActionMillis)
 	{
-		// ets_printf("%d\t%c\t%d\n",currentMarkIndex, currentMark, currentMark);
-		// Serial.println((unsigned int)seq);
 		if (currentMark == '\0')
 		{
 			currentMarkIndex = 0;
 			currentMark = 0x16;
-			#if _MORSE_PRINT
-			Serial.print(currentMark);
-			#endif // _MORSE_PRINT
 			nextActionMillis = currentMillis + dotDelay;
+			#if defined(ARDUINO_ARCH_AVR)
+			noTone(buzzerPin);
+			#elif defined(ARDUINO_ARCH_ESP32)
+			ledcWriteTone(buzzerPin, 0);
+			#endif
 			return 1;
 		}
 
@@ -307,231 +306,169 @@ bool Morse::playMorseChar(char c)
 			currentMark = 0x16;
 			nextActionMillis = currentMillis + dashDelay;
 		}
-		else if (currentMark == '~')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (-cos(M_PI * currentMarkIndex / 50.0) * 0.5 + 0.5);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.tilde[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else if (currentMark == '^')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1- abs((2*currentMarkIndex - float(alarmSteps) - 1.0) / (float(alarmSteps) - 1.0)));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.hat[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else if (currentMark == '<')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (currentMarkIndex / float(alarmSteps));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.lt[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else if (currentMark == '#')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = ((currentMarkIndex / 50) % 2) ? ALARM_LOW : ALARM_HIGH;
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.num[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else if (currentMark == '>')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * ((alarmSteps - currentMarkIndex) / float(alarmSteps));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.gt[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else if (currentMark == '[')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (pow((currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.lsqb[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else if (currentMark == ']')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (pow(1.0 - (currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.rsqb[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else if (currentMark == '{')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1.0 - pow(1.0 - (currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.lcub[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else if (currentMark == '}')
-		{
-			nextActionMillis = currentMillis + alarmDelay;
-
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1.0 - pow((currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.rcub[currentMarkIndex % alarmSteps];
-			#endif
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, signal);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, signal);
-			#endif
-		}
-		else
-			currentMark = '\0';
+		else playMorseAlarm(currentMillis);
 	}
 	return 0;
 }
 
+void Morse::playMorseAlarm(long currentMillis)
+{
+	if (currentMark == '~')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_TILDE(ALARM_LOW, ALARM_HIGH, currentMarkIndex);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.tilde[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '^')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_HAT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.hat[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '<')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_LT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.lt[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '#')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_NUM(ALARM_LOW, ALARM_HIGH, currentMarkIndex);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.num[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '>')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_GT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.gt[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '[')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_LSQB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.lsqb[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == ']')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_RSQB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.rsqb[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '{')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_LCUB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.lcub[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '}')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_RCUB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.rcub[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '$')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_CIFRAO(ALARM_LOW, ALARM_HIGH, currentMarkIndex);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.cifrao[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '%')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_PERCENT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 2.0, 5);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.percent[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '|')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_PIPE(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 10);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.pipe[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else if (currentMark == '_')
+	{
+		#if defined(ARDUINO_ARCH_AVR)
+		unsigned int signal = ALARM_FUNC_UNDER(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 6);
+		#elif defined(ARDUINO_ARCH_ESP32)
+		unsigned int signal = greatAlarmTable.under[currentMarkIndex % alarmSteps];
+		#endif
+
+		alarmAppendix(signal, currentMillis);
+	}
+	else
+		currentMark = '\0';
+}
+
+void Morse::alarmAppendix(unsigned int signal, long currentMillis)
+{
+	nextActionMillis = currentMillis + alarmDelay;
+
+	currentMarkIndex++;
+	if (alarmSteps < currentMarkIndex)
+	{
+		#if _MORSE_PRINT
+		// Serial.print(currentMark);
+		#endif // _MORSE_PRINT
+		currentMark = '\0';
+	}
+	#if defined(ARDUINO_ARCH_AVR)
+	tone(buzzerPin, signal);
+	#elif defined(ARDUINO_ARCH_ESP32)
+	ledcWriteTone(buzzerPin, signal);
+	#endif
+}
+
 bool Morse::updateMorse()
 {
-	// #if _MORSE_INTERRUPT
+	// #if MORSE_INTERRUPT
 	// if(quiet){
 	// 	#if defined(ARDUINO_ARCH_AVR)
 	// 	TIMSKn |= (1 << OCIEnA);
@@ -539,7 +476,7 @@ bool Morse::updateMorse()
 	// 	timerAlarmEnable(_morseTimer);
 	// 	#endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
 	// }
-	// #endif // _MORSE_INTERRUPT
+	// #endif // MORSE_INTERRUPT
 	// // ets_printf("updateMorse0\n");
 	// quiet = false;
 	unsetQuiet();
@@ -594,15 +531,15 @@ void MorseAtvBzz::setQuiet()
 	currentMarkIndex = 0;
 	quiet = true;
 
-	#if _MORSE_INTERRUPT
+	#if MORSE_INTERRUPT
 
 	#if defined(ARDUINO_ARCH_AVR)
 	TIMSKn &= ~(1 << OCIEnA);
 	#elif defined(ARDUINO_ARCH_ESP32)
-	timerAlarmDisable(_morseTimer);
+	timerStop(_morseTimer);
 	#endif // defined(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_AVR)
 
-	#endif // _MORSE_INTERRUPT
+	#endif // MORSE_INTERRUPT
 }
 
 bool MorseAtvBzz::playMorseChar(char c)
@@ -620,9 +557,10 @@ bool MorseAtvBzz::playMorseChar(char c)
 			currentMarkIndex = 0;
 			currentMark = 0x16;
 			#if _MORSE_PRINT
-			Serial.print(currentMark);
+			// Serial.print(currentMark);
 			#endif // _MORSE_PRINT
 			nextActionMillis = currentMillis + dotDelay;
+			digitalWrite(buzzerPin, !buzzerCmd);
 			return 1;
 		}
 		if (currentMark == 0x16)
@@ -658,198 +596,82 @@ bool MorseAtvBzz::playMorseChar(char c)
 			currentMark = 0x16;
 			nextActionMillis = currentMillis + dashDelay;
 		}
-		else if (currentMark == '~')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (-cos(M_PI * currentMarkIndex / 50.0) * 0.5 + 0.5);
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.tilde[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else if (currentMark == '^')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1- abs((2*currentMarkIndex - float(alarmSteps) - 1.0) / (float(alarmSteps) - 1.0)));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.hat[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else if (currentMark == '<')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (currentMarkIndex / float(alarmSteps));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.lt[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else if (currentMark == '#')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = ((currentMarkIndex / 50) % 2) ? ALARM_LOW : ALARM_HIGH;
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.num[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else if (currentMark == '>')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * ((alarmSteps - currentMarkIndex) / float(alarmSteps));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.gt[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else if (currentMark == '[')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (pow((currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.lsqb[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else if (currentMark == ']')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (pow(1.0 - (currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.rsqb[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else if (currentMark == '{')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1.0 - pow(1.0 - (currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.lcub[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else if (currentMark == '}')
-		{
-			#if defined(ARDUINO_ARCH_AVR)
-			int signal = long(ALARM_LOW) + long(ALARM_HIGH - ALARM_LOW) * (1.0 - pow((currentMarkIndex - 1.0) / (float(alarmSteps) - 1.0), 8));
-			#elif defined(ARDUINO_ARCH_ESP32)
-			int signal = greatAlarmTable.rcub[currentMarkIndex % alarmSteps];
-			#endif
-
-			nextActionMillis = currentMillis + signal/2;
-
-			currentMarkIndex++;
-			if (alarmSteps < currentMarkIndex)
-			{
-				#if _MORSE_PRINT
-				Serial.print(currentMark);
-				#endif // _MORSE_PRINT
-				currentMark = '\0';
-			}
-			alarmState = !alarmState;
-			digitalWrite(buzzerPin, alarmState);
-		}
-		else
-			currentMark = '\0';
+		else playMorseAlarm(currentMillis);
 	}
 	return 0;
 }
+
+void MorseAtvBzz::alarmAppendix(unsigned int signal, long currentMillis)
+{
+	#if defined(ARDUINO_ARCH_ESP32)
+	signal = map(signal, _MORSE_DEFAULT_ALARM_LOW, _MORSE_DEFAULT_ALARM_HIGH, ALARM_LOW, ALARM_HIGH);
+	#endif // defined(ARDUINO_ARCH_ESP32)
+	nextActionMillis = currentMillis + signal/2;
+
+	currentMarkIndex++;
+	if (alarmSteps < currentMarkIndex)
+	{
+		#if _MORSE_PRINT
+		Serial.print(currentMark);
+		#endif // _MORSE_PRINT
+		currentMark = '\0';
+	}
+	alarmState = !alarmState;
+	digitalWrite(buzzerPin, alarmState);
+}
+
+
+#if MORSE_INTERRUPT
+
+#if defined(ARDUINO_ARCH_ESP32)
+hw_timer_t *_morseTimer = NULL;
+#endif // defined(ARDUINO_ARCH_ESP32)
+
+void morseInterruptionSetup()
+{
+	#if _MORSE_PRINT
+	Serial.println("ISR config ini");
+	#endif // _MORSE_PRINT
+
+	#if defined(ARDUINO_ARCH_AVR)
+	cli();  // Disable interrupts
+
+	// Configure Timer3 for CTC mode
+	TCCRnA = 0; // Clear TCCR3A register
+	TCCRnB = 0; // Clear TCCR3B register
+
+	// Set CTC mode (Clear Timer on Compare Match)
+	TCCRnB |= (1 << WGMn2);
+	// Set prescaler to 8
+	TCCRnB |= TCCRnB_SET;
+	// TCCR3B |= (1 << CS31);
+
+	TCNTn = 0; // Initialize timer counter to 0
+
+	// Calculate OCR3A for 50Hz interrupt (16MHz / (50Hz * 8 prescaler) - 1)
+	OCRnA = TCNTn_VALUE;
+	// OCR3A = 39999;
+
+	// Enable Timer3 Compare Match A interrupt
+	TIMSKn |= (1 << OCIEnA);
+
+	sei();  // Enable interrupts
+	#elif defined(ARDUINO_ARCH_ESP32)
+
+	_morseTimer = timerBegin(1000000);
+	timerAttachInterrupt(_morseTimer, &InterruptServiceRoutine);
+	timerAlarm(_morseTimer, TIMER_INTERVAL_MS * 1000, true, 0);
+
+	#endif // define(ARDUINO_ARCH_AVR) \ defined(ARDUINO_ARCH_ESP32)
+
+	#if _MORSE_PRINT
+	Serial.println("ISR config fin");
+	#endif // _MORSE_PRINT
+}
+
+#endif // MORSE_INTERRUPT
+
+
+
+
+
