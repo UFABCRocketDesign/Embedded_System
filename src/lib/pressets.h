@@ -7,7 +7,7 @@
 
 #ifdef USING_MODE
 
-	#if USING_MODE == MODE_DEFAULT
+	#if USING_MODE == MODE_LANCAMENTO
 
 		#define CURRENT_MODE_P2H_NORMAL	450	// Height (meters) to main parachute normal deployment
 		#define CURRENT_MODE_P2H_BACKUP	400	// Height (meters) to main parachute backup deployment

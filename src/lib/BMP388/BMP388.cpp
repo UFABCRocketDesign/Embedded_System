@@ -47,12 +47,19 @@ void BMP388::begin() {
 }
 
 bool BMP388::readAll() {
-  unsigned long now = micros();
+  thisReadT = micros();
   Wire.beginTransmission(address);
   state = (Wire.endTransmission() == 0);
 
-  if (state) {
-    if (now - lastWorkT > recalibrateT) begin();
+  if (state)
+  {
+    if (getTimeLapse() > recalibrateT)
+    {
+      begin();
+#if PRINT
+      Serial.println(F("Relacibrado B"));
+#endif // PRINT
+    }
 
     Wire.beginTransmission(address);
     Wire.write(BMP3_REG_DATA);
@@ -71,8 +78,10 @@ bool BMP388::readAll() {
 
     celcius = (float)compensate_T(t_raw);
     pascal = (float)compensate_P(p_raw);
-    lastWorkT = now;
+    lastWorkT = thisReadT;
   }
+  lastReadT = thisReadT;
+
   return state;
 }
 
