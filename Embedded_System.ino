@@ -498,6 +498,9 @@ HardwareSerial &LoRa(Serial3);
 #endif
 Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define LoRaBaudRate 9600
+
+unsigned long pauseTelemetryUntil = 0;
+
 #if USE_LoRa_E32
 #if !defined(M0_LORA_PIN) || !defined(M1_LORA_PIN) || !defined(AUX_LORA_PIN)
 #error: Placa selecionada nao utiliza LoRa E32
@@ -715,7 +718,7 @@ void embedHexByte(char* target, byte val) {
   target[1] = nibble2AsciiHex(val & 0x0F);
 }
 
-unsigned long pauseTelemetryUntil = 0;
+// unsigned long pauseTelemetryUntil = 0;
 
 void cancelLoRaConfig(bool reverter, Configuration &previousConfig)
 {
@@ -995,9 +998,10 @@ void updateLoRaFrequency(){
 		}
 	}
 
-	if (oldState != HS_IDLE && hsState == HS_IDLE) {
-		extern unsigned long pauseTelemetryUntil;
-		pauseTelemetryUntil = 0;
+	if (hsState == HS_IDLE) {
+		if (oldState != HS_IDLE) pauseTelemetryUntil = 0;
+	} else {
+		pauseTelemetryUntil = millis() + 6000;	// Renova enquanto o handshake estiver vivo
 	}
 }
 
@@ -1097,9 +1101,9 @@ template <typename T, typename R> void transmitln(T message, R value);
 #pragma region Setup
 void setup()
 {
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32) && (ApoGee || USE_LoRa_E32_settable)
 	EEPROM.begin(512);
-#endif
+#endif // defined(ARDUINO_ARCH_ESP32) && (ApoGee || USE_LoRa_E32_settable)
 #if PWMapg
 	pinMode(PWMout, OUTPUT);
 #endif // PWMapg
@@ -1920,6 +1924,11 @@ inline void WaitUntilFlight(float minHeight)
 
 	}
 	while (abs(apg.getHeight()) < minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
+
+#if USE_LoRa_E32_settable
+	pauseTelemetryUntil = 0;	// Garante telemetria ativa ao entrar em voo
+#endif // USE_LoRa_E32_settable
+	
 #if MORSE_MSG
 	mensageiro.setQuiet();
 	Mutil.oneTimeReset();
