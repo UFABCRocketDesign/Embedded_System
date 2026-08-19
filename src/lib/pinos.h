@@ -156,7 +156,7 @@
 
 				#define M0_LORA_PIN 26 // Pinos adicionais do LoRa
 				#define M1_LORA_PIN 25 // Pinos adicionais do LoRa
-				#define AUX_LORA_PIN 36 // Pinos adicionais do LoRa
+				#define AUX_LORA_PIN 35 // Pinos adicionais do LoRa
 
 				#define RX_LORA_ESP 32
 				#define TX_LORA_ESP 33
