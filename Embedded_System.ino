@@ -50,7 +50,7 @@
 #define GPSmode (1)							//Use GPS
 #define LoRamode (1)						//Serial mode for transmission on LoRa module
 #define TalkingBoard (0)					//When two boards are connected for redundancy system
-#define BuZZ (1)								//Buzzer mode
+#define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
 #define PRINT (1)							//Print or not things on Serial
@@ -68,10 +68,10 @@
 #define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
 
 /**************************** GY912 ***************************/
-#define USE_BMP388 (USE_GY912 || 1)			//Use BMP280 sensor
-#define USE_ICM20948_ACCEL (USE_GY912 || 1)	//Use ICM20948 sensor, accelerometer
-#define USE_ICM20948_GYRO (USE_GY912 || 1)	//Use ICM20948 sensor, gyroscope
-#define USE_AK09916 (USE_GY912 || 1)		//Use AK09916 sensor
+#define USE_BMP388 (USE_GY912 || 0)			//Use BMP280 sensor
+#define USE_ICM20948_ACCEL (USE_GY912 || 0)	//Use ICM20948 sensor, accelerometer
+#define USE_ICM20948_GYRO (USE_GY912 || 0)	//Use ICM20948 sensor, gyroscope
+#define USE_AK09916 (USE_GY912 || 0)		//Use AK09916 sensor
 
 /************************** 9DoF IMU **************************/
 #define USE_BARO (USE_BMP085 || USE_BMP280 || USE_BMP388)				// Use any Barometer
@@ -499,8 +499,6 @@ HardwareSerial &LoRa(Serial3);
 Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define LoRaBaudRate 9600
 
-unsigned long pauseTelemetryUntil = 0;
-
 #if USE_LoRa_E32
 #if !defined(M0_LORA_PIN) || !defined(M1_LORA_PIN) || !defined(AUX_LORA_PIN)
 #error: Placa selecionada nao utiliza LoRa E32
@@ -561,7 +559,10 @@ bool setLoRaConfig()
 	Serial.println(c.status.code);
 #endif
 
-	if(c.status.code != E32_SUCCESS) return false;
+	if(c.status.code != E32_SUCCESS) {
+		c.close();
+		return false;
+	}
 
 	// It's important get configuration pointer before all other operation
 	Configuration configuration = *(Configuration*)c.data;
@@ -597,7 +598,11 @@ bool getLoRaConfig()
 {
 	ResponseStructContainer c = LoRaConfig.getConfiguration();
 	// It's important get configuration pointer before all other operation
-	if(c.status.code != E32_SUCCESS) return false;
+	if(c.status.code != E32_SUCCESS)
+	{
+		c.close();
+		return false;
+	}
 
 	configLoRa = *(Configuration*)c.data;
 
@@ -718,7 +723,7 @@ void embedHexByte(char* target, byte val) {
   target[1] = nibble2AsciiHex(val & 0x0F);
 }
 
-// unsigned long pauseTelemetryUntil = 0;
+unsigned long pauseTelemetryUntil = 0;
 
 void cancelLoRaConfig(bool reverter, Configuration &previousConfig)
 {
@@ -774,9 +779,9 @@ void updateLoRaFrequency(){
 				char tempRec[64] = {};
 				uint8_t count = LoRa.readBytesUntil('\n', tempRec, chgFreqReqLen);
 				tempRec[count] = '\0';
-				
+
 				// Pause telemetry for 6s
-				extern unsigned long pauseTelemetryUntil;
+				// extern unsigned long pauseTelemetryUntil;
 				pauseTelemetryUntil = millis() + 6000;
 
 #if PRINT
@@ -810,7 +815,7 @@ void updateLoRaFrequency(){
 				}
 
 				CHAN = hexFromCharPair(tempRec + chgFreqReqHeadLen);
-				if (CHAN > 69) {
+				if (CHAN > 0x45) {
 #if PRINT
 					Serial.println(F("[LORA RX] ERRO: Canal invalido"));
 #endif
@@ -857,7 +862,9 @@ void updateLoRaFrequency(){
 #if PRINT
 				Serial.print(F("[LORA RX] Bytes insuficientes ou invalido: "));
 				Serial.print(LoRa.available());
-				Serial.println(F(" / 27. Descartando 'M'"));
+				Serial.print(F(" / "));
+				Serial.print(chgFreqReqLen);
+				Serial.println(F(". Descartando 'M'"));
 #endif
 				LoRa.read();
 				hsState = HS_IDLE;
@@ -1928,7 +1935,7 @@ inline void WaitUntilFlight(float minHeight)
 #if USE_LoRa_E32_settable
 	pauseTelemetryUntil = 0;	// Garante telemetria ativa ao entrar em voo
 #endif // USE_LoRa_E32_settable
-	
+
 #if MORSE_MSG
 	mensageiro.setQuiet();
 	Mutil.oneTimeReset();
@@ -2382,7 +2389,9 @@ inline void beep()
 #if LoRamode
 inline void LoRaSend()
 {
+#if USE_LoRa_E32_settable
 	if (millis() < pauseTelemetryUntil) return;
+#endif // USE_LoRa_E32_settable
 
 	/*
 	L - Line

@@ -69,26 +69,42 @@ void ICM20948_GYRO::begin()
 
 bool ICM20948_GYRO::readAll()
 {
+  thisReadT = micros();
   Wire.beginTransmission(address);
-  Wire.endTransmission();
-  Wire.beginTransmission(address);
-  Wire.write(GYRO_XOUT_H);
-  Wire.endTransmission();
+  state = (Wire.endTransmission() == 0);
 
-  Wire.requestFrom(address, uint8_t(6));
-  unsigned long temp = micros();
-  while (Wire.available() < 6) {
-    if (temp + 10 < micros())
-      break;
+  if(state)
+  {
+    if (getTimeLapse() > recalibrateT)
+    {
+      begin();
+#if PRINT
+      Serial.println(F("Relacibrado G"));
+#endif // PRINT
+    }
+
+    Wire.beginTransmission(address);
+    Wire.write(GYRO_XOUT_H);
+    Wire.endTransmission();
+
+    Wire.requestFrom(address, uint8_t(6));
+    unsigned long temp = micros();
+    while (Wire.available() < 6) {
+      if (temp + 10 < micros())
+        break;
+    }
+
+    xaux_gyro = Wire.read() << 8 | Wire.read();
+    yaux_gyro = Wire.read() << 8 | Wire.read();
+    zaux_gyro = Wire.read() << 8 | Wire.read();
+
+    X = float(xaux_gyro) / GYRO_SENSITIVITY_2000DPS;
+    Y = float(yaux_gyro) / GYRO_SENSITIVITY_2000DPS;
+    Z = float(zaux_gyro) / GYRO_SENSITIVITY_2000DPS;
+
+    lastWorkT = thisReadT;
   }
+  lastReadT = thisReadT;
 
-  xaux_gyro = Wire.read() << 8 | Wire.read();
-  yaux_gyro = Wire.read() << 8 | Wire.read();
-  zaux_gyro = Wire.read() << 8 | Wire.read();
-
-  X = float(xaux_gyro) / GYRO_SENSITIVITY_2000DPS;
-  Y = float(yaux_gyro) / GYRO_SENSITIVITY_2000DPS;
-  Z = float(zaux_gyro) / GYRO_SENSITIVITY_2000DPS;
-  
   return true;
 }

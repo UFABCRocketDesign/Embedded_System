@@ -25,12 +25,18 @@
                             (unsigned(/*D*/ 10*(__DATE__[4] - '0') + (__DATE__[5] - '0')) \
                             ))))
 
+#if defined(ARDUINO_ARCH_ESP32)
+	#define _EEPROM_SIZE 512
+#else
+	#define _EEPROM_SIZE (E2END + 1)
+#endif
+
 class Apogeu
 {
 	const unsigned int N, R, Rl1;
 	const float S;
 	const float Rf;
-	const uint16_t eeAddress = _GERAL_TIME % (EEPROM.length()-sizeof(float));
+	const uint16_t eeAddress = _GERAL_TIME % (_EEPROM_SIZE - sizeof(float));
 	float base = 0;
 	float baseMax = 0;
 	float baseMin = 0;

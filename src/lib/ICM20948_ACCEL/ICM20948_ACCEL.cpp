@@ -69,26 +69,41 @@ void ICM20948_ACCEL::begin()
 
 bool ICM20948_ACCEL::readAll()
 {
+  thisReadT = micros();
   Wire.beginTransmission(address);
-  Wire.endTransmission();
-  Wire.beginTransmission(address);
-  Wire.write(ACCEL_XOUT_H);
-  Wire.endTransmission();
+  state = (Wire.endTransmission() == 0);
 
-  Wire.requestFrom(address, uint8_t(6));
-  unsigned long temp = micros();
-  while (Wire.available() < 6) {
-    if (temp + 1000 < micros())
-      return false;
+  if(state)
+  {
+    if (getTimeLapse() > recalibrateT)
+    {
+      begin();
+#if PRINT
+      Serial.println(F("Relacibrado A"));
+#endif // PRINT
+    }
+
+    Wire.beginTransmission(address);
+    Wire.write(ACCEL_XOUT_H);
+    Wire.endTransmission();
+
+    Wire.requestFrom(address, uint8_t(6));
+    unsigned long temp = micros();
+    while (Wire.available() < 6) {
+      if (temp + 1000 < micros())
+        return false;
+    }
+
+    xaux_acc = Wire.read() << 8 | Wire.read();
+    yaux_acc = Wire.read() << 8 | Wire.read();
+    zaux_acc = Wire.read() << 8 | Wire.read();
+
+    X = float(xaux_acc / ACCEL_SENSITIVITY_16G) * ACCEL_G;
+    Y = float(yaux_acc / ACCEL_SENSITIVITY_16G) * ACCEL_G;
+    Z = float(zaux_acc / ACCEL_SENSITIVITY_16G) * ACCEL_G;
+    lastWorkT = thisReadT;
   }
+  lastReadT = thisReadT;
 
-  xaux_acc = Wire.read() << 8 | Wire.read();
-  yaux_acc = Wire.read() << 8 | Wire.read();
-  zaux_acc = Wire.read() << 8 | Wire.read();
-
-  X = float(xaux_acc / ACCEL_SENSITIVITY_16G) * ACCEL_G;
-  Y = float(yaux_acc / ACCEL_SENSITIVITY_16G) * ACCEL_G;
-  Z = float(zaux_acc / ACCEL_SENSITIVITY_16G) * ACCEL_G;
-
-  return true;
+  return state;
 }
