@@ -742,6 +742,7 @@ void cancelLoRaConfig(bool reverter, Configuration &previousConfig)
 enum HandshakeState {
 	HS_IDLE,
 	HS_WAITING_M_PACKET,
+	HS_SENDING_CFM,
 	HS_WAITING_1SSO,
 	HS_WAITING_MUD0U,
 	HS_WAITING_B04
@@ -757,6 +758,8 @@ void updateLoRaFrequency(){
 	static int ADDH = LoRa_ADDH;
 	static int ADDL = LoRa_ADDL;
 	static char recieved[64] = {};
+	static char toSend[chgFreqCfmLen + 1] = {};
+	static unsigned long sendCfmAt = 0;
 
 	int discardLimit = 256; // Safety limit to prevent infinite loops on serial noise
 
@@ -836,7 +839,8 @@ void updateLoRaFrequency(){
 				Serial.println(ADDL, HEX);
 #endif
 
-				char toSend[chgFreqCfmLen + 1] = {};
+				// char toSend[chgFreqCfmLen + 1] = {};
+				memset(toSend, 0, sizeof(toSend));
 				memcpy(toSend, chgFreqCfmHead, chgFreqCfmHeadLen);
 				embedHexByte(toSend + chgFreqCfmHeadLen, CHAN);
 				memcpy(toSend + chgFreqCfmHeadLen + 2, chgFreqCfmMid, chgFreqCfmMidLen);
@@ -849,15 +853,18 @@ void updateLoRaFrequency(){
 				Serial.print(F("[LORA RX] Enviando confirmacao: "));
 				Serial.println(toSend);
 #endif
-				delay(900);
-				while (LoRa.available() > 0 && discardLimit-- > 0) LoRa.read();
-				LoRa.println(toSend);
+				sendCfmAt = millis() + 900;
+				hsState = HS_SENDING_CFM;
 
-#if PRINT
-				Serial.println(F("[LORA RX] Aguardando 1SSO_MSM do GS..."));
-#endif
-				stateTimeout = millis() + 5000;
-				hsState = HS_WAITING_1SSO;
+// 				delay(900);
+// 				while (LoRa.available() > 0 && discardLimit-- > 0) LoRa.read();
+// 				LoRa.println(toSend);
+
+// #if PRINT
+// 				Serial.println(F("[LORA RX] Aguardando 1SSO_MSM do GS..."));
+// #endif
+// 				stateTimeout = millis() + 5000;
+// 				hsState = HS_WAITING_1SSO;
 			} else if (millis() - startWait >= 100) {
 #if PRINT
 				Serial.print(F("[LORA RX] Bytes insuficientes ou invalido: "));
@@ -869,6 +876,20 @@ void updateLoRaFrequency(){
 				LoRa.read();
 				hsState = HS_IDLE;
 			}
+			break;
+		}
+
+		case HS_SENDING_CFM: {
+			if(long (millis() - sendCfmAt) < 0) break; // Esperar mais
+
+			while (LoRa.available() > 0 && discardLimit-- > 0) LoRa.read();
+			LoRa.println(toSend);
+
+#if PRINT
+			Serial.println(F("[LORA RX] Aguardando 1SSO_MSM do GS..."));
+#endif
+			stateTimeout = millis() + 5000;
+			hsState = HS_WAITING_1SSO;
 			break;
 		}
 
@@ -1109,7 +1130,7 @@ template <typename T, typename R> void transmitln(T message, R value);
 void setup()
 {
 #if defined(ARDUINO_ARCH_ESP32) && (ApoGee || USE_LoRa_E32_settable)
-	EEPROM.begin(512);
+	EEPROM.begin(_EEPROM_SIZE);
 #endif // defined(ARDUINO_ARCH_ESP32) && (ApoGee || USE_LoRa_E32_settable)
 #if PWMapg
 	pinMode(PWMout, OUTPUT);
@@ -1207,7 +1228,7 @@ void setup()
 
 	#if (USE_LoRa_E32_settable) && (ApoGee)
 	LoRaEEAddress = apg.getEEAddress() + sizeof(float);
-	if(LoRaEEAddress + sizeof(LoRaEEConfig) >= EEPROM.length()) LoRaEEAddress = 0;
+	if(LoRaEEAddress + sizeof(LoRaEEConfig) >= (_EEPROM_SIZE)) LoRaEEAddress = 0;
 	#endif // (USE_LoRa_E32_settable) && (ApoGee)
 
 	loadLoRaDefaultConfig();
@@ -1835,6 +1856,11 @@ inline void RemoveBefore()
 #endif // BuZZ
 
 	} while (!rbf);
+
+#if USE_LoRa_E32_settable
+	pauseTelemetryUntil = 0;	// Garante telemetria ativa ao entrar em voo
+#endif // USE_LoRa_E32_settable
+
 #if BuZZ
 	beep();
 #endif // BuZZ
