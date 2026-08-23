@@ -18,6 +18,7 @@
 #endif // ARDUINO_AVR_MEGA2560
 
 #include <EEPROM.h>
+#include "../EEDataRegister/EEDataRegister.h"
 
 #define _GERAL_TIME uint32_t(unsigned(/*S*/ 10*(__TIME__[6] - '0') + (__TIME__[7] - '0')) + 60 * \
                             (unsigned(/*M*/ 10*(__TIME__[3] - '0') + (__TIME__[4] - '0')) + 60 * \
@@ -25,11 +26,11 @@
                             (unsigned(/*D*/ 10*(__DATE__[4] - '0') + (__DATE__[5] - '0')) \
                             ))))
 
-#if defined(ARDUINO_ARCH_ESP32)
-	#define _EEPROM_SIZE 512
-#else
-	#define _EEPROM_SIZE (E2END + 1)
-#endif
+// #if defined(ARDUINO_ARCH_ESP32)
+// 	#define _EEPROM_SIZE 512
+// #else
+// 	#define _EEPROM_SIZE (E2END + 1)
+// #endif
 
 class Apogeu
 {

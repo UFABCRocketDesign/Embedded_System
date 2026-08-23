@@ -1846,14 +1846,14 @@ inline void RemoveBefore()
 		LoRaSend();
 #endif // LoRamode
 
-#if BuZZ
+#if BEEPING
 		///////////////////////////////////////
 
 		beep(sysC);
 
 		///////////////////////////////////////
 
-#endif // BuZZ
+#endif // BEEPING
 
 	} while (!rbf);
 
@@ -1861,9 +1861,9 @@ inline void RemoveBefore()
 	pauseTelemetryUntil = 0;	// Garante telemetria ativa ao entrar em voo
 #endif // USE_LoRa_E32_settable
 
-#if BuZZ
+#if BEEPING
 	beep();
-#endif // BuZZ
+#endif // BEEPING
 }
 #endif // RBF
 
