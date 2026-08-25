@@ -51,6 +51,16 @@ static constexpr uint16_t compileTimeHashCalc() {
     return hashStringC11(__TIME__, hashStringC11(__DATE__, 0));
 }
 
+// Base pseudo-aleatoria para UM CONJUNTO de registros.
+// Recebe o total de bytes do layout inteiro, de forma que todos os
+// registros se desloquem JUNTOS, preservando o espacamento relativo.
+static constexpr uint16_t compileTimeLayoutBase(uint16_t totalBytes) {
+	return static_cast<uint16_t>(
+		getCompileTimestampSeconds() %
+		((_EEPROM_SIZE > totalBytes) ? (_EEPROM_SIZE - totalBytes + 1) : 1)
+	);
+}
+
 template <typename type>
 class EEDataRegister{
 	static constexpr uint16_t expectedCompileHash = compileTimeHashCalc();
@@ -60,6 +70,10 @@ class EEDataRegister{
 	uint16_t totalSize = sizeof(EEDataRegister<type>);	// Tamanho (metadados + data)
 	uint16_t compileHash = expectedCompileHash;			// Versão de compilação
 	uint16_t checkSum = 0;								// Integridade dos dados
+
+	// Permite que EEDataRegister<A> leia o endereco de EEDataRegister<B>
+	template <typename U> friend class EEDataRegister;
+
 
 	public:
 
@@ -72,29 +86,49 @@ class EEDataRegister{
 		return _EEPROM_SIZE;
 	}
 
-	// Calcula um endereço base pseudo-aleatório baseado no timestamp da compilação
-	// Garantindo que a estrutura inteira caiba dentro da EEPROM
-	static constexpr uint16_t getCompileRefAddress() {
-		return static_cast<uint16_t>(
-			getCompileTimestampSeconds() % (_EEPROM_SIZE > sizeof(EEDataRegister<type>) ?
-				(_EEPROM_SIZE - sizeof(EEDataRegister<type>) + 1) : 1
-			)
-		);
+	static constexpr uint16_t blockSize() {
+		return static_cast<uint16_t>(sizeof(EEDataRegister<type>));
 	}
+
+	static constexpr uint32_t addressAfter(uint16_t base) {
+		return static_cast<uint32_t>(base) + blockSize();
+	}
+
+	static constexpr bool fitsAt(uint32_t base) {
+		return (base + blockSize()) <= _EEPROM_SIZE;
+	}
+
+
+	// ATENCAO: considera SOMENTE este tipo, nao coordena com outros
+	// registros. Para varios registros, use compileTimeLayoutBase()
+	// com o total do conjunto, ou simplesmente base fixa.
+	static constexpr uint16_t getCompileRefAddress() {
+		return compileTimeLayoutBase(blockSize());
+	}
+
 
 	uint16_t computeDataCheckSum() const;
 	void update();
 	bool isValid() const;
+
+	uint16_t getAddress() const { return eeAddress; }
+
 
 	bool fitsInEEPROM() const;
 	bool fitsInEEPROM(uint16_t address) const;
 
 	bool load();
 	bool load(uint16_t address);
+	bool saveIfChanged();
 	bool save();
 	bool save(uint16_t address);
 
-	bool getNextAvailableAddress(uint16_t &nextAddr) const;
+
+	bool placeAt(uint16_t address);
+
+	template <typename PrevType>
+	bool placeAfter(const EEDataRegister<PrevType>& prev);
+
 
 	// 1. Checa se um registro de tipo NextType cabe a partir de um endereço base qualquer
 	template <typename NextType>
@@ -103,10 +137,6 @@ class EEDataRegister{
 	// 2. Calcula o endereço imediatamente após o bloco atual e valida se cabe NextType
 	template <typename NextType>
 	bool getNextAvailableAddressFor(uint16_t &nextAddr) const;
-
-	// 3. Procura um endereço válido a partir de startAddress que comporte NextType (faz wrap/ajuste se necessário)
-	template <typename NextType>
-	static bool getNextValidAddressFrom(uint16_t startAddress, uint16_t &validAddr);
 };
 
 #include "EEDataRegister.tpp"

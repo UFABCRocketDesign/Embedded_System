@@ -34,36 +34,97 @@ float Apogeu::getZero()
 	return base;
 }
 
-bool Apogeu::fixZero(float maxRange)
+// bool Apogeu::fixZero(float maxRange)
+// {
+// 	float eeBase;
+// 	EEPROM.get(eeAddress, eeBase);
+
+// 	bool eeValid = true;
+// 	eeValid &= !isnan(eeBase);
+// 	eeValid &= !isinf(eeBase);
+// 	eeValid &= eeBase <= 44330.0f; // Max value of the barometric equation
+// 	eeValid &= eeBase >= -44330.0f; // Arbitrary value
+
+// 	if(eeValid && (baseMax - baseMin >= maxRange)) {
+// 		base = eeBase;
+// 		usingFixZero = true;
+// 	} else if(!eeValid || (abs(eeBase - base) >= maxRange)){
+// 		EEPROM.put(eeAddress, base);
+// 		#if defined(ARDUINO_ARCH_ESP32)
+// 		EEPROM.commit();
+// 		#endif // defined(ARDUINO_ARCH_ESP32)
+// 	}
+
+// 	return usingFixZero;
+// }
+
+bool Apogeu::fixZero(float maxRange, float maxDrift)
 {
-	float eeBase;
-	EEPROM.get(eeAddress, eeBase);
+	// integridade (checksum + build + tamanho + endereco) vem do registro
+	bool eeValid = zeroReg.load();
 
-	bool eeValid = true;
-	eeValid &= !isnan(eeBase);
-	eeValid &= !isinf(eeBase);
-	eeValid &= eeBase <= 44330.0f; // Max value of the barometric equation
-	eeValid &= eeBase >= -44330.0f; // Arbitrary value
+	// dominio: o checksum prova bytes intactos, nao valor plausivel
+	if (eeValid) {
+		const float eeBase = zeroReg.data.base;                          // (1)
+		eeValid &= !isnan(eeBase);
+		eeValid &= !isinf(eeBase);
+		eeValid &= eeBase <=  44330.0f;
+		eeValid &= eeBase >= -44330.0f;
+	}
 
-	if(eeValid && (baseMax - baseMin >= maxRange)) {
-		base = eeBase;
-		usingFixZero = true;
-	} else if(!eeValid || (abs(eeBase - base) >= maxRange)){
-		EEPROM.put(eeAddress, base);
-		#if defined(ARDUINO_ARCH_ESP32)
-		EEPROM.commit();
-		#endif // defined(ARDUINO_ARCH_ESP32)
+	// So faz sentido olhar o bit se o registro e valido
+	const bool hadLiftoff = eeValid && ((zeroReg.data.flags & ZERO_FLAG_LIFTOFF) != 0);   // (2)
+
+	if (eeValid)
+	{
+		// Dois indicios independentes de que NAO estamos na base:
+		const bool wasMoving  = (baseMax - baseMin) >= maxRange;	// media feita em movimento
+		// A distancia so vale se ja houve decolagem NESTE build, senao trocar
+		// de local de lancamento seria lido como reinicio em voo.
+		const bool farFromRef = hadLiftoff && (abs(zeroReg.data.base - base) >= maxDrift); // (3)
+
+		if (wasMoving || farFromRef) {
+			base = zeroReg.data.base;	// reinicio fora da base: recupera     // (1)
+			usingFixZero = true;
+			return usingFixZero;		// nao grava: a referencia boa e a da EEPROM
+		}
+	}
+
+	// Estamos na base: grava/atualiza a referencia e limpa bit de voo antigo
+	if (!eeValid || hadLiftoff || (abs(zeroReg.data.base - base) >= maxRange)) {           // (4)
+		zeroReg.data.base  = base;                                                     // (1)
+		zeroReg.data.flags = 0;                                                        // (4)
+		zeroReg.saveIfChanged();	// nao gasta escrita se ja for igual
 	}
 
 	return usingFixZero;
 }
+
+
+uint16_t Apogeu::getEEAddress()
+{
+	return zeroReg.getAddress();
+}
+
+void Apogeu::markLiftoff()
+{
+	if (zeroReg.data.flags & ZERO_FLAG_LIFTOFF) return;	// ja gravado
+	zeroReg.data.flags |= ZERO_FLAG_LIFTOFF;
+	zeroReg.save();		// save direto: ja sabemos que mudou
+}
+
+bool Apogeu::getLiftoff() const
+{
+	return (zeroReg.data.flags & ZERO_FLAG_LIFTOFF) != 0;
+}
+
 bool Apogeu::getFixZero(){
 	return usingFixZero;
 }
 
-uint16_t Apogeu::getEEAddress(){
-	return eeAddress;
-}
+// uint16_t Apogeu::getEEAddress(){
+// 	return eeAddress;
+// }
 
 void Apogeu::resetZero()
 {

@@ -18,13 +18,14 @@
 #endif // ARDUINO_AVR_MEGA2560
 
 #include <EEPROM.h>
-#include "../EEDataRegister/EEDataRegister.h"
+// #include "../EEDataRegister/EEDataRegister.h"
+#include "../EEDataRegister/EEMap.h"
 
-#define _GERAL_TIME uint32_t(unsigned(/*S*/ 10*(__TIME__[6] - '0') + (__TIME__[7] - '0')) + 60 * \
-                            (unsigned(/*M*/ 10*(__TIME__[3] - '0') + (__TIME__[4] - '0')) + 60 * \
-                            (unsigned(/*H*/ 10*(__TIME__[0] - '0') + (__TIME__[1] - '0')) + 24 * \
-                            (unsigned(/*D*/ 10*(__DATE__[4] - '0') + (__DATE__[5] - '0')) \
-                            ))))
+// #define _GERAL_TIME uint32_t(unsigned(/*S*/ 10*(__TIME__[6] - '0') + (__TIME__[7] - '0')) + 60 * \
+//                             (unsigned(/*M*/ 10*(__TIME__[3] - '0') + (__TIME__[4] - '0')) + 60 * \
+//                             (unsigned(/*H*/ 10*(__TIME__[0] - '0') + (__TIME__[1] - '0')) + 24 * \
+//                             (unsigned(/*D*/ 10*(__DATE__[4] - '0') + (__DATE__[5] - '0')) \
+//                             ))))
 
 // #if defined(ARDUINO_ARCH_ESP32)
 // 	#define _EEPROM_SIZE 512
@@ -32,12 +33,25 @@
 // 	#define _EEPROM_SIZE (E2END + 1)
 // #endif
 
+// Referencia de altitude zero persistida na EEPROM.
+// flags deixa espaco para mais estado de voo sem mudar o tamanho do bloco.
+struct ZeroRef {
+	float   base  = 0.0f;
+	uint8_t flags = 0;
+};
+
+#define ZERO_FLAG_LIFTOFF 0x01	// decolagem ja confirmada NESTE build
+
+
 class Apogeu
 {
 	const unsigned int N, R, Rl1;
 	const float S;
 	const float Rf;
-	const uint16_t eeAddress = _GERAL_TIME % (_EEPROM_SIZE - sizeof(float));
+	// const uint16_t eeAddress = _GERAL_TIME % (_EEPROM_SIZE - sizeof(float));
+	EEDataRegister<ZeroRef> zeroReg{eeSlotAddress(EE_SLOT_APOGEU_ZERO)};
+	static_assert(EEDataRegister<ZeroRef>::blockSize() <= EE_SLOT_SIZE,
+		"Apogeu: bloco do zero excede o slot");
 	float base = 0;
 	float baseMax = 0;
 	float baseMin = 0;
@@ -70,9 +84,11 @@ public:
 	Apogeu(unsigned int n, unsigned int r, float s);
 	float addZero(long P, float sealevelP = 101325);
 	float getZero();
-	bool fixZero(float maxRange = 10.0f);
+	bool fixZero(float maxRange = 10.0f, float maxDrift = 100.0f);
 	bool getFixZero();
 	uint16_t getEEAddress();
+	void markLiftoff();
+	bool getLiftoff() const;
 	void resetZero();
 	void resetAptPt();
 	void resetTimer();

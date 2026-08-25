@@ -16,6 +16,10 @@
 
 		#define CURRENT_MODE_WUPSdelay	10	// Delay (seconds) to bypass possible transonic unstable pressure
 
+		#define CURRENT_MODE_Fix0range	10	// Dispersao (m) que indica leitura em movimento
+		#define CURRENT_MODE_Fix0diff		150	// Distancia (m) da referencia que indica reinicio fora da base
+
+
 		#define CURRENT_MODE_PROJECT_NAME "Airuma"
 
 	#elif USING_MODE == MODE_ELEVADOR
@@ -26,6 +30,9 @@
 		#define CURRENT_MODE_WUFheigh	5	// Min height (meters) to confirm liftoff
 
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
+
+		#define CURRENT_MODE_Fix0range	3	// Dispersao (m) que indica leitura em movimento
+		#define CURRENT_MODE_Fix0diff		15	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Lift"
 
@@ -38,6 +45,9 @@
 
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
 
+		#define CURRENT_MODE_Fix0range	3	// Dispersao (m) que indica leitura em movimento
+		#define CURRENT_MODE_Fix0diff		15	// Distancia (m) da referencia que indica reinicio fora da base
+
 		#define CURRENT_MODE_PROJECT_NAME "Vacuum"
 
 	#elif USING_MODE == MODE_MANUAL
@@ -48,6 +58,9 @@
 		#define CURRENT_MODE_WUFheigh	3	// Min height (meters) to confirm liftoff
 
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
+
+		#define CURRENT_MODE_Fix0range	2	// Dispersao (m) que indica leitura em movimento
+		#define CURRENT_MODE_Fix0diff		5	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Hand"
 

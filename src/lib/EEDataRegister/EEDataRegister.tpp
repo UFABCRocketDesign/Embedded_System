@@ -45,15 +45,34 @@ template <typename type> bool EEDataRegister<type>::isValid() const {
 }
 
 template <typename type> bool EEDataRegister<type>::load() {
-    if (!fitsInEEPROM()) return false;
-    EEPROM.get(eeAddress, *this);
-    return isValid();
+	const uint16_t requested = eeAddress;
+
+	if (!fitsInEEPROM(requested)) return false;
+
+	EEPROM.get(requested, *this);
+
+	const bool addressMatches = (eeAddress == requested);
+	eeAddress = requested;					// nunca herdar lixo da EEPROM
+
+	return addressMatches && isValid();
 }
 
-template <typename type> bool EEDataRegister<type>::load(uint16_t address) {
-    this->eeAddress = address;
-    return load();
+
+template <typename type> bool EEDataRegister<type>::load(uint16_t address)
+{
+	if (!fitsInEEPROM(address)) return false;
+	this->eeAddress = address;
+	return load();
 }
+
+template <typename type> bool EEDataRegister<type>::saveIfChanged()
+{
+    EEDataRegister<type> stored;
+    if (stored.load(eeAddress) && memcmp(&stored.data, &data, sizeof(type)) == 0)
+        return true;                     // ja identico: nao gasta escrita
+    return save();
+}
+
 
 template <typename type> bool EEDataRegister<type>::save() {
     if (!fitsInEEPROM()) return false;
@@ -68,38 +87,35 @@ template <typename type> bool EEDataRegister<type>::save() {
 }
 
 template <typename type> bool EEDataRegister<type>::save(uint16_t address) {
-    this->eeAddress = address;
-    return save();
+	if (!fitsInEEPROM(address)) return false;
+	this->eeAddress = address;
+	return save();
 }
 
 template <typename type> template <typename NextType>
 bool EEDataRegister<type>::canFitAfter(uint16_t baseAddress) {
-    uint32_t endAddress = static_cast<uint32_t>(baseAddress) + sizeof(EEDataRegister<NextType>);
-    return (endAddress <= getEEPROMSize());
+	return EEDataRegister<NextType>::fitsAt(static_cast<uint32_t>(baseAddress));
 }
 
 template <typename type> template <typename NextType>
 bool EEDataRegister<type>::getNextAvailableAddressFor(uint16_t &nextAddr) const {
-    uint32_t targetAddress = static_cast<uint32_t>(eeAddress) + totalSize;
-    if (canFitAfter<NextType>(static_cast<uint16_t>(targetAddress))) {
-        nextAddr = static_cast<uint16_t>(targetAddress);
-        return true;
-    }
-    return false; // Não cabe na EEPROM física
+	const uint32_t targetAddress = static_cast<uint32_t>(eeAddress) + totalSize;
+	if (!EEDataRegister<NextType>::fitsAt(targetAddress)) return false;
+	nextAddr = static_cast<uint16_t>(targetAddress);
+	return true;
 }
 
-template <typename type> template <typename NextType>
-bool EEDataRegister<type>::getNextValidAddressFrom(uint16_t startAddress, uint16_t &validAddr) {
-    // Se o startAddress atual já comporta o próximo registro, use-o
-    if (canFitAfter<NextType>(startAddress)) {
-        validAddr = startAddress;
-        return true;
-    }
-    // Se estourou a memória, tenta dar wrap para o início da EEPROM (endereço 0)
-    if (canFitAfter<NextType>(0)) {
-        validAddr = 0;
-        return true;
-    }
-    // O registro é maior do que a EEPROM inteira
-    return false;
+
+template <typename type> bool EEDataRegister<type>::placeAt(uint16_t address) {
+	if (!fitsInEEPROM(address)) return false;
+	eeAddress = address;
+	return true;
+}
+
+template <typename type> template <typename PrevType>
+bool EEDataRegister<type>::placeAfter(const EEDataRegister<PrevType>& prev) {
+	const uint32_t target = static_cast<uint32_t>(prev.eeAddress) + sizeof(EEDataRegister<PrevType>);
+	if (!fitsAt(target)) return false;
+	eeAddress = static_cast<uint16_t>(target);
+	return true;
 }
