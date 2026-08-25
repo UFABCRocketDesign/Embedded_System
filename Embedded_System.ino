@@ -511,28 +511,34 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 #define LoRa_CHAN 0x2A // 42 decimal (904 - 862)
 
 #include "LoRa_E32.h"
-#include <EEPROM.h>
+// #include <EEPROM.h>
+#include "src/lib/EEDataRegister/EEMap.h"
 
-uint16_t LoRaEEAddress = 0x0; // Atualizar este valor no setup
+// uint16_t LoRaEEAddress = 0x0; // Atualizar este valor no setup
 Configuration configLoRa;
 
-struct LoRaEEConfig{
-	Configuration configuration;
-	uint16_t compileHash = 0;
-	uint16_t checkSum = 0;
-};
+// struct LoRaEEConfig{
+// 	Configuration configuration;
+// 	uint16_t compileHash = 0;
+// 	uint16_t checkSum = 0;
+// };
+
+EEDataRegister<Configuration> loraReg(eeSlotAddress(EE_SLOT_LORA_CONFIG));
+static_assert(EEDataRegister<Configuration>::blockSize() <= EE_SLOT_SIZE,
+	"LoRa: bloco de configuracao excede o slot");
+
 
 LoRa_E32 LoRaConfig(&LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_PIN), UART_BPS_RATE(LoRaBaudRate));
 
-uint16_t calcCheckSum(const Configuration& configuration)
-{
-	uint16_t sum = 0;
-	const byte* p = (const byte*)&configuration;
-	for (size_t i = 0; i < sizeof(Configuration); i++) {
-		sum += p[i];
-	}
-	return sum;
-}
+// uint16_t calcCheckSum(const Configuration& configuration)
+// {
+// 	uint16_t sum = 0;
+// 	const byte* p = (const byte*)&configuration;
+// 	for (size_t i = 0; i < sizeof(Configuration); i++) {
+// 		sum += p[i];
+// 	}
+// 	return sum;
+// }
 
 void loadLoRaDefaultConfig()
 {
@@ -611,42 +617,52 @@ bool getLoRaConfig()
 	return true;
 }
 
-uint16_t compileTimeHash() {
-	const char* date = __DATE__;
-	const char* time = __TIME__;
-	uint16_t hash = 0;
-	while (*date) {
-		hash = (hash << 5) - hash + *date++;
-	}
-	while (*time) {
-		hash = (hash << 5) - hash + *time++;
-	}
-	return hash;
-}
+// uint16_t compileTimeHash() {
+// 	const char* date = __DATE__;
+// 	const char* time = __TIME__;
+// 	uint16_t hash = 0;
+// 	while (*date) {
+// 		hash = (hash << 5) - hash + *date++;
+// 	}
+// 	while (*time) {
+// 		hash = (hash << 5) - hash + *time++;
+// 	}
+// 	return hash;
+// }
 
+// void saveLoRaEEConfig(){
+// 	LoRaEEConfig loRaEEAux;
+// 	loRaEEAux.configuration = configLoRa;
+// 	loRaEEAux.compileHash = compileTimeHash();
+// 	loRaEEAux.checkSum = calcCheckSum(configLoRa);
+// 	EEPROM.put(LoRaEEAddress, loRaEEAux);
+// 	#if defined(ARDUINO_ARCH_ESP32)
+// 	EEPROM.commit();
+// 	#endif // defined(ARDUINO_ARCH_ESP32)
+// }
 void saveLoRaEEConfig(){
-	LoRaEEConfig loRaEEAux;
-	loRaEEAux.configuration = configLoRa;
-	loRaEEAux.compileHash = compileTimeHash();
-	loRaEEAux.checkSum = calcCheckSum(configLoRa);
-	EEPROM.put(LoRaEEAddress, loRaEEAux);
-	#if defined(ARDUINO_ARCH_ESP32)
-	EEPROM.commit();
-	#endif // defined(ARDUINO_ARCH_ESP32)
+	loraReg.data = configLoRa;
+	loraReg.saveIfChanged();
 }
 
+// bool loadLoRaEEConfig() {
+// 	LoRaEEConfig loRaEEAux;
+// 	EEPROM.get(LoRaEEAddress, loRaEEAux);
+
+// 	uint16_t sum = calcCheckSum(loRaEEAux.configuration);
+
+// 	if((sum == loRaEEAux.checkSum) && (loRaEEAux.compileHash == compileTimeHash()) && (loRaEEAux.configuration.HEAD == 0xC0 || loRaEEAux.configuration.HEAD == 0xC2))
+// 	{
+// 		configLoRa = loRaEEAux.configuration;
+// 		return true;
+// 	}
+// 	return false;
+// }
 bool loadLoRaEEConfig() {
-	LoRaEEConfig loRaEEAux;
-	EEPROM.get(LoRaEEAddress, loRaEEAux);
-
-	uint16_t sum = calcCheckSum(loRaEEAux.configuration);
-
-	if((sum == loRaEEAux.checkSum) && (loRaEEAux.compileHash == compileTimeHash()) && (loRaEEAux.configuration.HEAD == 0xC0 || loRaEEAux.configuration.HEAD == 0xC2))
-	{
-		configLoRa = loRaEEAux.configuration;
-		return true;
-	}
-	return false;
+	if (!loraReg.load()) return false;
+	if (!(loraReg.data.HEAD == 0xC0 || loraReg.data.HEAD == 0xC2)) return false;
+	configLoRa = loraReg.data;
+	return true;
 }
 
 #define RX_CHG_FREQ_REQ_HEAD "MUD4R_FR3Q_PFV.CH4N"
@@ -1226,10 +1242,10 @@ void setup()
 
 	LoRaConfig.begin();
 
-	#if (USE_LoRa_E32_settable) && (ApoGee)
-	LoRaEEAddress = apg.getEEAddress() + sizeof(float);
-	if(LoRaEEAddress + sizeof(LoRaEEConfig) >= (_EEPROM_SIZE)) LoRaEEAddress = 0;
-	#endif // (USE_LoRa_E32_settable) && (ApoGee)
+	// #if (USE_LoRa_E32_settable) && (ApoGee)
+	// LoRaEEAddress = apg.getEEAddress() + sizeof(float);
+	// if(LoRaEEAddress + sizeof(LoRaEEConfig) >= (_EEPROM_SIZE)) LoRaEEAddress = 0;
+	// #endif // (USE_LoRa_E32_settable) && (ApoGee)
 
 	loadLoRaDefaultConfig();
 	bool loRaEEValid = loadLoRaEEConfig();
@@ -1285,7 +1301,7 @@ void setup()
 #endif // USE_BMP280
 #if ApoGee
 		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
-		apg.fixZero();
+		apg.fixZero(CURRENT_MODE_Fix0range, CURRENT_MODE_Fix0diff);
 #endif // ApoGee
 #if COMmode
 		transmit(F("\nBaro ok "));
@@ -1316,7 +1332,8 @@ void setup()
 			LoRa.print(F(" > CHAN < 0x"));
 			LoRa.print(configLoRa.CHAN, HEX);
 			LoRa.print(F(" > Ref @ < 0x "));
-			LoRa.print(LoRaEEAddress, HEX);
+			// LoRa.print(LoRaEEAddress, HEX);
+			LoRa.print(loraReg.getAddress(), HEX);
 			LoRa.print(F(" >)! "));
 
 			if(loRaEEValid)
@@ -1703,6 +1720,9 @@ void setup()
 #if AnyDeploy
 	rec.resetTimer();
 #endif // AnyDeploy
+#if ApoGee && WUF
+	apg.markLiftoff();	// persiste 'ja decolou neste build' (apos os timers)
+#endif // ApoGee && WUF
 
 #if WUPS
 	WaitUntilPressureStabilize(CURRENT_MODE_WUPSdelay);
@@ -1846,14 +1866,14 @@ inline void RemoveBefore()
 		LoRaSend();
 #endif // LoRamode
 
-#if BuZZ
+#if BEEPING
 		///////////////////////////////////////
 
 		beep(sysC);
 
 		///////////////////////////////////////
 
-#endif // BuZZ
+#endif // BEEPING
 
 	} while (!rbf);
 
@@ -1861,9 +1881,9 @@ inline void RemoveBefore()
 	pauseTelemetryUntil = 0;	// Garante telemetria ativa ao entrar em voo
 #endif // USE_LoRa_E32_settable
 
-#if BuZZ
+#if BEEPING
 	beep();
-#endif // BuZZ
+#endif // BEEPING
 }
 #endif // RBF
 
