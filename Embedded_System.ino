@@ -143,6 +143,22 @@
 #define Pgps (PRINT && GPSmode && 1)		//Print GPS informations
 #define Psep (PRINT && 0)					//Print visual separator
 
+/**************************** SD Log ***************************/
+#define Sgps (SDCard && GPSmode && 1)		//Log GPS data
+#define Sapg (SDCard && ApoGee && 1)		//Log apogee alpha and sigma
+#define Sdpl (SDCard && AnyDeploy && 1)	//Log parachute deployment state
+#define Shea (SDCard && AnyDeploy && 1)	//Log parachute health (igniter continuity)
+#define Semg (SDCard && AnyDeploy && 1)	//Log emergency state
+#define Srst (SDCard && 1)					//Log reset reason on file header
+
+#define Crst (COMmode && 1)			//Report reset reason on Serial/LoRa
+
+/* Colunas continuas: repetem o ultimo valor conhecido em toda linha.
+   Com 0, o dado so aparece no instante do evento. */
+#define Sgps_C (Sgps && 1)					//GPS em toda linha
+#define Sdpl_C (Sdpl && 1)					//Acionamentos em toda linha
+
+
 #define Tcom (PRINT && 1)					//Print time counter
 #define Lcom (PRINT && 0)					//Print loop counter
 #define Ncom (PRINT && 0)					//Print eachN counter
@@ -1139,6 +1155,33 @@ template <typename T, typename R> void transmitln(T message, R value);
 
 #pragma endregion
 
+#if (Srst || Crst) && defined(ARDUINO_ARCH_ESP32)
+// Nome do motivo de reinicio. O numero fica no log para scripts;
+// o nome, para quem le o arquivo depois do voo.
+// https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/misc_system_api.html#_CPPv416esp_reset_reasonv
+const __FlashStringHelper* resetReasonName(esp_reset_reason_t reset)
+{
+	switch (reset) {
+		case ESP_RST_POWERON:    return F("POWERON");
+		case ESP_RST_EXT:        return F("EXT");
+		case ESP_RST_SW:         return F("SW");
+		case ESP_RST_PANIC:      return F("PANIC");
+		case ESP_RST_INT_WDT:    return F("INT_WDT");
+		case ESP_RST_TASK_WDT:   return F("TASK_WDT");
+		case ESP_RST_WDT:        return F("WDT");
+		case ESP_RST_DEEPSLEEP:  return F("DEEPSLEEP");
+		case ESP_RST_BROWNOUT:   return F("BROWNOUT");
+		case ESP_RST_SDIO:       return F("SDIO");
+		case ESP_RST_USB:        return F("USB");
+		case ESP_RST_JTAG:       return F("JTAG");
+		case ESP_RST_EFUSE:      return F("EFUSE");
+		case ESP_RST_PWR_GLITCH: return F("PWR_GLITCH");
+		case ESP_RST_CPU_LOCKUP: return F("CPU_LOCKUP");
+		default:                 return F("UNKNOWN");
+	}
+}
+#endif // (Srst || Crst) && defined(ARDUINO_ARCH_ESP32)
+
 
 /////////////////////////////////////////////////////SETUP/////////////////////////////////////////////////////
 
@@ -1257,6 +1300,11 @@ void setup()
 #endif // USE_LoRa_E32
 
 #endif // LoRamode
+
+#if Crst && defined(ARDUINO_ARCH_ESP32)
+	transmit(F("\nReset: "));
+	transmit(resetReasonName(esp_reset_reason()));
+#endif // Crst && defined(ARDUINO_ARCH_ESP32)
 
 #if GPSmode
 	GpS.begin();
@@ -1446,7 +1494,17 @@ void setup()
 
 		//////////////////File Header//////////////////
 
+#if Srst && defined(ARDUINO_ARCH_ESP32)
+		SDC.theFile.print(F("Reset reason:\t"));
+		SDC.theFile.print(int(esp_reset_reason()));
+		SDC.theFile.print(F(" <"));
+		SDC.theFile.print(resetReasonName(esp_reset_reason()));
+		SDC.theFile.println(F(">"));
+#endif // Srst && defined(ARDUINO_ARCH_ESP32)
 #if ApoGee
+		SDC.theFile.print(F("Liftoff flag:\t"));
+		SDC.theFile.print(apg.getLiftoff());
+		SDC.theFile.println();
 		SDC.theFile.print(F("Start at:\t"));
 		SDC.theFile.print(apg.getZero());
 		SDC.theFile.print(F("\tm"));
@@ -1477,9 +1535,43 @@ void setup()
 #if ApoGee
 			"m.h.baro\t"
 #endif // ApoGee
-#if GPSmode
-			"lat.GPS\tlon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\t"
-#endif // GPSmode
+#if Sgps
+			"lat.GPS\tlon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\tnew.GPS\t"
+#endif // Sgps
+#if Sapg
+			"alpha.apg\tsigma.apg\t"
+#endif // Sapg
+#if Sdpl_C
+			"on.mainN\tfire.mainN\t"
+#if DualDeploy
+			"on.drogN\tfire.drogN\t"
+#endif // DualDeploy
+#if MainBackup
+			"on.mainB\tfire.mainB\t"
+#endif // MainBackup
+#if DrogueBackup
+			"on.drogB\tfire.drogB\t"
+#endif // DrogueBackup
+#endif // Sdpl_C
+
+#if Shea
+			"ok.mainN\t"
+#if DualDeploy
+			"ok.drogN\t"
+#endif // DualDeploy
+#if MainBackup
+			"ok.mainB\t"
+#endif // MainBackup
+#if DrogueBackup
+			"ok.drogB\t"
+#endif // DrogueBackup
+#endif // Shea
+
+#if Semg
+			"emrg\t"
+#endif // Semg
+
+
 		));
 
 		///////////////////////////////////////////////
@@ -2293,15 +2385,18 @@ inline void SDSend()
 
 #endif // USE_BARO
 
-#if GPSmode
+#if Sgps
+#if (!Sgps_C)
 			if (GpS.isNew())
 			{
+#endif // (!Sgps_C)
 				SDC.theFile.print(GpS.getLatitude(), 6);	SDC.tab(); //Latitude
 				SDC.theFile.print(GpS.getLongitude(), 6);	SDC.tab(); //Longitude
 				SDC.theFile.print(GpS.getAltitude());		SDC.tab(); //Altitude
 				SDC.theFile.print(GpS.getMps());			SDC.tab(); //Velocidade
 				SDC.theFile.print(GpS.getSatellites());		SDC.tab(); //Numero de satelites
 				SDC.theFile.print(GpS.getPrecision());		SDC.tab(); //Precisao
+#if (!Sgps_C)
 			}
 			else
 			{
@@ -2312,7 +2407,47 @@ inline void SDSend()
 				SDC.tab();
 				SDC.tab();
 			}
-#endif // GPSmode
+#endif // (!Sgps_C)
+			SDC.theFile.print(GpS.isNew());				SDC.tab(); //Fix novo nesta linha
+#endif // Sgps
+
+#if Sapg
+			SDC.theFile.print(apg.getAlpha());				SDC.tab(); //Apogeu declarado
+			SDC.theFile.print(apg.getSigma(), 3);			SDC.tab(); //Confianca do apogeu
+#endif // Sapg
+#if Sdpl_C
+			SDC.theFile.print(rec.mainN.getGlobalState(0));	SDC.tab(); //Main normal ja acionou
+			SDC.theFile.print(rec.mainN.getState(1));		SDC.tab(); //Main normal disparando agora
+#if DualDeploy
+			SDC.theFile.print(rec.drogN.getGlobalState(0));	SDC.tab();
+			SDC.theFile.print(rec.drogN.getState(1));		SDC.tab();
+#endif // DualDeploy
+#if MainBackup
+			SDC.theFile.print(rec.mainB.getGlobalState(0));	SDC.tab();
+			SDC.theFile.print(rec.mainB.getState(1));		SDC.tab();
+#endif // MainBackup
+#if DrogueBackup
+			SDC.theFile.print(rec.drogB.getGlobalState(0));	SDC.tab();
+			SDC.theFile.print(rec.drogB.getState(1));		SDC.tab();
+#endif // DrogueBackup
+#endif // Sdpl_C
+
+#if Shea
+			SDC.theFile.print(rec.mainN.info());			SDC.tab(); //Continuidade main normal
+#if DualDeploy
+			SDC.theFile.print(rec.drogN.info());			SDC.tab();
+#endif // DualDeploy
+#if MainBackup
+			SDC.theFile.print(rec.mainB.info());			SDC.tab();
+#endif // MainBackup
+#if DrogueBackup
+			SDC.theFile.print(rec.drogB.info());			SDC.tab();
+#endif // DrogueBackup
+#endif // Shea
+
+#if Semg
+			SDC.theFile.print(rec.mainN.getEmergency());	SDC.tab(); //Estado de emergencia
+#endif // Semg
 
 #if ApoGee
 			//if (apg.getApogeu(0.9, 0))

@@ -105,6 +105,10 @@ bool MonoDeploy::getGlobalState(bool type)
 	return globalState;
 }
 
+bool MonoDeploy::getEmergency() {
+	return emergencyState;
+}
+
 void MonoDeploy::refresh()
 {
 	Tnow = micros() - TimeZero;
