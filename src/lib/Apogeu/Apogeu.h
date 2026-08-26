@@ -42,6 +42,11 @@ struct ZeroRef {
 
 #define ZERO_FLAG_LIFTOFF 0x01	// decolagem ja confirmada NESTE build
 
+// Faixa de pressao aceita ao medir a referencia de zero (Pa).
+// Fora disso nao e atmosfera: e falha de leitura, e a amostra e descartada.
+#define ZERO_MIN_PA  50000L	// ~5500 m de altitude
+#define ZERO_MAX_PA 110000L	// pouco abaixo do nivel do mar
+
 
 class Apogeu
 {
@@ -86,6 +91,7 @@ public:
 	float getZero();
 	bool fixZero(float maxRange = 10.0f, float maxDrift = 100.0f);
 	bool getFixZero();
+	float getSpread();
 	uint16_t getEEAddress();
 	void markLiftoff();
 	bool getLiftoff() const;

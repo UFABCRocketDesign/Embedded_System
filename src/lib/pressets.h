@@ -31,8 +31,8 @@
 
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
 
-		#define CURRENT_MODE_Fix0range	3	// Dispersao (m) que indica leitura em movimento
-		#define CURRENT_MODE_Fix0diff		15	// Distancia (m) da referencia que indica reinicio fora da base
+		#define CURRENT_MODE_Fix0range	5	// Dispersao (m) que indica leitura em movimento
+		#define CURRENT_MODE_Fix0diff		10	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Lift"
 
@@ -45,8 +45,8 @@
 
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
 
-		#define CURRENT_MODE_Fix0range	3	// Dispersao (m) que indica leitura em movimento
-		#define CURRENT_MODE_Fix0diff		15	// Distancia (m) da referencia que indica reinicio fora da base
+		#define CURRENT_MODE_Fix0range	5	// Dispersao (m) que indica leitura em movimento
+		#define CURRENT_MODE_Fix0diff		10	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Vacuum"
 
@@ -59,8 +59,8 @@
 
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
 
-		#define CURRENT_MODE_Fix0range	2	// Dispersao (m) que indica leitura em movimento
-		#define CURRENT_MODE_Fix0diff		5	// Distancia (m) da referencia que indica reinicio fora da base
+		#define CURRENT_MODE_Fix0range	5	// Dispersao (m) que indica leitura em movimento
+		#define CURRENT_MODE_Fix0diff		10	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Hand"
 

@@ -13,6 +13,10 @@ Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 
 
 float Apogeu::addZero(long P, float sealevelP)
 {
+	// Descarta leitura implausivel: uma unica amostra ruim fica travada
+	// em baseMax/baseMin para sempre e contamina o zero medido.
+	if (P < ZERO_MIN_PA || P > ZERO_MAX_PA) return base;
+
 	// float currentHeight = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577);
 	float currentHeight = 44330.0 * (1 - pow(float(P) / sealevelP, 1 / 5.25588));
 	if (baseIndex == 0)
@@ -32,6 +36,11 @@ float Apogeu::addZero(long P, float sealevelP)
 float Apogeu::getZero()
 {
 	return base;
+}
+
+float Apogeu::getSpread()
+{
+	return (baseIndex > 0) ? (baseMax - baseMin) : 0.0f;
 }
 
 // bool Apogeu::fixZero(float maxRange)

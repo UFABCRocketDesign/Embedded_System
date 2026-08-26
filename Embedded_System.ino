@@ -1344,9 +1344,9 @@ void setup()
 	baro.begin();
 	if (baro)
 	{
-#if USE_BMP280
+// #if (USE_BMP280 || USE_BMP388)
 		for (short i = 0; i < 50; i++) baro.readAll(); // Contornar tempo de estabilização do filtro interno
-#endif // USE_BMP280
+// #endif // (USE_BMP280 || USE_BMP388)
 #if ApoGee
 		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
 		apg.fixZero(CURRENT_MODE_Fix0range, CURRENT_MODE_Fix0diff);
@@ -1507,6 +1507,8 @@ void setup()
 		SDC.theFile.println();
 		SDC.theFile.print(F("Start at:\t"));
 		SDC.theFile.print(apg.getZero());
+		SDC.theFile.print(F("\tm\tZero spread:\t"));
+		SDC.theFile.print(apg.getSpread());
 		SDC.theFile.print(F("\tm"));
 		if(apg.getFixZero()) {
 			SDC.theFile.print(F("\t(Using EEPROM Zero Ref @ < 0x"));
