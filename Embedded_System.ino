@@ -1344,9 +1344,9 @@ void setup()
 	baro.begin();
 	if (baro)
 	{
-// #if (USE_BMP280 || USE_BMP388)
+#if (!USE_BMP085)
 		for (short i = 0; i < 50; i++) baro.readAll(); // Contornar tempo de estabilização do filtro interno
-// #endif // (USE_BMP280 || USE_BMP388)
+#endif // (!USE_BMP085)
 #if ApoGee
 		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
 		apg.fixZero(CURRENT_MODE_Fix0range, CURRENT_MODE_Fix0diff);

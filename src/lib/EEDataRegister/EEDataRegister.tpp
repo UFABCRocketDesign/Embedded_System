@@ -80,7 +80,7 @@ template <typename type> bool EEDataRegister<type>::save() {
     EEPROM.put(eeAddress, *this);
 
 #if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266) || defined(ESP32) || defined(ESP8266)
-    EEPROM.commit();
+    if(!EEPROM.commit()) return false;
 #endif
 
     return true;

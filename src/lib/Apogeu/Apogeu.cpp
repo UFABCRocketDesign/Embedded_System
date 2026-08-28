@@ -100,11 +100,11 @@ bool Apogeu::fixZero(float maxRange, float maxDrift)
 	}
 
 	// Estamos na base: grava/atualiza a referencia e limpa bit de voo antigo
-	if (!eeValid || hadLiftoff || (abs(zeroReg.data.base - base) >= maxRange)) {           // (4)
+	// if (!eeValid || hadLiftoff || (abs(zeroReg.data.base - base) >= maxRange)) {           // (4)
 		zeroReg.data.base  = base;                                                     // (1)
 		zeroReg.data.flags = 0;                                                        // (4)
 		zeroReg.saveIfChanged();	// nao gasta escrita se ja for igual
-	}
+	// }
 
 	return usingFixZero;
 }
