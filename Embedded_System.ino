@@ -53,7 +53,7 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
-#define PRINT (1)							//Print or not things on Serial
+#define PRINT (0)							//Print or not things on Serial
 
 /**************************** GY80 ****************************/
 #define USE_BMP085 (USE_GY80 || 0)			//Use BMP085 sensor
