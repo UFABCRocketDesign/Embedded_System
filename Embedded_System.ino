@@ -27,10 +27,11 @@
 
 #include "src/lib/modes.h"
 
-#define USING_MODE MODE_LANCAMENTO
+// #define USING_MODE MODE_LANCAMENTO
 // #define USING_MODE MODE_ELEVADOR
 // #define USING_MODE MODE_ASPIRADOR
 // #define USING_MODE MODE_MANUAL
+#define USING_MODE MODE_VIRTUAL
 
 #include "src/lib/pressets.h"
 
@@ -44,7 +45,8 @@
 
 #define USE_GY80 (0)						//Use GY80 module
 #define USE_GY91 (0)						//Use GY91 module
-#define USE_GY912 (1)						//Use GY912 module
+#define USE_GY912 (0)						//Use GY912 module
+#define USE_VIRTUAL (1 & (USING_MODE == MODE_VIRTUAL))	// Use virtual version of things
 
 #define SDCard (1)							//Use SD card
 #define GPSmode (1)							//Use GPS
@@ -54,6 +56,7 @@
 #define ForceSysC (0)
 
 #define PRINT (1)							//Print or not things on Serial
+
 
 /**************************** GY80 ****************************/
 #define USE_BMP085 (USE_GY80 || 0)			//Use BMP085 sensor
@@ -73,11 +76,14 @@
 #define USE_ICM20948_GYRO (USE_GY912 || 0)	//Use ICM20948 sensor, gyroscope
 #define USE_AK09916 (USE_GY912 || 0)		//Use AK09916 sensor
 
+/*************************** VIRTUAL **************************/
+#define USE_V_BARO (USE_VIRTUAL && 1)		//Use Virtual Barometer
+
 /************************** 9DoF IMU **************************/
-#define USE_BARO (USE_BMP085 || USE_BMP280 || USE_BMP388)				// Use any Barometer
-#define USE_ACCEL (USE_ADXL345 || USE_MPU9250_ACCEL || USE_ICM20948_ACCEL)	// Use any Accelerometer
-#define USE_GYRO (USE_L3G4200D || USE_MPU9250_GYRO || USE_ICM20948_GYRO)		// Use any Gyroscope
-#define USE_MAGN (USE_HMC5883 || USE_AK8963 || USE_AK09916)			// Use any Magnetometer
+#define USE_BARO ((USE_BMP085) || (USE_BMP280) || (USE_BMP388) || (USE_V_BARO))				// Use any Barometer
+#define USE_ACCEL ((USE_ADXL345) || (USE_MPU9250_ACCEL) || (USE_ICM20948_ACCEL))	// Use any Accelerometer
+#define USE_GYRO ((USE_L3G4200D) || (USE_MPU9250_GYRO) || (USE_ICM20948_GYRO))		// Use any Gyroscope
+#define USE_MAGN ((USE_HMC5883) || (USE_AK8963) || (USE_AK09916))			// Use any Magnetometer
 
 /**************************** LoRa ****************************/
 
@@ -211,20 +217,27 @@ constexpr uint8_t SYSTEM_n = ( 0
 
 #include "src/lib/Classes.h"
 
+#if USE_VIRTUAL
+#include "src/lib/VirtualBridge/VirtualBridge.h"
+#endif // USE_VIRTUAL
+
 #if USE_BARO
-#if 1 < ((USE_BMP085) + (USE_BMP280) + (USE_BMP388))
+#if 1 < ((USE_V_BARO) + (USE_BMP085) + (USE_BMP280) + (USE_BMP388))
 #error: Múltiplos barômetros definidos
+#elif USE_V_BARO
+#include "src/lib/VirtualBaro/VirtualBaro.h"	// Barometro Virtual
+VirtualBaro baro;
 #elif USE_BMP085
-#include "src/lib/BMP085/BMP085.h" // Barometro BMP085
+#include "src/lib/BMP085/BMP085.h"				// Barometro BMP085
 BMP085 baro;									//Barometer object declaration
 #elif USE_BMP280
-#include "src/lib/BMP280/BMP280.h" // Barometro BMP280
+#include "src/lib/BMP280/BMP280.h"				// Barometro BMP280
 BMP280 baro;									//Barometer object declaration
 #elif USE_BMP388
-#include "src/lib/BMP388/BMP388.h" // Barometro BMP388
+#include "src/lib/BMP388/BMP388.h"				// Barometro BMP388
 BMP388 baro;									//Barometer object declaration
 #endif // USE_BMP085 / USE_BMP280
-//MovingAverage MM_baro[2]{ (2),(2) };		//Array declaration of the moving average filter objects
+// MovingAverage MM_baro[2]{ (2),(2) };			//Array declaration of the moving average filter objects
 float MM_baro[2]{};
 bool baroHasData = false;
 #endif // USE_BARO
@@ -1239,7 +1252,7 @@ void setup()
 
 
 
-#if ((PRINT) || (PERF_Tcom_print))
+#if ((PRINT) || (PERF_Tcom_print) || (VIRTUAL))
 	Serial.begin(BaudRate);
 
 	#if defined(ARDUINO_ARCH_ESP32)
@@ -2875,6 +2888,9 @@ template <typename T, typename R> void transmitln(T message, R value)
 
 inline void readEverything()
 {
+#if USE_VIRTUAL
+	Bridge.update();
+#endif // USE_VIRTUAL
 #if USE_BARO
 	if (baro)
 	{
