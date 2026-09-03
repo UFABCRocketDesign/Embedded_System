@@ -117,14 +117,14 @@ bool GyGPS::readAll()
 	if (state)
 	{
 #if USE_TINY_PLUS
-		latitude = gps.location.lat();
-		longitude = gps.location.lng();
+		latitude = (float) gps.location.lat();
+		longitude = (float) gps.location.lng();
 		age = gps.location.age();
 		satellites = gps.satellites.value();
 		precision = gps.hdop.value();
-		altitude = gps.altitude.meters();
-		Kph = gps.speed.kmph();
-		mps = gps.speed.mps();
+		altitude = (float) gps.altitude.meters();
+		Kph = (float) gps.speed.kmph();
+		mps = (float) gps.speed.mps();
 #else
 		gps.f_get_position(&latitude, &longitude, &age);
 		satellites = gps.satellites();

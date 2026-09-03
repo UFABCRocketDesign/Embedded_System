@@ -1,7 +1,7 @@
 #include "SDCH.h"
 
 ///Auxiliar para o uso do cartao SD
-SDCH::SDCH(uint8_t csPin, String name, String type, SPIClass &spi_sd) :CS(csPin), Fname0(name), Ftype((type.length() == 3) ? type : (String)"txt"), coef(8 - name.length()), nMax(pow(10, (name.length() < 8) ? 8 - name.length() : 0)), SPI_SD(spi_sd)
+SDCH::SDCH(uint8_t csPin, String name, String type, SPIClass &spi_sd) :CS(csPin), Fname0(name), Ftype((type.length() == 3) ? type : (String)"txt"), coef(8 - name.length()), nMax(pow10ul((name.length() < 8) ? 8 - name.length() : 0)), SPI_SD(spi_sd)
 {
 	newName();
 }
@@ -75,4 +75,10 @@ SDCH::operator bool()
 String SDCH::getFname()
 {
 	return Fname;
+}
+unsigned long SDCH::pow10ul(uint8_t n)
+{
+	unsigned long r = 1;
+	while (n--) r *= 10;
+	return r;
 }

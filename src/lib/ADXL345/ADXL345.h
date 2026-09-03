@@ -10,7 +10,7 @@
 class ADXL345 : public Accel
 {
 public:
-ADXL345(long recalT = 0.1);
+ADXL345(float recalT = 0.1f);
 	void begin();
 	bool readAll();
 };

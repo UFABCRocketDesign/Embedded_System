@@ -35,7 +35,7 @@ private:
   static constexpr float ACCEL_SENSITIVITY_16G = 2048.0f;
 
 public:
-  ICM20948_ACCEL(float sc, float recalT = 0.1);
+  ICM20948_ACCEL(long sc, float recalT = 0.1f);
   void begin();
   bool readAll();
 };

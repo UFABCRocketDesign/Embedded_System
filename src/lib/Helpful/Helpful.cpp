@@ -59,12 +59,12 @@ float Helpful::lapse()
 {
 	unsigned long tnow = micros(), t = tnow - lapseT;
 	lapseT = tnow;
-	return (float)t / 1000000.0;
+	return (float)t / 1000000.0f;
 }
 
 float Helpful::sinceBegin()
 {
-	return float(micros() - T0) / 1000000.0;
+	return float(micros() - T0) / 1000000.0f;
 }
 
 bool Helpful::oneTime()

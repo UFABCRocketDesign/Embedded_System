@@ -10,7 +10,7 @@
 class HMC5883 : public Magn
 {
 public:
-	HMC5883(long recalT = 0.1);
+	HMC5883(float recalT = 0.1f);
 	void begin();
 	bool readAll();
 };

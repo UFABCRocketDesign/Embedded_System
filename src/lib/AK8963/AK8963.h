@@ -35,7 +35,7 @@ int16_t yaux_mag;
 int16_t zaux_mag;
 
 public:
-	AK8963(long recalT = 0.1);
+	AK8963(float recalT = 0.1f);
 	void begin();
 	bool readAll();
 };

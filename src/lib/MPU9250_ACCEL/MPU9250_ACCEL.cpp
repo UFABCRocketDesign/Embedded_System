@@ -1,6 +1,6 @@
 #include "MPU9250_ACCEL.h"
 
-MPU9250_ACCEL::MPU9250_ACCEL(long sc, long recalT) : Accel(sc, MPU9250_ADDRESS_A, recalT)
+MPU9250_ACCEL::MPU9250_ACCEL(long sc, float recalT) : Accel(sc, MPU9250_ADDRESS_A, recalT)
 {
 }
 

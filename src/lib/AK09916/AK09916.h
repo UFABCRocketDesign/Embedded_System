@@ -28,7 +28,7 @@ class AK09916 : public Magn
 private:
   static constexpr float MAG_SENSITIVITY = 0.15f;
 public:
-  AK09916(float recalT = 0.1);
+  AK09916(float recalT = 0.1f);
   void begin();
   bool readAll();
 };

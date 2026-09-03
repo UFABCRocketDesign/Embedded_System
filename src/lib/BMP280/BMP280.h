@@ -45,7 +45,7 @@ class BMP280 : public Baro
 	int16_t dig_P7;
 	int16_t dig_P8;
 	int16_t dig_P9;
-	
+
 	uint32_t adc_p;
 	uint32_t adc_t;
 
@@ -54,7 +54,7 @@ class BMP280 : public Baro
 	BMP280_S32_t t_fine;
 
 public:
-    BMP280(float recalT = 0.1);
+    BMP280(float recalT = 0.1f);
     void begin();
     bool readAll();
 

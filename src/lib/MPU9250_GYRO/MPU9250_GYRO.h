@@ -24,7 +24,7 @@ private:
     void updateGyroConfig();
 
 public:
-    MPU9250_GYRO(long sc, long recalT = 0.1);
+    MPU9250_GYRO(long sc, float recalT = 0.1f);
     void begin();
     bool readAll();
 };

@@ -12,7 +12,7 @@
 class Magn : public Sens, public TriA
 {
 public:
-	Magn(uint8_t address, long recalT = 0.1);
+	Magn(uint8_t address, float recalT = 0.1f);
 };
 
 #endif

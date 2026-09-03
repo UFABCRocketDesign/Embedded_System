@@ -25,7 +25,7 @@ private:
     void updateAccelConfig();
 
 public:
-    MPU9250_ACCEL(long sc, long recalT = 0.1);
+    MPU9250_ACCEL(long sc, float recalT = 0.1f);
     void begin();
     bool readAll();
 };

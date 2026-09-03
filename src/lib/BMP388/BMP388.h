@@ -13,14 +13,14 @@
 #define BMP3_REG_CALIB_DATA 0x31
 #define BMP3_REG_CMD 0x7E
 
-class BMP388 : public Baro 
+class BMP388 : public Baro
 {
   double t1, t2, t3;
   double p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11;
   double t_lin;
 
 public:
-  BMP388(float recalT = 0.1, uint8_t addr = BMP388_ADDRESS_DEFAULT);
+  BMP388(float recalT = 0.1f, uint8_t addr = BMP388_ADDRESS_DEFAULT);
   void begin();
   bool readAll();
 

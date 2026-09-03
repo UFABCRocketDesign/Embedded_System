@@ -13,7 +13,7 @@ protected:
 	const long scale;
 
 public:
-	Accel(long sc, uint8_t address, long recalT = 0.1);
+	Accel(long sc, uint8_t address, float recalT = 0.1f);
 };
 
 #endif

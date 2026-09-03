@@ -10,7 +10,7 @@
 class L3G4200D : public Gyro
 {
 public:
-	L3G4200D(long sc, long recalT = 0.1);
+	L3G4200D(long sc, float recalT = 0.1f);
 	void begin();
 	bool readAll();
 };

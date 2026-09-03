@@ -87,7 +87,7 @@ class Apogeu
 
 public:
 	Apogeu(unsigned int n, unsigned int r, float s);
-	float addZero(long P, float sealevelP = 101325);
+	float addZero(float P, float sealevelP = 101325);
 	float getZero();
 	bool fixZero(float maxRange = 10.0f, float maxDrift = 100.0f);
 	bool getFixZero();
@@ -99,7 +99,7 @@ public:
 	void resetAptPt();
 	void resetTimer();
 	//float addAltitude(float H);
-	float calcHeight(const long &P, float sealevelP = 101325);
+	float calcHeight(const float &P, float sealevelP = 101325);
 	void setGamma(bool apgE);
 
 	bool apgAlpha(bool serial = 0);

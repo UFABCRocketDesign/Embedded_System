@@ -48,54 +48,58 @@
 
 
 
+inline constexpr unsigned int toneHz(double f)
+{
+	return (f > 0) ? (unsigned int)(f + 0.5f) : 0;	// arredonda, nao trunca
+}
 
 
 #define ALARM_FUNC_(LOW, HIGH, STEP) \
-(long(LOW) + long(HIGH - LOW) * ())
+toneHz(long(LOW) + long(HIGH - LOW) * ())
 
 
 #define ALARM_FUNC_SIGMOID(STEP, WIDTH, ADJUST) \
-(1.0/(1.0+exp(-(1.0/ADJUST)*(STEP/(WIDTH/2.0f)))))
+(1.0f/(1.0f+exp(-(1.0f/ADJUST)*(STEP/(WIDTH/2.0f)))))
 
 
 #define ALARM_FUNC_TILDE(LOW, HIGH, STEP) \
-(long(LOW) + long(HIGH - LOW) * (-cos(M_PI * STEP / 50.0) * 0.5 + 0.5))
+toneHz(long(LOW) + long(HIGH - LOW) * (-cosf(M_PI * STEP / 50.0f) * 0.5f + 0.5f))
 
 #define ALARM_FUNC_HAT(LOW, HIGH, STEP, WIDTH) \
-(long(LOW) + long(HIGH - LOW) * (1- abs((2*STEP - float(WIDTH) - 1.0) / (float(WIDTH) - 1.0))))
+toneHz(long(LOW) + long(HIGH - LOW) * (1- abs((2*STEP - float(WIDTH) - 1.0f) / (float(WIDTH) - 1.0f))))
 
 #define ALARM_FUNC_LT(LOW, HIGH, STEP, WIDTH) \
-(long(LOW) + long(HIGH - LOW) * (STEP / float(WIDTH)))
+toneHz(long(LOW) + long(HIGH - LOW) * (STEP / float(WIDTH)))
 
 #define ALARM_FUNC_GT(LOW, HIGH, STEP, WIDTH) \
-(long(LOW) + long(HIGH - LOW) * ((WIDTH - STEP) / float(WIDTH)))
+toneHz(long(LOW) + long(HIGH - LOW) * ((WIDTH - STEP) / float(WIDTH)))
 
 #define ALARM_FUNC_NUM(LOW, HIGH, STEP) \
 (((STEP / 50) % 2) ? LOW : HIGH)
 
 #define ALARM_FUNC_LSQB(LOW, HIGH, STEP, WIDTH) \
-(long(LOW) + long(HIGH - LOW) * (pow((STEP - 1.0) / (float(WIDTH) - 1.0), 8)))
+toneHz(long(LOW) + long(HIGH - LOW) * powf((STEP - 1.0f) / (float(WIDTH) - 1.0f), 8))
 
 #define ALARM_FUNC_RSQB(LOW, HIGH, STEP, WIDTH) \
-(long(LOW) + long(HIGH - LOW) * (pow(1.0 - (STEP - 1.0) / (float(WIDTH) - 1.0), 3)))
+toneHz(long(LOW) + long(HIGH - LOW) * powf(1.0f - (STEP - 1.0f) / (float(WIDTH) - 1.0f), 3))
 
 #define ALARM_FUNC_LCUB(LOW, HIGH, STEP, WIDTH) \
-(long(LOW) + long(HIGH - LOW) * (1.0 - pow(1.0 - (STEP - 1.0) / (float(WIDTH) - 1.0), 3)))
+toneHz(long(LOW) + long(HIGH - LOW) * (1.0f - powf(1.0f - (STEP - 1.0f) / (float(WIDTH) - 1.0f), 3)))
 
 #define ALARM_FUNC_RCUB(LOW, HIGH, STEP, WIDTH) \
-(long(LOW) + long(HIGH - LOW) * (1.0 - pow((STEP - 1.0) / (float(WIDTH) - 1.0), 3)))
+toneHz(long(LOW) + long(HIGH - LOW) * (1.0f - powf((STEP - 1.0f) / (float(WIDTH) - 1.0f), 3)))
 
 #define ALARM_FUNC_CIFRAO(LOW, HIGH, STEP) \
-(long(LOW) + long(HIGH - LOW) * ((((STEP / 25) % 2) ? 0 : 1) - 1.5 * sin(M_PI * STEP / 25.0) * 0.5))
+toneHz(long(LOW) + long(HIGH - LOW) * ((((STEP / 25) % 2) ? 0 : 1) - 1.5 * sinf(M_PI * STEP / 25.0f) * 0.5f))
 
 #define ALARM_FUNC_PERCENT(LOW, HIGH, STEP, ADJUST_A, ADJUST_B) \
-(long(LOW) + long(HIGH - LOW) * ((sin(M_PI * STEP / 50.0) + sin(ADJUST_B*M_PI * STEP / 50.0)/ADJUST_A)/(1.0+1.0/ADJUST_A)+1) / 2.0)
+toneHz(long(LOW) + long(HIGH - LOW) * ((sinf(M_PI * STEP / 50.0f) + sinf(ADJUST_B*M_PI * STEP / 50.0f)/ADJUST_A)/(1.0f+1.0f/ADJUST_A)+1) / 2.0f)
 
 #define ALARM_FUNC_PIPE(LOW, HIGH, STEP, ADJUST) \
-(long(LOW) + long(HIGH - LOW) * (1+sin(M_PI * STEP / 50.0)*(sin(ADJUST * M_PI * STEP / 50.0))))
+toneHz(long(LOW) + long(HIGH - LOW) * (1+sinf(M_PI * STEP / 50.0f)*(sinf(ADJUST * M_PI * STEP / 50.0f))))
 
 #define ALARM_FUNC_UNDER(LOW, HIGH, STEP, ADJUST) \
-(long(LOW) + long(HIGH - LOW) * ((((STEP / 50) % 2) ? -1 : 1)*(1/(2+cos(M_PI+ADJUST * M_PI * STEP / 50.0)))+1))
+toneHz(long(LOW) + long(HIGH - LOW) * ((((STEP / 50) % 2) ? -1 : 1)*(1/(2+cosf(M_PI+ADJUST * M_PI * STEP / 50.0f))))+1)
 
 
 
@@ -137,7 +141,7 @@ namespace MorseAlarm {
 			table.lcub[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_LCUB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
 			table.rcub[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_RCUB(ALARM_LOW, ALARM_HIGH, currentMarkIndex, alarmSteps));
 			table.cifrao[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_CIFRAO(ALARM_LOW, ALARM_HIGH, currentMarkIndex));
-			table.percent[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_PERCENT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 2.0, 5));
+			table.percent[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_PERCENT(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 2.0f, 5));
 			table.pipe[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_PIPE(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 10));
 			table.under[currentMarkIndex]	= (uint16_t)(ALARM_FUNC_UNDER(ALARM_LOW, ALARM_HIGH, currentMarkIndex, 6));
 		}

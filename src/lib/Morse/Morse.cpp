@@ -270,9 +270,9 @@ bool Morse::playMorseChar(char c)
 		else if (currentMark == '.')
 		{
 			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, FREQ_DASH * (numAux ? 0.5 : 1));
+			tone(buzzerPin, toneHz(FREQ_DASH * (numAux ? 0.5 : 1)));
 			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, FREQ_DASH * (numAux ? 0.5 : 1));
+			ledcWriteTone(buzzerPin, toneHz(FREQ_DASH * (numAux ? 0.5 : 1)));
 			#endif
 			#if _MORSE_PRINT
 			Serial.print(currentMark);
@@ -283,9 +283,9 @@ bool Morse::playMorseChar(char c)
 		else if (currentMark == '-')
 		{
 			#if defined(ARDUINO_ARCH_AVR)
-			tone(buzzerPin, FREQ_DOT * (numAux ? 0.5 : 1));
+			tone(buzzerPin, toneHz(FREQ_DOT * (numAux ? 0.5 : 1)));
 			#elif defined(ARDUINO_ARCH_ESP32)
-			ledcWriteTone(buzzerPin, FREQ_DOT * (numAux ? 0.5 : 1));
+			ledcWriteTone(buzzerPin, toneHz(FREQ_DOT * (numAux ? 0.5 : 1)));
 			#endif
 			#if _MORSE_PRINT
 			Serial.print(currentMark);

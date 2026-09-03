@@ -3,22 +3,22 @@
 ///Rotinas de verificacao de apogeu
 
 #ifdef ARDUINO_AVR_MEGA2560
-Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Height(N, 5), Rf(Rl1 * (Rl1 + 1) * (2 * Rl1 + 1) / 6)
+Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Height(N, 5), Rf((unsigned long)Rl1 * (Rl1 + 1) * (2 * Rl1 + 1) / 6)
 #else
-Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Height(N), Rf(Rl1 * (Rl1 + 1) * (2 * Rl1 + 1) / 6)
+Apogeu::Apogeu(unsigned int n, unsigned int r, float s) : N(n), R((r > 1) ? r : 2), Rl1((r > 1) ? r - 1 : 1), S(s), Height(N), Rf((unsigned long)Rl1 * (Rl1 + 1) * (2 * Rl1 + 1) / 6)
 #endif // ARDUINO_AVR_MEGA2560
 {
 	//for (int i = Rl1; i > 0; i--) Rf += (float)(i*i);
 }
 
-float Apogeu::addZero(long P, float sealevelP)
+float Apogeu::addZero(float P, float sealevelP)
 {
 	// Descarta leitura implausivel: uma unica amostra ruim fica travada
 	// em baseMax/baseMin para sempre e contamina o zero medido.
 	if (P < ZERO_MIN_PA || P > ZERO_MAX_PA) return base;
 
 	// float currentHeight = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577);
-	float currentHeight = 44330.0 * (1 - pow(float(P) / sealevelP, 1 / 5.25588));
+	float currentHeight = 44330.0f * (1 - powf(float(P) / sealevelP, 1.0f / 5.25588f));
 	if (baseIndex == 0)
 	{
 		base = baseMax = baseMin = currentHeight;
@@ -178,7 +178,7 @@ void Apogeu::resetTimer()
 //	return heightMed[0];
 //}
 
-float Apogeu::calcHeight(const long &P, float sealevelP)
+float Apogeu::calcHeight(const float &P, float sealevelP)
 {
 	//for (int i = N - 1; i > 0; i--)
 	//{
@@ -195,7 +195,7 @@ float Apogeu::calcHeight(const long &P, float sealevelP)
 		heightMed[i] = heightMed[i - 1];
 	}
 	//heightMed[0] = Sum / N;
-	heightMed[0] = Height = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577) - base;
+	heightMed[0] = Height = ((1.0f - powf((float)P / sealevelP, 1.0f / 5.25588f)) / 0.0000225577f) - base;
 	if (heightMed[0] > apgPt)
 	{
 		apgPt = heightMed[0];
@@ -307,7 +307,7 @@ float Apogeu::getApgPt()
 
 float Apogeu::getApgTm()
 {
-	return (float)apgTm / 1000000.0;
+	return (float)apgTm / 1000000.0f;
 }
 
 float Apogeu::getMaxH()
