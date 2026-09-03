@@ -23,7 +23,7 @@ protected:
 	bool state = 0;
 
 public:
-	Sens(uint8_t add, long recalT = 0.1);
+	Sens(uint8_t add, float recalT = 0.1f);
 	virtual void begin() = 0;
 	virtual bool readAll() = 0;
 	long getTimeLapse();

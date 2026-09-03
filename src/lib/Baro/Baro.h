@@ -15,7 +15,7 @@ protected:
 	float pascal;
 
 public:
-	Baro(uint8_t address, float recalT = 0.1);
+	Baro(uint8_t address, float recalT = 0.1f);
 	float getTemperature();
 	float getPressure();
 };

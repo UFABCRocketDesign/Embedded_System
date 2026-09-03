@@ -20,7 +20,7 @@ class BMP085 : public Baro
 	int mb, mc, md;
 
 public:
-	BMP085(float recalT = 0.1);
+	BMP085(float recalT = 0.1f);
 	void begin();
 	bool readAll();
 };

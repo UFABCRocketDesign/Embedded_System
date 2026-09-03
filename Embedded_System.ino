@@ -55,7 +55,7 @@
 #define BuZZ (1)							//Buzzer mode
 #define ForceSysC (0)
 
-#define PRINT (1)							//Print or not things on Serial
+#define PRINT (0)							//Print or not things on Serial
 
 
 /**************************** GY80 ****************************/

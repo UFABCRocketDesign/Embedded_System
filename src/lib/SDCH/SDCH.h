@@ -27,6 +27,7 @@ class SDCH
 	unsigned long number = 0;
 	String Fname;
 	void newName();
+	static unsigned long pow10ul(uint8_t n);
 public:
 	SDCH(uint8_t csPin, String name, String type = "txt", SPIClass &spi_sd = SPI);
 	File theFile;

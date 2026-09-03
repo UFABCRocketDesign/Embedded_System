@@ -73,8 +73,8 @@ bool BMP280::readAll()
     adc_p = ((uint32_t(Wire.read()) << 16) | (uint32_t(Wire.read()) << 8) | (uint32_t(Wire.read()))) >> 4; // 0xF7 / 0xF8 / 0xF9
     adc_t = ((uint32_t(Wire.read()) << 16) | (uint32_t(Wire.read()) << 8) | (uint32_t(Wire.read()))) >> 4; // 0xFA / 0xFB / 0xFC
 
-    celcius = float(bmp280_compensate_T_int32(adc_t)) / 100.0;
-    pascal = float(bmp280_compensate_P_int64(adc_p)) / 256.0;
+    celcius = float(bmp280_compensate_T_int32(adc_t)) / 100.0f;
+    pascal = float(bmp280_compensate_P_int64(adc_p)) / 256.0f;
     lastWorkT = thisReadT;
   }
   lastReadT = thisReadT;

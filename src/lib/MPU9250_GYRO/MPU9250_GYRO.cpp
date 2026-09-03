@@ -1,6 +1,6 @@
 #include "MPU9250_GYRO.h"
 
-MPU9250_GYRO::MPU9250_GYRO(long sc, long recalT) : Gyro(sc, MPU9250_ADDRESS_G, recalT)
+MPU9250_GYRO::MPU9250_GYRO(long sc, float recalT) : Gyro(sc, MPU9250_ADDRESS_G, recalT)
 {
 }
 
@@ -70,5 +70,5 @@ void MPU9250_GYRO::updateGyroConfig() {
             break;
     }
 
-    adcToDps = float(scale) / float(0x1u << 15); 
+    adcToDps = float(scale) / float(0x1u << 15);
 }

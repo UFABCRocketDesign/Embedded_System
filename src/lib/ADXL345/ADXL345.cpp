@@ -1,7 +1,7 @@
 #include "ADXL345.h"
 
 ///Acelerometro
-ADXL345::ADXL345(long recalT) : Accel(0x53, recalT)
+ADXL345::ADXL345(float recalT) : Accel(-1, 0x53, recalT)
 {
 }
 
@@ -56,9 +56,9 @@ bool ADXL345::readAll()
 			Y = Wire.read() | Wire.read() << 8;		//Y_lsb + Y_msb << 8
 			Z = Wire.read() | Wire.read() << 8;		//Z_lsb + Z_msb << 8
 		}
-		X *= 0.004 * 9.80665F;
-		Y *= 0.004 * 9.80665F;
-		Z *= 0.004 * 9.80665F;
+		X *= 0.004f * 9.80665f;
+		Y *= 0.004f * 9.80665f;
+		Z *= 0.004f * 9.80665f;
 
 		lastWorkT = thisReadT;
 	}

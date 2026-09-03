@@ -24,8 +24,8 @@ float MovingAverage::getMedia()
 float MovingAverage::getVar()
 {
 	sigma = 0;
-	for (unsigned int i = 0; i < N; i++) sigma += pow(Vals[i] - media, 2.f);
-	sigma = pow(sigma / (N - 1), .5f);
+	for (unsigned int i = 0; i < N; i++) sigma += powf(Vals[i] - media, 2.f);
+	sigma = powf(sigma / (N - 1), .5f);
 	return sigma;
 }
 

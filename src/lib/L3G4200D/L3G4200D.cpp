@@ -1,7 +1,7 @@
 #include "L3G4200D.h"
 
 ///Giroscopio
-L3G4200D::L3G4200D(long sc, long recalT) : Gyro(sc, 0x69, recalT)
+L3G4200D::L3G4200D(long sc, float recalT) : Gyro(sc, 0x69, recalT)
 {
 }
 

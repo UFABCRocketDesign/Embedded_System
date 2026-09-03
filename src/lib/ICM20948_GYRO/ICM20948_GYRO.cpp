@@ -1,6 +1,6 @@
 #include "ICM20948_GYRO.h"
 
-ICM20948_GYRO::ICM20948_GYRO(float sc, float recalT) : Gyro(sc, ICM20948_ADDRESS_G, recalT)
+ICM20948_GYRO::ICM20948_GYRO(long sc, float recalT) : Gyro(sc, ICM20948_ADDRESS_G, recalT)
 {
 }
 

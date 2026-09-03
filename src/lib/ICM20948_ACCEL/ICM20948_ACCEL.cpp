@@ -1,6 +1,6 @@
 #include "ICM20948_ACCEL.h"
 
-ICM20948_ACCEL::ICM20948_ACCEL(float sc, float recalT) : Accel(sc, ICM20948_ADDRESS_A, recalT)
+ICM20948_ACCEL::ICM20948_ACCEL(long sc, float recalT) : Accel(sc, ICM20948_ADDRESS_A, recalT)
 {
 }
 

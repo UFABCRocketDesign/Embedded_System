@@ -39,9 +39,9 @@ float MediaMovel::getVar()
 	sigma = 0;
 	for (unsigned int i = 0; i < N; i++)
 	{
-		sigma += pow(Vals[i] - media, 2);
+		sigma += powf(Vals[i] - media, 2);
 	}
-	sigma = pow(sigma / (N - 1), .5);
+	sigma = powf(sigma / (N - 1), .5);
 	return sigma;
 }
 

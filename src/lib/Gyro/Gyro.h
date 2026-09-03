@@ -14,7 +14,7 @@ class Gyro : public Sens, public TriA
 protected:
 	const long scale;
 public:
-	Gyro(long sc, uint8_t address, long recalT = 0.1);
+	Gyro(long sc, uint8_t address, float recalT = 0.1f);
 
 };
 

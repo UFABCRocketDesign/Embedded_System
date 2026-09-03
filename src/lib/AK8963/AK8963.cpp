@@ -1,6 +1,6 @@
 #include "AK8963.h"
 
-AK8963::AK8963(long recalT) : Magn(MPU9250_MAG_ADDRESS, recalT)
+AK8963::AK8963(float recalT) : Magn(MPU9250_MAG_ADDRESS, recalT)
 {
 }
 
@@ -76,9 +76,9 @@ bool AK8963::readAll()
 		zaux_mag = Wire.read() | Wire.read() << 8; // Valor do ADC de 16 bits
 		Wire.flush();							   // O datasheet indica que é necessário ler este byte para atualizar
 
-		X = float(xaux_mag) * ((((float(asax_mag) - 128.0) * 0.5) / 128.0) + 1);
-		Y = float(yaux_mag) * ((((float(asay_mag) - 128.0) * 0.5) / 128.0) + 1);
-		Z = float(zaux_mag) * ((((float(asaz_mag) - 128.0) * 0.5) / 128.0) + 1);
+		X = float(xaux_mag) * ((((float(asax_mag) - 128.0f) * 0.5f) / 128.0f) + 1);
+		Y = float(yaux_mag) * ((((float(asay_mag) - 128.0f) * 0.5f) / 128.0f) + 1);
+		Z = float(zaux_mag) * ((((float(asaz_mag) - 128.0f) * 0.5f) / 128.0f) + 1);
 		lastWorkT = thisReadT;
 	}
 	lastReadT = thisReadT;

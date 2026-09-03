@@ -30,7 +30,7 @@ private:
   static constexpr float GYRO_SENSITIVITY_2000DPS = 16.4f;
 
 public:
-  ICM20948_GYRO(float sc, float recalT = 0.1);
+  ICM20948_GYRO(long sc, float recalT = 0.1f);
   void begin();
   bool readAll();
 };
