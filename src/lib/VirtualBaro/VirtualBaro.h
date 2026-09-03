@@ -15,7 +15,7 @@ class VirtualBaro : public Baro
 	uint16_t lastSeq;
 
 public:
-	VirtualBaro(VirtualBridge &bridge = Bridge, float recalT = 0.1);
+	VirtualBaro(VirtualBridge &bridge = Bridge, float recalT = 0.1f);
 	void begin() override;
 	bool readAll() override;
 };

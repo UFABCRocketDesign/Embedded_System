@@ -27,11 +27,11 @@
 
 #include "src/lib/modes.h"
 
-// #define USING_MODE MODE_LANCAMENTO
+#define USING_MODE MODE_LANCAMENTO
 // #define USING_MODE MODE_ELEVADOR
 // #define USING_MODE MODE_ASPIRADOR
 // #define USING_MODE MODE_MANUAL
-#define USING_MODE MODE_VIRTUAL
+// #define USING_MODE MODE_VIRTUAL
 
 #include "src/lib/pressets.h"
 
@@ -78,12 +78,15 @@
 
 /*************************** VIRTUAL **************************/
 #define USE_V_BARO (USE_VIRTUAL && 1)		//Use Virtual Barometer
+#define USE_V_GPS  (USE_VIRTUAL && GPSmode && 1)	//Use Virtual GPS
 
 /************************** 9DoF IMU **************************/
 #define USE_BARO ((USE_BMP085) || (USE_BMP280) || (USE_BMP388) || (USE_V_BARO))				// Use any Barometer
 #define USE_ACCEL ((USE_ADXL345) || (USE_MPU9250_ACCEL) || (USE_ICM20948_ACCEL))	// Use any Accelerometer
 #define USE_GYRO ((USE_L3G4200D) || (USE_MPU9250_GYRO) || (USE_ICM20948_GYRO))		// Use any Gyroscope
 #define USE_MAGN ((USE_HMC5883) || (USE_AK8963) || (USE_AK09916))			// Use any Magnetometer
+
+#define USE_GYGPS (GPSmode && !USE_V_GPS)	//Use real GPS module
 
 /**************************** LoRa ****************************/
 
@@ -500,15 +503,33 @@ SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to 
 #endif // ARDUINO_ARCH_ESP32
 #endif // SDCard
 
+// #if GPSmode
+// #include "src/lib/GyGPS/GyGPS.h" // Auxiliar para GPS
+// #ifdef ARDUINO_ARCH_ESP32
+// HardwareSerial GpSSerial(1);
+// GyGPS GpS(GpSSerial, 0, SERIAL_8N1, RX_GPS_ESP, TX_GPS_ESP);
+// #else
+// GyGPS GpS(Serial1, 0);
+// #endif // ARDUINO_ARCH_ESP32
+// #endif // GPSmode
+
 #if GPSmode
-#include "src/lib/GyGPS/GyGPS.h" // Auxiliar para GPS
+#if 1 < ((USE_V_GPS) + (USE_GYGPS))
+#error: Multiplos GPS definidos
+#elif USE_V_GPS
+// #include "src/lib/VirtualGPS/VirtualGPS.h"	// GPS Virtual
+// VirtualGPS GpS;
+#elif USE_GYGPS
+#include "src/lib/GyGPS/GyGPS.h"			// Auxiliar para GPS
 #ifdef ARDUINO_ARCH_ESP32
 HardwareSerial GpSSerial(1);
 GyGPS GpS(GpSSerial, 0, SERIAL_8N1, RX_GPS_ESP, TX_GPS_ESP);
 #else
 GyGPS GpS(Serial1, 0);
 #endif // ARDUINO_ARCH_ESP32
+#endif // USE_V_GPS / USE_GYGPS
 #endif // GPSmode
+
 
 #if LoRamode
 #if 1 < ((USE_LoRa_DORJI) + (USE_LoRa_E32))
@@ -1252,7 +1273,7 @@ void setup()
 
 
 
-#if ((PRINT) || (PERF_Tcom_print) || (VIRTUAL))
+#if ((PRINT) || (PERF_Tcom_print) || (USE_VIRTUAL))
 	Serial.begin(BaudRate);
 
 	#if defined(ARDUINO_ARCH_ESP32)
