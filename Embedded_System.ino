@@ -27,11 +27,11 @@
 
 #include "src/lib/modes.h"
 
-#define USING_MODE MODE_LANCAMENTO
+// #define USING_MODE MODE_LANCAMENTO
 // #define USING_MODE MODE_ELEVADOR
 // #define USING_MODE MODE_ASPIRADOR
 // #define USING_MODE MODE_MANUAL
-// #define USING_MODE MODE_VIRTUAL
+#define USING_MODE MODE_VIRTUAL
 
 #include "src/lib/pressets.h"
 
@@ -517,8 +517,8 @@ SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to 
 #if 1 < ((USE_V_GPS) + (USE_GYGPS))
 #error: Multiplos GPS definidos
 #elif USE_V_GPS
-// #include "src/lib/VirtualGPS/VirtualGPS.h"	// GPS Virtual
-// VirtualGPS GpS;
+#include "src/lib/VirtualGPS/VirtualGPS.h"	// GPS Virtual
+VirtualGPS GpS;
 #elif USE_GYGPS
 #include "src/lib/GyGPS/GyGPS.h"			// Auxiliar para GPS
 #ifdef ARDUINO_ARCH_ESP32

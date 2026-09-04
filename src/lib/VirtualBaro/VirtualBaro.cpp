@@ -2,8 +2,7 @@
 
 ///Barometro
 VirtualBaro::VirtualBaro(VirtualBridge &bridge, float recalT) : Baro(0, recalT), br(bridge), hP(-1), hT(-1), lastSeq(0)
-{
-}
+{}
 
 void VirtualBaro::begin()
 {
