@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define VB_MAX_SENSORS 16
+#define VB_MAX_SENSORS 32
 #define VB_KEY_MAX_LEN  8	// 7 caracteres uteis + terminador
 #define VB_BUFFER_LEN  48	// tamanho maximo de uma linha
 

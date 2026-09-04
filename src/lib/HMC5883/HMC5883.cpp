@@ -24,7 +24,7 @@ bool HMC5883::readAll()
 		{
 			begin();
 #if PRINT
-			Serial.println(F("Relacibrado M"));
+			Serial.println(F("Recalibrado M"));
 #endif // PRINT
 		}
 		///Faz a leitura de todos os eixos///

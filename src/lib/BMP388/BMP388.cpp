@@ -6,7 +6,7 @@ void BMP388::begin() {
   Wire.beginTransmission(address);
   Wire.write(BMP3_REG_CALIB_DATA);
   Wire.endTransmission();
-  
+
   Wire.requestFrom(address, uint8_t(21));
 
   unsigned long temp = micros();
@@ -57,7 +57,7 @@ bool BMP388::readAll() {
     {
       begin();
 #if PRINT
-      Serial.println(F("Relacibrado B"));
+      Serial.println(F("Recalibrado B"));
 #endif // PRINT
     }
 

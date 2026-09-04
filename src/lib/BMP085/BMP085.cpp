@@ -41,7 +41,7 @@ bool BMP085::readAll()
 		{
 			begin();
 #if PRINT
-			Serial.println(F("Relacibrado B"));
+			Serial.println(F("Recalibrado B"));
 #endif // PRINT
 		}
 		//Leitura de temperatura

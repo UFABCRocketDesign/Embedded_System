@@ -79,7 +79,7 @@ bool ICM20948_ACCEL::readAll()
     {
       begin();
 #if PRINT
-      Serial.println(F("Relacibrado A"));
+      Serial.println(F("Recalibrado A"));
 #endif // PRINT
     }
 

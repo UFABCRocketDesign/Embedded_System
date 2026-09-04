@@ -22,7 +22,7 @@ bool VirtualBaro::readAll()
 		{
 			// begin();
 #if PRINT
-			Serial.println(F("Relacibrado B"));
+			Serial.println(F("Trigger Recal B"));
 #endif // PRINT
 		}
 

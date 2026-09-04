@@ -52,7 +52,7 @@ bool VirtualGPS::readAll()
 		{
 			// begin();
 #if PRINT
-			Serial.println(F("Relacibrado L"));
+			Serial.println(F("Trigger Relac L"));
 #endif // PRINT
 		}
 
@@ -60,18 +60,18 @@ bool VirtualGPS::readAll()
 		latitude = br.value(hLat);
 		longitude = br.value(hLon);
 		altitude = br.value(hAlt);
-		satellites = br.value(hSat);
-		precision = br.value(hPrec);
-		chars = br.value(hChars);
-		age = br.value(hAge);
+		satellites = (unsigned char) br.value(hSat);
+		precision = (unsigned long) br.value(hPrec);
+		chars = (unsigned long) br.value(hChars);
+		age = (unsigned long) br.value(hAge);
 		Kph = br.value(hKph);
 		mps = br.value(hMps);
-		year = br.value(hYear);
-		month = br.value(hMonth);
-		day = br.value(hDay);
-		hour = br.value(hHour);
-		minute = br.value(hMinute);
-		second = br.value(hSecond);
+		year = (int) br.value(hYear);
+		month = (byte) br.value(hMonth);
+		day = (byte) br.value(hDay);
+		hour = (byte) br.value(hHour);
+		minute = (byte) br.value(hMinute);
+		second = (byte) br.value(hSecond);
 
 		lastWorkT = thisReadT;
 	}

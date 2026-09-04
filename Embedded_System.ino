@@ -78,11 +78,12 @@
 
 /*************************** VIRTUAL **************************/
 #define USE_V_BARO (USE_VIRTUAL && 1)		//Use Virtual Barometer
+#define USE_V_ACCEL (USE_VIRTUAL && 1)		//Use Virtual Accelerometer
 #define USE_V_GPS  (USE_VIRTUAL && GPSmode && 1)	//Use Virtual GPS
 
 /************************** 9DoF IMU **************************/
-#define USE_BARO ((USE_BMP085) || (USE_BMP280) || (USE_BMP388) || (USE_V_BARO))				// Use any Barometer
-#define USE_ACCEL ((USE_ADXL345) || (USE_MPU9250_ACCEL) || (USE_ICM20948_ACCEL))	// Use any Accelerometer
+#define USE_BARO ((USE_V_BARO) || (USE_BMP085) || (USE_BMP280) || (USE_BMP388))				// Use any Barometer
+#define USE_ACCEL ((USE_V_ACCEL) || (USE_ADXL345) || (USE_MPU9250_ACCEL) || (USE_ICM20948_ACCEL))	// Use any Accelerometer
 #define USE_GYRO ((USE_L3G4200D) || (USE_MPU9250_GYRO) || (USE_ICM20948_GYRO))		// Use any Gyroscope
 #define USE_MAGN ((USE_HMC5883) || (USE_AK8963) || (USE_AK09916))			// Use any Magnetometer
 
@@ -437,8 +438,11 @@ MonoDeploy Recovery::drogB pins_drogB;
 */
 
 #if USE_ACCEL
-#if 1 < ((USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
+#if 1 < ((USE_V_BARO) + (USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
 #error: Múltiplos acelerômetros definidos
+#elif USE_V_BARO
+#include "src/lib/VirtualAccel/VirtualAccel.h"	// Acelerometro Virtual
+VirtualAccel accel;
 #elif USE_ADXL345
 #include "src/lib/ADXL345/ADXL345.h" // Accelerometer ADXL345
 ADXL345 accel;									//Accelerometer object declaration
@@ -1650,6 +1654,13 @@ void setup()
 #if COMmode
 		transmitln(F(" "));
 #endif // COMmode
+
+#if USE_VIRTUAL
+	if(Bridge.count() >= VB_MAX_SENSORS)
+	{
+		transmitln(F("\nERRO: Tabela de ponte sobrecarregada!"));
+	}
+#endif // USE_VIRTUAL
 
 	////////////////RBF directive////////////////
 

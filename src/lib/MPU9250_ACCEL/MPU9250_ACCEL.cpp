@@ -24,7 +24,7 @@ bool MPU9250_ACCEL::readAll()
         {
             begin();
 #if PRINT
-            Serial.println(F("Relacibrado A"));
+            Serial.println(F("Recalibrado A"));
 #endif // PRINT
         }
         Wire.beginTransmission(address);
