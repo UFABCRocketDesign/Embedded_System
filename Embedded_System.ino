@@ -79,12 +79,13 @@
 /*************************** VIRTUAL **************************/
 #define USE_V_BARO (USE_VIRTUAL && 1)		//Use Virtual Barometer
 #define USE_V_ACCEL (USE_VIRTUAL && 1)		//Use Virtual Accelerometer
+#define USE_V_GYRO (USE_VIRTUAL && 1)		//Use Virtual Gyroscope
 #define USE_V_GPS  (USE_VIRTUAL && GPSmode && 1)	//Use Virtual GPS
 
 /************************** 9DoF IMU **************************/
 #define USE_BARO ((USE_V_BARO) || (USE_BMP085) || (USE_BMP280) || (USE_BMP388))				// Use any Barometer
 #define USE_ACCEL ((USE_V_ACCEL) || (USE_ADXL345) || (USE_MPU9250_ACCEL) || (USE_ICM20948_ACCEL))	// Use any Accelerometer
-#define USE_GYRO ((USE_L3G4200D) || (USE_MPU9250_GYRO) || (USE_ICM20948_GYRO))		// Use any Gyroscope
+#define USE_GYRO ((USE_V_GYRO) || (USE_L3G4200D) || (USE_MPU9250_GYRO) || (USE_ICM20948_GYRO))		// Use any Gyroscope
 #define USE_MAGN ((USE_HMC5883) || (USE_AK8963) || (USE_AK09916))			// Use any Magnetometer
 
 #define USE_GYGPS (GPSmode && !USE_V_GPS)	//Use real GPS module
@@ -458,8 +459,11 @@ float MM_accel[3]{};
 #endif // USE_ACCEL
 
 #if USE_GYRO
-#if 1 < ((USE_L3G4200D) + (USE_MPU9250_GYRO) + (USE_ICM20948_GYRO))
+#if 1 < ((USE_V_GYRO) + (USE_L3G4200D) + (USE_MPU9250_GYRO) + (USE_ICM20948_GYRO))
 #error: Múltiplos giroscópios definidos
+#elif USE_V_GYRO
+#include "src/lib/VirtualGyro/VirtualGyro.h"	// Acelerometro Virtual
+VirtualGyro giro;
 #elif USE_L3G4200D
 #include "src/lib/L3G4200D/L3G4200D.h" // Gyroscope L3G4200D
 L3G4200D giro(2000);							//Gyroscope object declaration

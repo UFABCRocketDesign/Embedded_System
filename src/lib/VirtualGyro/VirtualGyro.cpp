@@ -1,17 +1,17 @@
-#include "VirtualAccel.h"
+#include "VirtualGyro.h"
 
-///Aceleometro
-VirtualAccel::VirtualAccel(VirtualBridge &bridge, float recalT) : Accel(-1, 0, recalT), br(bridge), hX(-1), hY(-1), hZ(-1), lastSeq(0)
+///Giroscopio
+VirtualGyro::VirtualGyro(VirtualBridge &bridge, float recalT) : Gyro(-1, 0, recalT), br(bridge), hX(-1), hY(-1), hZ(-1), lastSeq(0)
 {}
 
-void VirtualAccel::begin()
+void VirtualGyro::begin()
 {
-	hX = br.handle("Ax");
-	hY = br.handle("Ay");
-	hZ = br.handle("Az");
+	hX = br.handle("Gx");
+	hY = br.handle("Gy");
+	hZ = br.handle("Gz");
 }
 
-bool VirtualAccel::readAll()
+bool VirtualGyro::readAll()
 {
 	thisReadT = micros();
 
@@ -23,7 +23,7 @@ bool VirtualAccel::readAll()
 		{
 			// begin();
 #if PRINT
-			Serial.println(F("Trigger Recal A"));
+			Serial.println(F("Trigger Recal G"));
 #endif // PRINT
 		}
 
