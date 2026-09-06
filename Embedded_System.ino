@@ -43,149 +43,194 @@
 
 #define BaudRate 115200
 
+/********************************* Subsystems *********************************/
+
+#define REQUIRE_PRINT	(1)		//Require serial debug output (test builds)
+#define REQUIRE_BARO	(1)		//Require barometer
+#define REQUIRE_ACCEL	(1)		//Require accelerometer
+#define REQUIRE_GYRO	(1)		//Require gyroscope
+#define REQUIRE_MAGN	(1)		//Require magnetometer
+#define REQUIRE_GNSS	(1)		//Require GNSS (GPS)
+#define REQUIRE_LoRa	(1)		//Require telemetry
+#define REQUIRE_SD		(1)		//Require SD card
+#define REQUIRE_BUZZ	(1)		//Require buzzer
+#define REQUIRE_DEPLOY	(1)		//Require parachute deployment
+#define REQUIRE_RGB		(0)		//Require RGB LED
+
+/********************************** Hardware **********************************/
+
+/************************* Modules ************************/
+
+/* IMU */
 #define USE_GY80 (0)						//Use GY80 module
 #define USE_GY91 (0)						//Use GY91 module
 #define USE_GY912 (0)						//Use GY912 module
+
+/* GNSS/GPS */
+#define USE_NEO_M (REQUIRE_GNSS && 0)		//Use Neo6M/Neo8M/Neo10M GPS module
+
+/* Data storage */
+#define USE_SD_SPI (REQUIRE_SD && 1)		//Use SPI SD card module
+
+/* Virtual sensors */
 #define USE_VIRTUAL (1 & (USING_MODE == MODE_VIRTUAL))	// Use virtual version of things
 
-#define SDCard (1)							//Use SD card
-#define GPSmode (1)							//Use GPS
-#define LoRamode (1)						//Serial mode for transmission on LoRa module
-#define TalkingBoard (0)					//When two boards are connected for redundancy system
-#define BuZZ (1)							//Buzzer mode
-#define ForceSysC (0)
+/***************** Variants of each module ****************/
 
-#define PRINT (0)							//Print or not things on Serial
+/**************** GY80 ****************/
+#define USE_BMP085 (REQUIRE_BARO && (USE_GY80 || 0))			//Use BMP085 sensor
+#define USE_ADXL345 (REQUIRE_ACCEL && (USE_GY80 || 0))			//Use ADXL345 sensor
+#define USE_L3G4200D (REQUIRE_GYRO && (USE_GY80 || 0))			//Use L3G4200D sensor
+#define USE_HMC5883 (REQUIRE_MAGN && (USE_GY80 || 0))			//Use HMC5883 sensor
 
+/**************** GY91 ****************/
+#define USE_BMP280 (REQUIRE_BARO && (USE_GY91 || 0))			//Use BMP280 sensor
+#define USE_MPU9250_ACCEL (REQUIRE_ACCEL && (USE_GY91 || 0))	//Use MPU9250 sensor, accelerometer
+#define USE_MPU9250_GYRO (REQUIRE_GYRO && (USE_GY91 || 0))		//Use MPU9250 sensor, gyroscope
+#define USE_AK8963 (REQUIRE_MAGN && (USE_GY91 || 0))			//Use AK8963 sensor
 
-/**************************** GY80 ****************************/
-#define USE_BMP085 (USE_GY80 || 0)			//Use BMP085 sensor
-#define USE_ADXL345 (USE_GY80 || 0)			//Use ADXL345 sensor
-#define USE_L3G4200D (USE_GY80 || 0)		//Use L3G4200D sensor
-#define USE_HMC5883 (USE_GY80 || 0)			//Use HMC5883 sensor
+/**************** GY912 ***************/
+#define USE_BMP388 (REQUIRE_BARO && (USE_GY912 || 0))			//Use BMP388 sensor
+#define USE_ICM20948_ACCEL (REQUIRE_ACCEL && (USE_GY912 || 0))	//Use ICM20948 sensor, accelerometer
+#define USE_ICM20948_GYRO (REQUIRE_GYRO && (USE_GY912 || 0))	//Use ICM20948 sensor, gyroscope
+#define USE_AK09916 (REQUIRE_MAGN && (USE_GY912 || 0))			//Use AK09916 sensor
 
-/**************************** GY91 ****************************/
-#define USE_BMP280 (USE_GY91 || 0)			//Use BMP280 sensor
-#define USE_MPU9250_ACCEL (USE_GY91 || 0)	//Use MPU9250 sensor, accelerometer
-#define USE_MPU9250_GYRO (USE_GY91 || 0)	//Use MPU9250 sensor, gyroscope
-#define USE_AK8963 (USE_GY91 || 0)			//Use AK8963 sensor
+/**************** LoRa ****************/
+#define USE_LoRa_DORJI (REQUIRE_LoRa && defined(BOARD_HAS_LoRa_DORJI))	// Dorji LoRa Module (2019 and before)
+#define USE_LoRa_E32 (REQUIRE_LoRa && defined(BOARD_HAS_LoRa_E32))		// E32 LoRa Module (2019 and before)
 
-/**************************** GY912 ***************************/
-#define USE_BMP388 (USE_GY912 || 0)			//Use BMP280 sensor
-#define USE_ICM20948_ACCEL (USE_GY912 || 0)	//Use ICM20948 sensor, accelerometer
-#define USE_ICM20948_GYRO (USE_GY912 || 0)	//Use ICM20948 sensor, gyroscope
-#define USE_AK09916 (USE_GY912 || 0)		//Use AK09916 sensor
+/***************** RGB ****************/
+#define USE_RGB (REQUIRE_RGB && defined(BOARD_HAS_RGB))			//Board RGB LED
 
-/*************************** VIRTUAL **************************/
-#define USE_V_BARO (USE_VIRTUAL && 1)		//Use Virtual Barometer
-#define USE_V_ACCEL (USE_VIRTUAL && 1)		//Use Virtual Accelerometer
-#define USE_V_GYRO (USE_VIRTUAL && 1)		//Use Virtual Gyroscope
-#define USE_V_MAGN (USE_VIRTUAL && 1)		//Use Virtual Magnetometer
-#define USE_V_GPS  (USE_VIRTUAL && GPSmode && 1)	//Use Virtual GPS
+/************ Double Board ************/
+#define TalkingBoard (0)										//When two boards are connected for redundancy system
 
-/************************** 9DoF IMU **************************/
+/*************** Buzzer ***************/
+#define USE_ACT_BUZZER (REQUIRE_BUZZ && 0)						//Active buzzer
+#define USE_PSS_BUZZER (REQUIRE_BUZZ && 1)						//Passive buzzer
+#define USE_BLINK_BUZZ (REQUIRE_BUZZ && 0)						//LED_BUILTIN instead of a buzzer
+
+/*************** VIRTUAL **************/
+#define USE_V_BARO (REQUIRE_BARO && (USE_VIRTUAL && 1))			//Use Virtual Barometer
+#define USE_V_ACCEL (REQUIRE_ACCEL && (USE_VIRTUAL && 1))		//Use Virtual Accelerometer
+#define USE_V_GYRO (REQUIRE_GYRO && (USE_VIRTUAL && 1))			//Use Virtual Gyroscope
+#define USE_V_MAGN (REQUIRE_MAGN && (USE_VIRTUAL && 1))			//Use Virtual Magnetometer
+#define USE_V_GNSS  (REQUIRE_GNSS && (USE_VIRTUAL && 1))		//Use Virtual GNSS
+
+/******************************** Capabilities ********************************/
+#define USE_PRINT (REQUIRE_PRINT)		// Use serial debug output
 #define USE_BARO ((USE_V_BARO) || (USE_BMP085) || (USE_BMP280) || (USE_BMP388))				// Use any Barometer
 #define USE_ACCEL ((USE_V_ACCEL) || (USE_ADXL345) || (USE_MPU9250_ACCEL) || (USE_ICM20948_ACCEL))	// Use any Accelerometer
 #define USE_GYRO ((USE_V_GYRO) || (USE_L3G4200D) || (USE_MPU9250_GYRO) || (USE_ICM20948_GYRO))		// Use any Gyroscope
 #define USE_MAGN ((USE_V_MAGN) || (USE_HMC5883) || (USE_AK8963) || (USE_AK09916))			// Use any Magnetometer
+#define USE_GNSS ((USE_NEO_M) || (USE_V_GNSS))	// Use any GNSS
+#define USE_LoRa ((USE_LoRa_DORJI) || (USE_LoRa_E32))	// Use any radio
+#define USE_STORAGE ((USE_SD_SPI))				// Use any storage
+#define USE_BuZZ ((USE_ACT_BUZZER) || (USE_PSS_BUZZER) || (USE_BLINK_BUZZ))	//Buzzer mode
 
-#define USE_GYGPS (GPSmode && !USE_V_GPS)	//Use real GPS module
-
-/**************************** LoRa ****************************/
-
-#define USE_LoRa_CONTIGUOUS (LoRamode && 1)		// Force data columns to always exist
-
-#define USE_LoRa_DORJI (LoRamode && defined(BOARD_HAS_LoRa_DORJI))		// Dorji LoRa Module (2019 and before)
-#define USE_LoRa_E32 (LoRamode && defined(BOARD_HAS_LoRa_E32))		// E32 LoRa Module (2019 and before)
-
-#define USE_LoRa_E32_settable (USE_LoRa_E32 && 1)
-
-#define USE_LoRa_KEYVALUE (LoRamode && 1)	// Send LoRa data Using Key-value pair
-
-/*************************** Others ***************************/
+/*********************************** Flight ***********************************/
 
 #define ApoGee (USE_BARO && 1)				//Detection of apogee
 
-#define RBF (0)								//Revome Before Flight
+#define RBF (0)								//Remove Before Flight
 #define WU (ApoGee && 1)					//Wait Until Directives
 #define WUF (WU && 1)						//Wait Until Flight
 #define WUPS (WU && 1)						//Wait Until Pressure Stabilize
 
-#define ACT_BUZZER (BuZZ && 0)				//Active buzzer in hardware
-#define PSS_BUZZER (BuZZ && 1)				//Passive buzzer in hardware
-#define MORSE_MSG  (BuZZ && 1)				//Morse beeping
-#define BEEPING (BuZZ && 0)					//Buzzer mode
-
-#define BlinkBuzzer (BuZZ && 0)
-#define RGB (defined(BOARD_HAS_RGB) && 0)								//RGB LED board
-
-#define AnyDeploy (ApoGee && defined(BOARD_HAS_IGN_1) && 1)				//Any Parachute Deployment
+#define AnyDeploy (REQUIRE_DEPLOY && ApoGee && defined(BOARD_HAS_IGN_1) && 1)				//Any Parachute Deployment
 #define DualDeploy (AnyDeploy && defined(BOARD_HAS_IGN_3) && 1)			//Dual Parachute Deployment
 #define DrogueBackup (AnyDeploy && defined(BOARD_HAS_IGN_2) && DualDeploy && 1)	//Drogue Redundancy mode
 #define MainBackup (AnyDeploy && defined(BOARD_HAS_IGN_4) && 1)					//Main Redundancy mode
 
-
 #define DELAYED_MAIN (AnyDeploy && 1)			//Aways delay main deployment
 
+#define ForceSysC (0)						//Force the working systems counter outside RBF and WUF
 
-#define PbarT (PRINT && USE_BARO && 1)		//Print barometer temperature data
-#define PbarP (PRINT && USE_BARO && 1)		//Print barometer pressure data
+/*********************************** Options **********************************/
 
-#define PaclX (PRINT && USE_ACCEL && 1)		//Print accelerometer X axis data
-#define PaclY (PRINT && USE_ACCEL && 1)		//Print accelerometer Y axis data
-#define PaclZ (PRINT && USE_ACCEL && 1)		//Print accelerometer Z axis data
+/************ LoRa Options ************/
+#define USE_LoRa_CONTIGUOUS (USE_LoRa && 1)		// Force data columns to always exist
+#define USE_LoRa_E32_settable (USE_LoRa_E32 && 1)	// Configure the E32 by software instead of fixing M0/M1
+#define USE_LoRa_KEYVALUE (USE_LoRa && 1)	// Send LoRa data Using Key-value pair
 
-#define PgirX (PRINT && USE_GYRO && 1)		//Print gyroscope x axis data
-#define PgirY (PRINT && USE_GYRO && 1)		//Print gyroscope Y axis data
-#define PgirZ (PRINT && USE_GYRO && 1)		//Print gyroscope Z axis data
+/*********** Buzzer Options ***********/
+#define MORSE_MSG  (USE_BuZZ && 1)				//Morse beeping
+#define BEEPING (USE_BuZZ && 0)					//Buzzer mode
 
-#define PmagX (PRINT && USE_MAGN && 1)		//Print magnetometer x axis data
-#define PmagY (PRINT && USE_MAGN && 1)		//Print magnetometer Y axis data
-#define PmagZ (PRINT && USE_MAGN && 1)		//Print magnetometer Z axis data
+/******************************** Data Analysis *******************************/
 
-#define papgI (PRINT && ApoGee && 1)		//Print MonoDeploy.info of every instance
-#define PapgW (PRINT && ApoGee && 1)		//Print apogee information when detected
-#define PapgH (PRINT && ApoGee && 1)		//Print altimeter data
-#define PapgB (PRINT && ApoGee && 1)		//Print altimeter base
-#define PapgP (PRINT && ApoGee && 0)		//Print current apogee information
-#define PapgA (PRINT && ApoGee && 1)		//Print apogee alpha
-#define PapgS (PRINT && ApoGee && 1)		//Print apogee sigma
-#define PapgM (PRINT && ApoGee && 0)		//Print apogee sigma max
+#define PbarT (USE_PRINT && USE_BARO && 1)		//Print barometer temperature data
+#define PbarP (USE_PRINT && USE_BARO && 1)		//Print barometer pressure data
 
-#define Pgps (PRINT && GPSmode && 1)		//Print GPS informations
-#define Psep (PRINT && 0)					//Print visual separator
+#define PaclX (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer X axis data
+#define PaclY (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer Y axis data
+#define PaclZ (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer Z axis data
 
-/**************************** SD Log ***************************/
-#define Sgps (SDCard && GPSmode && 1)		//Log GPS data
-#define Sapg (SDCard && ApoGee && 1)		//Log apogee alpha and sigma
-#define Sdpl (SDCard && AnyDeploy && 1)	//Log parachute deployment state
-#define Shea (SDCard && AnyDeploy && 1)	//Log parachute health (igniter continuity)
-#define Semg (SDCard && AnyDeploy && 1)	//Log emergency state
-#define Srst (SDCard && 1)					//Log reset reason on file header
+#define PgirX (USE_PRINT && USE_GYRO && 1)		//Print gyroscope x axis data
+#define PgirY (USE_PRINT && USE_GYRO && 1)		//Print gyroscope Y axis data
+#define PgirZ (USE_PRINT && USE_GYRO && 1)		//Print gyroscope Z axis data
 
-#define Crst (COMmode && 1)			//Report reset reason on Serial/LoRa
+#define PmagX (USE_PRINT && USE_MAGN && 1)		//Print magnetometer x axis data
+#define PmagY (USE_PRINT && USE_MAGN && 1)		//Print magnetometer Y axis data
+#define PmagZ (USE_PRINT && USE_MAGN && 1)		//Print magnetometer Z axis data
 
-/* Colunas continuas: repetem o ultimo valor conhecido em toda linha.
-   Com 0, o dado so aparece no instante do evento. */
-#define Sgps_C (Sgps && 1)					//GPS em toda linha
-#define Sdpl_C (Sdpl && 1)					//Acionamentos em toda linha
+#define papgI (USE_PRINT && ApoGee && 1)		//Print MonoDeploy.info of every instance
+#define PapgW (USE_PRINT && ApoGee && 1)		//Print apogee information when detected
+#define PapgH (USE_PRINT && ApoGee && 1)		//Print altimeter data
+#define PapgB (USE_PRINT && ApoGee && 1)		//Print altimeter base
+#define PapgP (USE_PRINT && ApoGee && 0)		//Print current apogee information
+#define PapgA (USE_PRINT && ApoGee && 1)		//Print apogee alpha
+#define PapgS (USE_PRINT && ApoGee && 1)		//Print apogee sigma
+#define PapgM (USE_PRINT && ApoGee && 0)		//Print apogee sigma max
 
+#define Pgps (USE_PRINT && USE_GNSS && 1)		//Print GPS informations
+#define Psep (USE_PRINT && 0)					//Print visual separator
 
-#define Tcom (PRINT && 1)					//Print time counter
-#define Lcom (PRINT && 0)					//Print loop counter
-#define Ncom (PRINT && 0)					//Print eachN counter
-#define Ps_n (PRINT && 1)					//Print SYSTEM_n
+#define Tcom (USE_PRINT && 1)					//Print time counter
+#define Lcom (USE_PRINT && 0)					//Print loop counter
+#define Ncom (USE_PRINT && 0)					//Print eachN counter
+#define Ps_n (USE_PRINT && 1)					//Print SYSTEM_n
 
 #define PWMapg (ApoGee && 1)				//Show the apogee coefficient in a LED
 
 #define PERF_Tcom_print (0)				//Print time counter every 100 iterations (for performance tests)
 
-#define COMmode (PRINT || LoRamode)
-#define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)
+/********************************** Data Log **********************************/
+
+#define Sgps (USE_STORAGE && USE_GNSS && 1)		//Log GPS data
+#define Sapg (USE_STORAGE && ApoGee && 1)		//Log apogee alpha and sigma
+#define Sdpl (USE_STORAGE && AnyDeploy && 1)	//Log parachute deployment state
+#define Shea (USE_STORAGE && AnyDeploy && 1)	//Log parachute health (igniter continuity)
+#define Semg (USE_STORAGE && AnyDeploy && 1)	//Log emergency state
+#define Srst (USE_STORAGE && 1)					//Log reset reason on file header
+
+/* Continuous columns: repeat the last known value on every line.
+With 0, the data only shows up at the moment of the event. */
+#define Sgps_C (Sgps && 1)					//GPS on every line
+#define Sdpl_C (Sdpl && 1)					//Deployments on every line
+
+/*********************************** Derived **********************************/
+
+// #define PRINT (0)							//Print or not things on Serial
+// #define SDCard (1)						//Use SD card
+// #define GPSmode (1)						//Use GPS
+// #define LoRamode (1)						//Serial mode for transmission on LoRa module
+
+// #define ACT_BUZZER (USE_BuZZ && 0)				//Active buzzer in hardware
+// #define PSS_BUZZER (USE_BuZZ && 1)				//Passive buzzer in hardware
+
+// #define BlinkBuzzer (USE_BuZZ && 0)				// Use a LED instead of a buzzer
+// #define RGB (defined(BOARD_HAS_RGB) && 0)								//RGB LED board
+
+#define COMmode (USE_PRINT || USE_LoRa)								//Any communication channel exists
+#define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)	//Any I2C sensor exists
+
+#define Crst (COMmode && 1)			//Report reset reason on Serial/LoRa
+
 constexpr uint8_t SYSTEM_n = ( 0
-	#if SDCard
+	#if USE_STORAGE
 	+ 1
-	#endif // SDCard
+	#endif // USE_STORAGE
 	#if USE_BARO
 	+ 1
 	#endif // USE_BARO
@@ -198,9 +243,9 @@ constexpr uint8_t SYSTEM_n = ( 0
 	#if USE_MAGN
 	+ 1
 	#endif // USE_MAGN
-	#if GPSmode
+	#if USE_GNSS
 	+ 1
-	#endif // GPSmode
+	#endif // USE_GNSS
 	#if AnyDeploy
 	+ 1
 	#endif // AnyDeploy
@@ -212,8 +257,50 @@ constexpr uint8_t SYSTEM_n = ( 0
 	#endif // DrogueBackup
 	#if MainBackup
 	+ 1
-		#endif // MainBackup
+	#endif // MainBackup
 ); //Expected count of systems functioning for flight
+
+/*********************************** Guards ***********************************/
+
+#if REQUIRE_BARO && !USE_BARO
+#error: REQUIRE_BARO ligado mas nenhum barometro selecionado
+#endif
+#if REQUIRE_ACCEL && !USE_ACCEL
+#error: REQUIRE_ACCEL ligado mas nenhum acelerometro selecionado
+#endif
+#if REQUIRE_GYRO && !USE_GYRO
+#error: REQUIRE_GYRO ligado mas nenhum giroscopio selecionado
+#endif
+#if REQUIRE_MAGN && !USE_MAGN
+#error: REQUIRE_MAGN ligado mas nenhum magnetometro selecionado
+#endif
+#if REQUIRE_GNSS && !USE_GNSS
+#error: REQUIRE_GNSS ligado mas nenhum GNSS selecionado
+#endif
+#if REQUIRE_LoRa && !USE_LoRa
+#error: REQUIRE_LoRa ligado mas a placa nao tem radio
+#endif
+#if REQUIRE_SD && !USE_STORAGE
+#error: REQUIRE_SD ligado mas nenhum modulo de cartao selecionado
+#endif
+#if REQUIRE_BUZZ && !USE_BuZZ
+#error: REQUIRE_BUZZ ligado mas nenhum tipo de buzzer selecionado
+#endif
+#if REQUIRE_DEPLOY && !AnyDeploy
+#error: REQUIRE_DEPLOY ligado mas nenhum acionamento selecionado
+#endif
+#if REQUIRE_RGB && !USE_RGB
+#error: REQUIRE_RGB ligado mas a placa nao tem LED RGB
+#endif
+#if USE_PRINT && (USING_MODE == MODE_LANCAMENTO)
+#warning USE_PRINT ligado em build de LANCAMENTO - o Serial rouba tempo do loop
+#endif
+#if RBF && (USING_MODE == MODE_LANCAMENTO)
+#warning RBF ligado em build de LANCAMENTO - metodo abandonado, confira o jumper
+#endif
+#if ForceSysC && (USING_MODE == MODE_LANCAMENTO)
+#warning ForceSysC ligado em build de LANCAMENTO - o buzzer vai apitar a contagem de sistemas durante o voo
+#endif
 
 #pragma endregion
 
@@ -499,7 +586,7 @@ AK09916 magn;									//Magnetometer object declaration
 float MM_magn[3]{};
 #endif // USE_MAGN
 
-#if SDCard
+#if USE_STORAGE
 
 #include <SPI.h>
 #include <SD.h>
@@ -513,9 +600,9 @@ SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME, "txt", SPI_SD);						//Declaratio
 #else
 SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to help SD card file management
 #endif // ARDUINO_ARCH_ESP32
-#endif // SDCard
+#endif // USE_STORAGE
 
-// #if GPSmode
+// #if USE_GNSS
 // #include "src/lib/GyGPS/GyGPS.h" // Auxiliar para GPS
 // #ifdef ARDUINO_ARCH_ESP32
 // HardwareSerial GpSSerial(1);
@@ -523,15 +610,15 @@ SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to 
 // #else
 // GyGPS GpS(Serial1, 0);
 // #endif // ARDUINO_ARCH_ESP32
-// #endif // GPSmode
+// #endif // USE_GNSS
 
-#if GPSmode
-#if 1 < ((USE_V_GPS) + (USE_GYGPS))
+#if USE_GNSS
+#if 1 < ((USE_V_GNSS) + (USE_NEO_M))
 #error: Multiplos GPS definidos
-#elif USE_V_GPS
+#elif USE_V_GNSS
 #include "src/lib/VirtualGPS/VirtualGPS.h"	// GPS Virtual
 VirtualGPS GpS;
-#elif USE_GYGPS
+#elif USE_NEO_M
 #include "src/lib/GyGPS/GyGPS.h"			// Auxiliar para GPS
 #ifdef ARDUINO_ARCH_ESP32
 HardwareSerial GpSSerial(1);
@@ -539,11 +626,11 @@ GyGPS GpS(GpSSerial, 0, SERIAL_8N1, RX_GPS_ESP, TX_GPS_ESP);
 #else
 GyGPS GpS(Serial1, 0);
 #endif // ARDUINO_ARCH_ESP32
-#endif // USE_V_GPS / USE_GYGPS
-#endif // GPSmode
+#endif // USE_V_GNSS / USE_NEO_M
+#endif // USE_GNSS
 
 
-#if LoRamode
+#if USE_LoRa
 #if 1 < ((USE_LoRa_DORJI) + (USE_LoRa_E32))
 #error: Múltiplos LoRas definidos
 #elif USE_LoRa_DORJI
@@ -622,7 +709,7 @@ void loadLoRaDefaultConfig()
 bool setLoRaConfig()
 {
 	ResponseStructContainer c = LoRaConfig.getConfiguration();
-#if PRINT
+#if USE_PRINT
 	Serial.println(c.status.getResponseDescription());
 	Serial.println(c.status.code);
 #endif
@@ -652,7 +739,7 @@ bool setLoRaConfig()
 
 	// Set configuration changed and set to not hold the configuration
 	ResponseStatus rs = LoRaConfig.setConfiguration(configuration, WRITE_CFG_PWR_DWN_SAVE);
-#if PRINT
+#if USE_PRINT
 	Serial.println(rs.getResponseDescription());
 	Serial.println(rs.code);
 #endif
@@ -806,7 +893,7 @@ unsigned long pauseTelemetryUntil = 0;
 void cancelLoRaConfig(bool reverter, Configuration &previousConfig)
 {
 	LoRa.println(TX_CHG_FREQ_ERROR);
-#if PRINT
+#if USE_PRINT
 	Serial.println(F("[LORA RX] ERRO: Handshake abortado ou configuracao invalida!"));
 #endif
 
@@ -865,7 +952,7 @@ void updateLoRaFrequency(){
 				// extern unsigned long pauseTelemetryUntil;
 				pauseTelemetryUntil = millis() + 6000;
 
-#if PRINT
+#if USE_PRINT
 				Serial.println(F("\n========== [LORA RX] =========="));
 				Serial.print(F("[LORA RX] Mensagem recebida: "));
 				Serial.println(tempRec);
@@ -887,7 +974,7 @@ void updateLoRaFrequency(){
 				}
 
 				if (!reqCheck) {
-#if PRINT
+#if USE_PRINT
 					Serial.println(F("[LORA RX] ERRO: Header/Separador/Tail invalido"));
 #endif
 					cancelLoRaConfig(false, previousConfig);
@@ -897,7 +984,7 @@ void updateLoRaFrequency(){
 
 				CHAN = hexFromCharPair(tempRec + chgFreqReqHeadLen);
 				if (CHAN > 0x45) {
-#if PRINT
+#if USE_PRINT
 					Serial.println(F("[LORA RX] ERRO: Canal invalido"));
 #endif
 					cancelLoRaConfig(false, previousConfig);
@@ -908,7 +995,7 @@ void updateLoRaFrequency(){
 				ADDH = hexFromCharPair(tempRec + chgFreqReqHeadLen + 2 + chgFreqReqMidLen);
 				ADDL = hexFromCharPair(tempRec + chgFreqReqHeadLen + 2 + chgFreqReqMidLen + 2);
 
-#if PRINT
+#if USE_PRINT
 				Serial.print(F("[LORA RX] Parse OK! CHAN="));
 				Serial.print(CHAN, DEC);
 				Serial.print(F(" ADDH=0x"));
@@ -927,7 +1014,7 @@ void updateLoRaFrequency(){
 				memcpy(toSend + chgFreqCfmHeadLen + 2 + chgFreqCfmMidLen + 4, chgFreqCfmTail, chgFreqCfmTailLen);
 				toSend[chgFreqCfmLen] = '\0';
 
-#if PRINT
+#if USE_PRINT
 				Serial.print(F("[LORA RX] Enviando confirmacao: "));
 				Serial.println(toSend);
 #endif
@@ -938,13 +1025,13 @@ void updateLoRaFrequency(){
 // 				while (LoRa.available() > 0 && discardLimit-- > 0) LoRa.read();
 // 				LoRa.println(toSend);
 
-// #if PRINT
+// #if USE_PRINT
 // 				Serial.println(F("[LORA RX] Aguardando 1SSO_MSM do GS..."));
 // #endif
 // 				stateTimeout = millis() + 5000;
 // 				hsState = HS_WAITING_1SSO;
 			} else if (millis() - startWait >= 100) {
-#if PRINT
+#if USE_PRINT
 				Serial.print(F("[LORA RX] Bytes insuficientes ou invalido: "));
 				Serial.print(LoRa.available());
 				Serial.print(F(" / "));
@@ -963,7 +1050,7 @@ void updateLoRaFrequency(){
 			while (LoRa.available() > 0 && discardLimit-- > 0) LoRa.read();
 			LoRa.println(toSend);
 
-#if PRINT
+#if USE_PRINT
 			Serial.println(F("[LORA RX] Aguardando 1SSO_MSM do GS..."));
 #endif
 			stateTimeout = millis() + 5000;
@@ -973,7 +1060,7 @@ void updateLoRaFrequency(){
 
 		case HS_WAITING_1SSO: {
 			if (millis() > stateTimeout) {
-#if PRINT
+#if USE_PRINT
 				Serial.println(F("[LORA RX] TIMEOUT aguardando 1SSO_MSM"));
 #endif
 				cancelLoRaConfig(false, previousConfig);
@@ -988,7 +1075,7 @@ void updateLoRaFrequency(){
 				if (LoRa.available() >= chgFreqOkLen) {
 					uint8_t count = LoRa.readBytesUntil('\n', recieved, chgFreqOkLen);
 					recieved[count] = '\0';
-#if PRINT
+#if USE_PRINT
 					Serial.print(F("[LORA RX] Recebeu: "));
 					Serial.println(recieved);
 #endif
@@ -1000,7 +1087,7 @@ void updateLoRaFrequency(){
 
 						if (setLoRaConfig()) {
 							saveLoRaEEConfig();
-#if PRINT
+#if USE_PRINT
 							Serial.println(F("[LORA RX] Frequencia aplicada. Aguardando MUD0U_MSM do GS..."));
 #endif
 							stateTimeout = millis() + 5000;
@@ -1010,7 +1097,7 @@ void updateLoRaFrequency(){
 							hsState = HS_IDLE;
 						}
 					} else {
-#if PRINT
+#if USE_PRINT
 						Serial.println(F("[LORA RX] ERRO: 1SSO_MSM invalido"));
 #endif
 						cancelLoRaConfig(false, previousConfig);
@@ -1023,7 +1110,7 @@ void updateLoRaFrequency(){
 
 		case HS_WAITING_MUD0U: {
 			if (millis() > stateTimeout) {
-#if PRINT
+#if USE_PRINT
 				Serial.println(F("[LORA RX] TIMEOUT aguardando MUD0U_MSM"));
 #endif
 				cancelLoRaConfig(true, previousConfig);
@@ -1038,23 +1125,23 @@ void updateLoRaFrequency(){
 				if (LoRa.available() >= chgFreqVrfyLen) {
 					uint8_t count = LoRa.readBytesUntil('\n', recieved, chgFreqVrfyLen);
 					recieved[count] = '\0';
-#if PRINT
+#if USE_PRINT
 					Serial.print(F("[LORA RX] Recebeu: "));
 					Serial.println(recieved);
 #endif
 
 					if (strncmp(recieved, chgFreqVrfy, chgFreqVrfyLen) == 0) {
-#if PRINT
+#if USE_PRINT
 						Serial.println(F("[LORA RX] Enviando JUR0_JUR4D1NH0..."));
 #endif
 						LoRa.println(TX_CHG_FREQ_RESP);
-#if PRINT
+#if USE_PRINT
 						Serial.println(F("[LORA RX] Aguardando B04 do GS..."));
 #endif
 						stateTimeout = millis() + 5000;
 						hsState = HS_WAITING_B04;
 					} else {
-#if PRINT
+#if USE_PRINT
 						Serial.println(F("[LORA RX] ERRO: MUD0U_MSM invalido"));
 #endif
 						cancelLoRaConfig(true, previousConfig);
@@ -1067,7 +1154,7 @@ void updateLoRaFrequency(){
 
 		case HS_WAITING_B04: {
 			if (millis() > stateTimeout) {
-#if PRINT
+#if USE_PRINT
 				Serial.println(F("[LORA RX] TIMEOUT aguardando B04"));
 #endif
 				cancelLoRaConfig(true, previousConfig);
@@ -1082,17 +1169,17 @@ void updateLoRaFrequency(){
 				if (LoRa.available() >= chgFreqFinalLen) {
 					uint8_t count = LoRa.readBytesUntil('\n', recieved, chgFreqFinalLen);
 					recieved[count] = '\0';
-#if PRINT
+#if USE_PRINT
 					Serial.print(F("[LORA RX] Recebeu: "));
 					Serial.println(recieved);
 #endif
 
 					if (strncmp(recieved, chgFreqFinal, chgFreqFinalLen) == 0) {
-#if PRINT
+#if USE_PRINT
 						Serial.println(F("[LORA RX] Mudanca de frequencia concluida com sucesso!"));
 #endif
 					} else {
-#if PRINT
+#if USE_PRINT
 						Serial.println(F("[LORA RX] ERRO: B04 invalido"));
 #endif
 						cancelLoRaConfig(true, previousConfig);
@@ -1136,14 +1223,14 @@ void updateLoRaFrequency(){
 
 #endif // USE_LoRa_KEYVALUE
 
-#endif // LoRamode
+#endif // USE_LoRa
 
 #if TalkingBoard
 ComProtocol Talk(Serial2, 9600);			//Declaration of communication protocol object
 #endif // TalkingBoard
 
-#if ((PRINT) || (PERF_Tcom_print))
-#endif // ((PRINT) || (PERF_Tcom_print))
+#if ((USE_PRINT) || (PERF_Tcom_print))
+#endif // ((USE_PRINT) || (PERF_Tcom_print))
 
 Helpful Gutil;								//Declaration of helpful object to general cases
 
@@ -1156,13 +1243,16 @@ unsigned short sysC = 0;
 #endif // RBF || WUF || ForceSysC
 
 
-#if BuZZ
+#if USE_BuZZ
+#if 1 < ((USE_ACT_BUZZER) + (USE_PSS_BUZZER) + (USE_BLINK_BUZZ))
+#error: Multiplos tipos de buzzer definidos
+#endif
 
-#if BlinkBuzzer
+#if USE_BLINK_BUZZ
 #define buzzPin LED_BUILTIN
 #define buzzCmd HIGH
-#endif // BlinkBuzzer
-#endif // BuZZ
+#endif // USE_BLINK_BUZZ
+#endif // USE_BuZZ
 
 #if MORSE_MSG
 
@@ -1172,13 +1262,13 @@ unsigned short sysC = 0;
 
 #define ALARM_DELAY 10					// Delay after alarm when all systems working properly
 
-#if ACT_BUZZER
+#if USE_ACT_BUZZER
 MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
 // MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . # . > . [ . ] . { . }");
-#elif PSS_BUZZER
+#elif USE_PSS_BUZZER
 Morse mensageiro(buzzPin, "~ ");
 // Morse mensageiro(buzzPin, CURRENT_MODE_PROJECT_NAME);
-#endif  // ACT_BUZZER / PSS_BUZZER
+#endif  // USE_ACT_BUZZER / USE_PSS_BUZZER
 
 #if MORSE_INTERRUPT
 MORSE_INTERRPUT_PRESET(mensageiro);
@@ -1245,14 +1335,14 @@ void setup()
 	pinMode(RBFpin, INPUT_PULLUP);
 #endif // RBF
 
-#if RGB
+#if USE_RGB
 	pinMode(RGB_rPin, OUTPUT);
 	pinMode(RGB_gPin, OUTPUT);
 	pinMode(RGB_bPin, OUTPUT);
 	digitalWrite(RGB_rPin, !RGB_CMD);
 	digitalWrite(RGB_gPin, !RGB_CMD);
 	digitalWrite(RGB_bPin, !RGB_CMD);
-#endif // RGB
+#endif // USE_RGB
 
 #if AnyDeploy
 	rec.begin();
@@ -1285,7 +1375,7 @@ void setup()
 
 
 
-#if ((PRINT) || (PERF_Tcom_print) || (USE_VIRTUAL))
+#if ((USE_PRINT) || (PERF_Tcom_print) || (USE_VIRTUAL))
 	Serial.begin(BaudRate);
 
 	#if defined(ARDUINO_ARCH_ESP32)
@@ -1297,13 +1387,13 @@ void setup()
 	Serial.print(F("System number: "));
 	Serial.println(SYSTEM_n);
 #endif // Ps_n
-#endif // ((PRINT) || (PERF_Tcom_print))
+#endif // ((USE_PRINT) || (PERF_Tcom_print))
 
 
-#if ACT_BUZZER
+#if USE_ACT_BUZZER
 	pinMode(buzzPin, OUTPUT);
 	digitalWrite(buzzPin, !buzzCmd);
-#endif // ACT_BUZZER
+#endif // USE_ACT_BUZZER
 #if MORSE_MSG
 	mensageiro.setup();
 
@@ -1318,7 +1408,7 @@ void setup()
 	beep();
 #endif // BEEPING
 
-#if LoRamode
+#if USE_LoRa
 
 #ifdef ARDUINO_ARCH_ESP32
 	LoRa.begin(LoRaBaudRate, SERIAL_8N1, RX_LORA_ESP, TX_LORA_ESP);
@@ -1345,14 +1435,14 @@ void setup()
 #endif  // USE_LoRa_E32_settable
 #endif // USE_LoRa_E32
 
-#endif // LoRamode
+#endif // USE_LoRa
 
 #if Crst && defined(ARDUINO_ARCH_ESP32)
 	transmit(F("\nReset: "));
 	transmit(resetReasonName(esp_reset_reason()));
 #endif // Crst && defined(ARDUINO_ARCH_ESP32)
 
-#if GPSmode
+#if USE_GNSS
 	GpS.begin();
 	GpS.util.mem = false; // Auxiliar de primeira leitura
 	GpS.util.forT(60);
@@ -1374,7 +1464,7 @@ void setup()
 		transmit(F("\nGPS err, waiting signal"));
 #endif // COMmode
 	}
-#endif // GPSmode
+#endif // USE_GNSS
 
 #if WIREmode
 #if ARDUINO_ARCH_ESP32
@@ -1410,11 +1500,11 @@ void setup()
 
 		Serial.print(apg.getZero());
 		Serial.println();
-#elif PRINT
+#elif USE_PRINT
 		Serial.println();
-#endif // PRINT
+#endif // USE_PRINT
 
-#if LoRamode
+#if USE_LoRa
 #if ApoGee
 		// When system gets a invalid zero height (reset on flight)
 		if(apg.getFixZero()) {
@@ -1447,7 +1537,7 @@ void setup()
 		LoRa.println(apg.getZero());
 #endif // ApoGee
 		LoRa.println();
-#endif // LoRamode
+#endif // USE_LoRa
 
 	}
 	else
@@ -1525,7 +1615,7 @@ void setup()
 #endif // AnyDeploy && COMmode
 
 
-#if SDCard
+#if USE_STORAGE
 
 #if ARDUINO_ARCH_ESP32
 	SPI_SD.begin(SCK_SD_ESP, MISO_SD_ESP, MOSI_SD_ESP, CS_SD_ESP);
@@ -1641,9 +1731,9 @@ void setup()
 #if ApoGee
 			"m\t"
 #endif // ApoGee
-#if GPSmode
+#if USE_GNSS
 			"Latitude\tLongitude\tAltitude (m)\tspeed\tSat\tPrec\t"
-#endif // GPSmode
+#endif // USE_GNSS
 		));
 */
 		///////////////////////////////////////////////
@@ -1657,7 +1747,7 @@ void setup()
 		transmit(F("\nSD err"));
 #endif // COMmode
 	}
-#endif // SDCard
+#endif // USE_STORAGE
 
 #if COMmode
 		transmitln(F(" "));
@@ -1840,9 +1930,9 @@ void setup()
 #endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
 */
 
-#if SDCard
+#if USE_STORAGE
 	SDC.util.begin();
-#endif // SDCard
+#endif // USE_STORAGE
 
 	////////////////WUF directive////////////////
 
@@ -1857,9 +1947,9 @@ void setup()
 
 	Gutil.begin();
 
-#if LoRamode
+#if USE_LoRa
 	LRutil.begin();
-#endif // LoRamode
+#endif // USE_LoRa
 
 #if ApoGee
 	apg.resetTimer();
@@ -1936,17 +2026,17 @@ void loop()
 	analogWrite(PWMout, (char)(apg.getSigma() * 255));
 #endif // PWMapg
 
-#if ((PRINT) || (PERF_Tcom_print))
+#if ((USE_PRINT) || (PERF_Tcom_print))
 	SerialSend();
-#endif // ((PRINT) || (PERF_Tcom_print))
+#endif // ((USE_PRINT) || (PERF_Tcom_print))
 
-#if SDCard
+#if USE_STORAGE
 	SDSend();
-#endif // SDCard
+#endif // USE_STORAGE
 
-#if LoRamode
+#if USE_LoRa
 	LoRaSend();
-#endif // LoRamode
+#endif // USE_LoRa
 
 #if MORSE_MSG && ForceSysC && (!MORSE_INTERRUPT)
 	mensageiro.updateMorse();
@@ -1974,7 +2064,7 @@ inline void RemoveBefore()
 		rbf = digitalRead(RBFpin);
 		if (rbfHelper.oneTime())
 		{
-#if PRINT
+#if USE_PRINT
 			Serial.print(sysC);
 			Serial.print(F(" parts of "));
 			Serial.print(SYSTEM_n);
@@ -1984,7 +2074,7 @@ inline void RemoveBefore()
 			Serial.print(F(" "));
 			Serial.write(0xB0);
 #endif // USE_BARO
-#if GPSmode
+#if USE_GNSS
 			Serial.print(F("C\tLat: "));
 			Serial.print(GpS.getLatitude(), 6);
 			Serial.print(F("\tLon: "));
@@ -1999,19 +2089,19 @@ inline void RemoveBefore()
 			Serial.print(GpS.getMinute());
 			Serial.print(':');
 			Serial.print(GpS.getSecond());
-#endif // GPSmode
+#endif // USE_GNSS
 
 			Serial.println();
 
-#endif // PRINT
+#endif // USE_PRINT
 		}
 		else if (rbfHelper.eachT(2)) rbfHelper.oneTimeReset();
-#if LoRamode
+#if USE_LoRa
 #if USE_LoRa_E32_settable
 		updateLoRaFrequency();
 #endif // USE_LoRa_E32_settable
 		LoRaSend();
-#endif // LoRamode
+#endif // USE_LoRa
 
 #if BEEPING
 		///////////////////////////////////////
@@ -2058,17 +2148,17 @@ inline void WaitUntil()
 			analogWrite(PWMout, (char)(apg.getSigma() * 255));
 	#endif // PWMapg
 
-	#if ((PRINT) || (PERF_Tcom_print))
+	#if ((USE_PRINT) || (PERF_Tcom_print))
 			SerialSend();
-	#endif // ((PRINT) || (PERF_Tcom_print))
+	#endif // ((USE_PRINT) || (PERF_Tcom_print))
 
-	#if SDCard
+	#if USE_STORAGE
 			SDSend();
-	#endif // SDCard
+	#endif // USE_STORAGE
 
-	#if LoRamode
+	#if USE_LoRa
 			LoRaSend();
-	#endif // LoRamode
+	#endif // USE_LoRa
 }
 #endif // WU
 
@@ -2153,7 +2243,7 @@ inline void WaitUntilPressureStabilize(float waitTime) {
 
 //////////////////////////////////////////////////////SPT//////////////////////////////////////////////////////
 
-#if ((PRINT) || (PERF_Tcom_print))
+#if ((USE_PRINT) || (PERF_Tcom_print))
 inline void SerialSend()
 {
 
@@ -2356,9 +2446,9 @@ inline void SerialSend()
 	{
 		if (rec.mainN.getState(0))
 		{
-#if SDCard
+#if USE_STORAGE
 			rec.mainN.getStateReset(); // Serial -> SD -> LoRa
-#endif // SDCard
+#endif // USE_STORAGE
 			Serial.print(F("Act MainN:"));
 			Serial.print(rec.mainN.getDeploymentHeight());
 			Serial.print(F("m\t"));
@@ -2367,9 +2457,9 @@ inline void SerialSend()
 #if DualDeploy
 		if (rec.drogN.getState(0))
 		{
-#if SDCard
+#if USE_STORAGE
 			rec.drogN.getStateReset(); // Serial -> SD -> LoRa
-#endif // SDCard
+#endif // USE_STORAGE
 			Serial.print(F("Act DrogueN:"));
 			Serial.print(rec.drogN.getDeploymentHeight());
 			Serial.print(F("m\t"));
@@ -2379,9 +2469,9 @@ inline void SerialSend()
 #if MainBackup
 		if (rec.mainB.getState(0))
 		{
-#if SDCard
+#if USE_STORAGE
 			rec.mainB.getStateReset(); // Serial -> SD -> LoRa
-#endif // SDCard
+#endif // USE_STORAGE
 			Serial.print(F("Act MainB:"));
 			Serial.print(rec.mainB.getDeploymentHeight());
 			Serial.print(F("m\t"));
@@ -2391,9 +2481,9 @@ inline void SerialSend()
 #if DrogueBackup
 		if (rec.drogB.getState(0))
 		{
-#if SDCard
+#if USE_STORAGE
 			rec.drogB.getStateReset(); // Serial -> SD -> LoRa
-#endif // SDCard
+#endif // USE_STORAGE
 			Serial.print(F("Act DrogueB:"));
 			Serial.print(rec.drogB.getDeploymentHeight());
 			Serial.print(F("m\t"));
@@ -2411,11 +2501,11 @@ inline void SerialSend()
 #endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
 
 }
-#endif // ((PRINT) || (PERF_Tcom_print))
+#endif // ((USE_PRINT) || (PERF_Tcom_print))
 
 //////////////////////////////////////////////////////SDC//////////////////////////////////////////////////////
 
-#if SDCard
+#if USE_STORAGE
 inline void SDSend()
 {
 	if (!SDC.util.mem)
@@ -2520,9 +2610,9 @@ inline void SDSend()
 #if AnyDeploy
 				if (rec.mainN.getState(0))
 				{
-#if LoRamode
+#if USE_LoRa
 					rec.mainN.getStateReset(); // Serial -> SD -> LoRa
-#endif // LoRamode
+#endif // USE_LoRa
 					SDC.theFile.print(F("Act MainN:"));
 					SDC.theFile.print(rec.mainN.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
@@ -2531,9 +2621,9 @@ inline void SDSend()
 #if DualDeploy
 				if (rec.drogN.getState(0))
 				{
-#if LoRamode
+#if USE_LoRa
 					rec.drogN.getStateReset(); // Serial -> SD -> LoRa
-#endif // LoRamode
+#endif // USE_LoRa
 					SDC.theFile.print(F("Act DrogueN:"));
 					SDC.theFile.print(rec.drogN.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
@@ -2543,9 +2633,9 @@ inline void SDSend()
 #if MainBackup
 				if (rec.mainB.getState(0))
 				{
-#if LoRamode
+#if USE_LoRa
 					rec.mainB.getStateReset(); // Serial -> SD -> LoRa
-#endif // LoRamode
+#endif // USE_LoRa
 					SDC.theFile.print(F("Act MainB:"));
 					SDC.theFile.print(rec.mainB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
@@ -2555,9 +2645,9 @@ inline void SDSend()
 #if DrogueBackup
 				if (rec.drogB.getState(0))
 				{
-#if LoRamode
+#if USE_LoRa
 					rec.drogB.getStateReset(); // Serial -> SD -> LoRa
-#endif // LoRamode
+#endif // USE_LoRa
 					SDC.theFile.print(F("Act DrogueB:"));
 					SDC.theFile.print(rec.drogB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
@@ -2591,7 +2681,7 @@ inline void SDSend()
 		#endif  // MORSE_MSG
 	}
 }
-#endif // SDCard
+#endif // USE_STORAGE
 
 //////////////////////////////////////////////////////BZZ//////////////////////////////////////////////////////
 
@@ -2622,7 +2712,7 @@ inline void beep()
 
 //////////////////////////////////////////////////////LRM//////////////////////////////////////////////////////
 
-#if LoRamode
+#if USE_LoRa
 inline void LoRaSend()
 {
 #if USE_LoRa_E32_settable
@@ -2660,7 +2750,7 @@ inline void LoRaSend()
 #endif // USE_LoRa_KEYVALUE
 		LoRa.print(LRutil.sinceBegin());
 		LoRa.print('\t');
-#if GPSmode
+#if USE_GNSS
 		if(GpS.util.mem) { // Somente mandar dados validos apos primeira leitura bem sucedida
 #if USE_LoRa_KEYVALUE
 			LoRa.print(F(LoRa_KEY_LAT)); // l>A<titude
@@ -2711,7 +2801,7 @@ inline void LoRaSend()
 				"~\t"
 			));
 		}
-#endif // GPSmode
+#endif // USE_GNSS
 #if ApoGee
 #if USE_LoRa_KEYVALUE
 		LoRa.print(F(LoRa_KEY_HEIGTH)); // >>H<<eight
@@ -2721,13 +2811,13 @@ inline void LoRaSend()
 		// LoRa.print(apg.getSigma(), 3);
 		// LoRa.print('\t');
 #endif // ApoGee
-#if SDCard
+#if USE_STORAGE
 #if USE_LoRa_KEYVALUE
 		LoRa.print(F(LoRa_KEY_SD)); // >>s<<D
 #endif // USE_LoRa_KEYVALUE
 		LoRa.print(!SDC.util.mem);
 		LoRa.print('\t');
-#endif // SDCard
+#endif // USE_STORAGE
 #if ApoGee
 		if (Gutil.mem)
 		{
@@ -2877,49 +2967,49 @@ inline void LoRaSend()
 #endif // USE_BARO
   }
 }
-#endif // LoRamode
+#endif // USE_LoRa
 
 //////////////////////////////////////////////////////COM//////////////////////////////////////////////////////
 
 #if COMmode
 template <typename T> void transmit(T message)
 {
-#if PRINT
+#if USE_PRINT
 	Serial.print(message);
-#endif // PRINT
-#if LoRamode
+#endif // USE_PRINT
+#if USE_LoRa
 	LoRa.print(message);
-#endif // LoRamode
+#endif // USE_LoRa
 }
 
 template <typename T> void transmitln(T message)
 {
-#if PRINT
+#if USE_PRINT
 	Serial.println(message);
-#endif // PRINT
-#if LoRamode
+#endif // USE_PRINT
+#if USE_LoRa
 	LoRa.println(message);
-#endif // LoRamode
+#endif // USE_LoRa
 }
 
 template <typename T, typename R> void transmit(T message, R value)
 {
-#if PRINT
+#if USE_PRINT
 	Serial.print(message, value);
-#endif // PRINT
-#if LoRamode
+#endif // USE_PRINT
+#if USE_LoRa
 	LoRa.print(message, value);
-#endif // LoRamode
+#endif // USE_LoRa
 }
 
 template <typename T, typename R> void transmitln(T message, R value)
 {
-#if PRINT
+#if USE_PRINT
 	Serial.println(message, value);
-#endif // PRINT
-#if LoRamode
+#endif // USE_PRINT
+#if USE_LoRa
 	LoRa.println(message, value);
-#endif // LoRamode
+#endif // USE_LoRa
 }
 
 #endif // COMmode
@@ -2992,7 +3082,7 @@ inline void readEverything()
 #endif  // MORSE_MSG
 	}
 #endif // USE_MAGN
-#if GPSmode
+#if USE_GNSS
 	if (GpS) GpS.util.forT(10);
 	if (!GpS.util.mem) if (GpS.isNew()) GpS.util.mem = true; // Auxiliar de primeira leitura bem sucedida
 	if (GpS.util.forT()) {
@@ -3005,7 +3095,7 @@ inline void readEverything()
 #endif  // MORSE_MSG
 }
 
-#endif // GPSmode
+#endif // USE_GNSS
 #if AnyDeploy && (RBF || WUF)
 	if (rec.mainN.info()) {
 		sysC++;
