@@ -25,7 +25,7 @@ bool MPU9250_GYRO::readAll()
         {
             begin();
 #if PRINT
-            Serial.println(F("Relacibrado G"));
+            Serial.println(F("Recalibrado G"));
 #endif // PRINT
         }
         Wire.beginTransmission(address);

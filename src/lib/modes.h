@@ -9,5 +9,6 @@
 #define MODE_ELEVADOR 1
 #define MODE_ASPIRADOR 2
 #define MODE_MANUAL 3
+#define MODE_VIRTUAL 9
 
 #endif // _MODES_H

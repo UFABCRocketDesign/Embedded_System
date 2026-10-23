@@ -49,7 +49,7 @@ bool L3G4200D::readAll()
 		{
 			begin();
 #if PRINT
-			Serial.println(F("Relacibrado G"));
+			Serial.println(F("Recalibrado G"));
 #endif // PRINT
 		}
 		///Faz a leitura de todos os eixos///

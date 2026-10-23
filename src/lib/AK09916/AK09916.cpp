@@ -46,7 +46,7 @@ bool AK09916::readAll()
     {
       begin();
 #if PRINT
-      Serial.println(F("Relacibrado M"));
+      Serial.println(F("Recalibrado M"));
 #endif // PRINT
     }
 

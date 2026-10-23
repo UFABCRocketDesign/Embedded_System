@@ -45,7 +45,7 @@
 #define _MORSE_DEFAULT_ALARM_FAST 5
 #define _MORSE_DEFAULT_ALARM_SLOW 100
 
-
+#define M_PIf 3.14159265358979323846f
 
 
 inline constexpr unsigned int toneHz(double f)
@@ -63,7 +63,7 @@ toneHz(long(LOW) + long(HIGH - LOW) * ())
 
 
 #define ALARM_FUNC_TILDE(LOW, HIGH, STEP) \
-toneHz(long(LOW) + long(HIGH - LOW) * (-cosf(M_PI * STEP / 50.0f) * 0.5f + 0.5f))
+toneHz(long(LOW) + long(HIGH - LOW) * (-cosf(M_PIf * STEP / 50.0f) * 0.5f + 0.5f))
 
 #define ALARM_FUNC_HAT(LOW, HIGH, STEP, WIDTH) \
 toneHz(long(LOW) + long(HIGH - LOW) * (1- abs((2*STEP - float(WIDTH) - 1.0f) / (float(WIDTH) - 1.0f))))
@@ -90,16 +90,16 @@ toneHz(long(LOW) + long(HIGH - LOW) * (1.0f - powf(1.0f - (STEP - 1.0f) / (float
 toneHz(long(LOW) + long(HIGH - LOW) * (1.0f - powf((STEP - 1.0f) / (float(WIDTH) - 1.0f), 3)))
 
 #define ALARM_FUNC_CIFRAO(LOW, HIGH, STEP) \
-toneHz(long(LOW) + long(HIGH - LOW) * ((((STEP / 25) % 2) ? 0 : 1) - 1.5 * sinf(M_PI * STEP / 25.0f) * 0.5f))
+toneHz(long(LOW) + long(HIGH - LOW) * ((((STEP / 25) % 2) ? 0 : 1) - 1.5f * sinf(M_PIf * STEP / 25.0f) * 0.5f))
 
 #define ALARM_FUNC_PERCENT(LOW, HIGH, STEP, ADJUST_A, ADJUST_B) \
-toneHz(long(LOW) + long(HIGH - LOW) * ((sinf(M_PI * STEP / 50.0f) + sinf(ADJUST_B*M_PI * STEP / 50.0f)/ADJUST_A)/(1.0f+1.0f/ADJUST_A)+1) / 2.0f)
+toneHz(long(LOW) + long(HIGH - LOW) * ((sinf(M_PIf * STEP / 50.0f) + sinf(ADJUST_B*M_PIf * STEP / 50.0f)/ADJUST_A)/(1.0f+1.0f/ADJUST_A)+1) / 2.0f)
 
 #define ALARM_FUNC_PIPE(LOW, HIGH, STEP, ADJUST) \
-toneHz(long(LOW) + long(HIGH - LOW) * (1+sinf(M_PI * STEP / 50.0f)*(sinf(ADJUST * M_PI * STEP / 50.0f))))
+toneHz(long(LOW) + long(HIGH - LOW) * (1+sinf(M_PIf * STEP / 50.0f)*(sinf(ADJUST * M_PIf * STEP / 50.0f))))
 
 #define ALARM_FUNC_UNDER(LOW, HIGH, STEP, ADJUST) \
-toneHz(long(LOW) + long(HIGH - LOW) * ((((STEP / 50) % 2) ? -1 : 1)*(1/(2+cosf(M_PI+ADJUST * M_PI * STEP / 50.0f))))+1)
+toneHz(long(LOW) + long(HIGH - LOW) * ((((STEP / 50) % 2) ? -1 : 1)*(1/(2+cosf(M_PIf+ADJUST * M_PIf * STEP / 50.0f))))+1)
 
 
 

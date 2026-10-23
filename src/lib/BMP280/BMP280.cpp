@@ -54,7 +54,7 @@ bool BMP280::readAll()
     {
       begin();
 #if PRINT
-      Serial.println(F("Relacibrado B"));
+      Serial.println(F("Recalibrado B"));
 #endif // PRINT
     }
 

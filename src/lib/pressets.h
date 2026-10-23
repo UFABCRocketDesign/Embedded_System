@@ -17,8 +17,7 @@
 		#define CURRENT_MODE_WUPSdelay	10	// Delay (seconds) to bypass possible transonic unstable pressure
 
 		#define CURRENT_MODE_Fix0range	10	// Dispersao (m) que indica leitura em movimento
-		#define CURRENT_MODE_Fix0diff		150	// Distancia (m) da referencia que indica reinicio fora da base
-
+		#define CURRENT_MODE_Fix0diff	150	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Airuma"
 
@@ -32,7 +31,7 @@
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
 
 		#define CURRENT_MODE_Fix0range	5	// Dispersao (m) que indica leitura em movimento
-		#define CURRENT_MODE_Fix0diff		10	// Distancia (m) da referencia que indica reinicio fora da base
+		#define CURRENT_MODE_Fix0diff	10	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Lift"
 
@@ -46,7 +45,7 @@
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
 
 		#define CURRENT_MODE_Fix0range	5	// Dispersao (m) que indica leitura em movimento
-		#define CURRENT_MODE_Fix0diff		10	// Distancia (m) da referencia que indica reinicio fora da base
+		#define CURRENT_MODE_Fix0diff	10	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Vacuum"
 
@@ -60,9 +59,23 @@
 		#define CURRENT_MODE_WUPSdelay	3	// Delay (seconds) to bypass possible transonic unstable pressure
 
 		#define CURRENT_MODE_Fix0range	5	// Dispersao (m) que indica leitura em movimento
-		#define CURRENT_MODE_Fix0diff		10	// Distancia (m) da referencia que indica reinicio fora da base
+		#define CURRENT_MODE_Fix0diff	10	// Distancia (m) da referencia que indica reinicio fora da base
 
 		#define CURRENT_MODE_PROJECT_NAME "Hand"
+
+	#elif USING_MODE == MODE_VIRTUAL
+
+		#define CURRENT_MODE_P2H_NORMAL	450	// Height (meters) to main parachute normal deployment
+		#define CURRENT_MODE_P2H_BACKUP	400	// Height (meters) to main parachute backup deployment
+
+		#define CURRENT_MODE_WUFheigh	50	// Min height (meters) to confirm liftoff
+
+		#define CURRENT_MODE_WUPSdelay	10	// Delay (seconds) to bypass possible transonic unstable pressure
+
+		#define CURRENT_MODE_Fix0range	10	// Dispersao (m) que indica leitura em movimento
+		#define CURRENT_MODE_Fix0diff	150	// Distancia (m) da referencia que indica reinicio fora da base
+
+		#define CURRENT_MODE_PROJECT_NAME "Simul"
 
 	#else
 

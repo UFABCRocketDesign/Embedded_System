@@ -7,7 +7,7 @@ GMT(gmt),
 UARTconfig(((rxPin == -1) && (txPin == -1)) ? 0x0 : config),
 UARTrxPin(rxPin),
 UARTtxPin(txPin),
-Sens(0x0)
+GNSS(0x0)
 {
 }
 
@@ -21,80 +21,80 @@ unsigned short GyGPS::getSentences()
 	return sentences;
 }
 
-unsigned char GyGPS::getSatellites()
-{
-	return satellites;
-}
+// unsigned char GyGPS::getSatellites()
+// {
+// 	return satellites;
+// }
 
-unsigned long GyGPS::getPrecision()
-{
-	return precision;
-}
+// unsigned long GyGPS::getPrecision()
+// {
+// 	return precision;
+// }
 
-unsigned long GyGPS::getChars()
-{
-	return chars;
-}
+// unsigned long GyGPS::getChars()
+// {
+// 	return chars;
+// }
 
-unsigned long GyGPS::getAge()
-{
-	return age;
-}
+// unsigned long GyGPS::getAge()
+// {
+// 	return age;
+// }
 
-float GyGPS::getLatitude()
-{
-	return latitude;
-}
+// float GyGPS::getLatitude()
+// {
+// 	return latitude;
+// }
 
-float GyGPS::getLongitude()
-{
-	return longitude;
-}
+// float GyGPS::getLongitude()
+// {
+// 	return longitude;
+// }
 
-float GyGPS::getAltitude()
-{
-	return altitude;
-}
+// float GyGPS::getAltitude()
+// {
+// 	return altitude;
+// }
 
-float GyGPS::getKph()
-{
-	return Kph;
-}
+// float GyGPS::getKph()
+// {
+// 	return Kph;
+// }
 
-float GyGPS::getMps()
-{
-	return mps;
-}
+// float GyGPS::getMps()
+// {
+// 	return mps;
+// }
 
-int GyGPS::getYear()
-{
-	return year;
-}
+// int GyGPS::getYear()
+// {
+// 	return year;
+// }
 
-byte GyGPS::getMonth()
-{
-	return month;
-}
+// byte GyGPS::getMonth()
+// {
+// 	return month;
+// }
 
-byte GyGPS::getDay()
-{
-	return day;
-}
+// byte GyGPS::getDay()
+// {
+// 	return day;
+// }
 
-byte GyGPS::getHour(bool gmt)
-{
-	return hour + (gmt ? GMT : 0);
-}
+// byte GyGPS::getHour(bool gmt)
+// {
+// 	return hour + (gmt ? GMT : 0);
+// }
 
-byte GyGPS::getMinute()
-{
-	return minute;
-}
+// byte GyGPS::getMinute()
+// {
+// 	return minute;
+// }
 
-byte GyGPS::getSecond()
-{
-	return second;
-}
+// byte GyGPS::getSecond()
+// {
+// 	return second;
+// }
 
 void GyGPS::begin()
 {
@@ -154,7 +154,7 @@ bool GyGPS::readAll()
 	return state;
 }
 
-bool GyGPS::isNew()
-{
-	return state;
-}
+// bool GyGPS::isNew()
+// {
+// 	return state;
+// }

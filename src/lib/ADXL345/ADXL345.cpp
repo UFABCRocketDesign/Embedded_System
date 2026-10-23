@@ -43,7 +43,7 @@ bool ADXL345::readAll()
 		{
 			begin();
 #if PRINT
-			Serial.println(F("Relacibrado A"));
+			Serial.println(F("Recalibrado A"));
 #endif // PRINT
 		}
 		Wire.beginTransmission(address);
