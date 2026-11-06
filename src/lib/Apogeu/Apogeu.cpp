@@ -18,7 +18,8 @@ float Apogeu::addZero(float P, float sealevelP)
 	if (P < ZERO_MIN_PA || P > ZERO_MAX_PA) return base;
 
 	// float currentHeight = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577);
-	float currentHeight = 44330.0f * (1 - powf(float(P) / sealevelP, 1.0f / 5.25588f));
+	// float currentHeight = 44330.0f * (1.0f - powf(float(P) / sealevelP, 1.0f / 5.25588f));
+	float currentHeight = getAltitude(P, sealevelP);
 	if (baseIndex == 0)
 	{
 		base = baseMax = baseMin = currentHeight;
@@ -43,30 +44,6 @@ float Apogeu::getSpread()
 	return (baseIndex > 0) ? (baseMax - baseMin) : 0.0f;
 }
 
-// bool Apogeu::fixZero(float maxRange)
-// {
-// 	float eeBase;
-// 	EEPROM.get(eeAddress, eeBase);
-
-// 	bool eeValid = true;
-// 	eeValid &= !isnan(eeBase);
-// 	eeValid &= !isinf(eeBase);
-// 	eeValid &= eeBase <= 44330.0f; // Max value of the barometric equation
-// 	eeValid &= eeBase >= -44330.0f; // Arbitrary value
-
-// 	if(eeValid && (baseMax - baseMin >= maxRange)) {
-// 		base = eeBase;
-// 		usingFixZero = true;
-// 	} else if(!eeValid || (abs(eeBase - base) >= maxRange)){
-// 		EEPROM.put(eeAddress, base);
-// 		#if defined(ARDUINO_ARCH_ESP32)
-// 		EEPROM.commit();
-// 		#endif // defined(ARDUINO_ARCH_ESP32)
-// 	}
-
-// 	return usingFixZero;
-// }
-
 bool Apogeu::fixZero(float maxRange, float maxDrift)
 {
 	// integridade (checksum + build + tamanho + endereco) vem do registro
@@ -77,8 +54,10 @@ bool Apogeu::fixZero(float maxRange, float maxDrift)
 		const float eeBase = zeroReg.data.base;                          // (1)
 		eeValid &= !isnan(eeBase);
 		eeValid &= !isinf(eeBase);
-		eeValid &= eeBase <=  44330.0f;
-		eeValid &= eeBase >= -44330.0f;
+		// eeValid &= eeBase <=  44330.0f;
+		// eeValid &= eeBase >= -44330.0f;
+		eeValid &= eeBase <=  5000.0f;
+		eeValid &= eeBase >= -500.0f;
 	}
 
 	// So faz sentido olhar o bit se o registro e valido
@@ -90,7 +69,7 @@ bool Apogeu::fixZero(float maxRange, float maxDrift)
 		const bool wasMoving  = (baseMax - baseMin) >= maxRange;	// media feita em movimento
 		// A distancia so vale se ja houve decolagem NESTE build, senao trocar
 		// de local de lancamento seria lido como reinicio em voo.
-		const bool farFromRef = hadLiftoff && (abs(zeroReg.data.base - base) >= maxDrift); // (3)
+		const bool farFromRef = hadLiftoff && (fabsf(zeroReg.data.base - base) >= maxDrift); // (3)
 
 		if (wasMoving || farFromRef) {
 			base = zeroReg.data.base;	// reinicio fora da base: recupera     // (1)
@@ -100,11 +79,9 @@ bool Apogeu::fixZero(float maxRange, float maxDrift)
 	}
 
 	// Estamos na base: grava/atualiza a referencia e limpa bit de voo antigo
-	// if (!eeValid || hadLiftoff || (abs(zeroReg.data.base - base) >= maxRange)) {           // (4)
-		zeroReg.data.base  = base;                                                     // (1)
-		zeroReg.data.flags = 0;                                                        // (4)
-		zeroReg.saveIfChanged();	// nao gasta escrita se ja for igual
-	// }
+	zeroReg.data.base  = base;                                                     // (1)
+	zeroReg.data.flags = 0;                                                        // (4)
+	zeroReg.saveIfChanged();	// nao gasta escrita se ja for igual
 
 	return usingFixZero;
 }
@@ -137,8 +114,10 @@ bool Apogeu::getFixZero(){
 
 void Apogeu::resetZero()
 {
-	base = 0;
+	base = 0.0f;
 	baseIndex = 0;
+	baseMax = 0.0f;
+	baseMin = 0.0f;
 }
 
 void Apogeu::resetAptPt()
@@ -151,51 +130,38 @@ void Apogeu::resetTimer()
 	TimeZero = micros();
 }
 
-//float Apogeu::addAltitude(float H)
-//{
-//	for (int i = N - 1; i > 0; i--)
-//	{
-//		Height[i] = Height[i - 1];
-//	}
-//	Height[0] = H;
-//	float Sum = 0;
-//	for (uint8_t i = 0; i < N; i++)
-//	{
-//		Sum += Height[i];
-//	}
-//	for (uint8_t i = Rl1; i > 0; i--)
-//	{
-//		heightMed[i] = heightMed[i - 1];
-//	}
-//	heightMed[0] = Sum / N;
-//	if (heightMed[0] > apgPt)
-//	{
-//		apgPt = heightMed[0];
-//		apgTm = micros() - TimeZero;
-//	}
-//	minH = (heightMed[0] < minH) ? heightMed[0] : minH;
-//	maxH = (heightMed[0] > maxH) ? heightMed[0] : maxH;
-//	return heightMed[0];
-//}
+float Apogeu::getAltitude(float P, float sealevelP) {
+  // Razão de pressão exata aos 11 km: (216.65 / 288.15)^5.25588
+  const float P11km = sealevelP * 0.223361f;
+
+  if (P > P11km) {
+    // 0 a 11 km (Troposfera): 1 / 5.25588 ~= 0.1902631f
+    return 44330.0f * (1.0f - powf(P / sealevelP, 1.0f / 5.25588f));
+  } else {
+    // 11 a 20 km (Baixa Estratosfera): camada isotérmica (-56.5 °C)
+    return 11000.0f + 6341.62f * logf(P11km / P);
+  }
+}
 
 float Apogeu::calcHeight(const float &P, float sealevelP)
 {
-	//for (int i = N - 1; i > 0; i--)
-	//{
-	//	Height[i] = Height[i - 1];
-	//}
-	//Height[0] = ((1 - pow((float)P / sealevelP, 1 / 5.25588)) / 0.0000225577) - base;
-	//float Sum = 0;
-	//for (uint8_t i = 0; i < N; i++)
-	//{
-	//	Sum += Height[i];
-	//}
+	// Razão de pressão exata aos 11 km: (216.65 / 288.15)^5.25588
+  	// const float P11km = sealevelP * 0.223361f;
+
 	for (uint8_t i = Rl1; i > 0; i--)
 	{
 		heightMed[i] = heightMed[i - 1];
 	}
-	//heightMed[0] = Sum / N;
-	heightMed[0] = Height = ((1.0f - powf((float)P / sealevelP, 1.0f / 5.25588f)) / 0.0000225577f) - base;
+
+	heightMed[0] = Height = getAltitude(P, sealevelP) - base;
+
+	// if(P > P11km)
+	// { // 0 a 11 km (Troposfera): 1 / 5.25588 ~= 0.190263f
+	// heightMed[0] = Height = (44330.0f * (1.0f - powf(float(P) / sealevelP, 1.0f / 5.25588f))) - base;
+	// } else { // 11 a 20 km (Baixa Estratosfera): camada isotérmica (-56.5 °C)
+	// 	heightMed[0] = Height = (11000.0f + 6341.62f * logf(P11 / P)) - base;
+	// }
+
 	if (heightMed[0] > apgPt)
 	{
 		apgPt = heightMed[0];

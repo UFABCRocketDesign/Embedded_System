@@ -99,6 +99,7 @@ public:
 	void resetAptPt();
 	void resetTimer();
 	//float addAltitude(float H);
+	float getAltitude(float P, float sealevelP = 101325);
 	float calcHeight(const float &P, float sealevelP = 101325);
 	void setGamma(bool apgE);
 
