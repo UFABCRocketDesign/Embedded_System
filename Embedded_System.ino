@@ -27,11 +27,11 @@
 
 #include "src/lib/modes.h"
 
-// #define USING_MODE MODE_LANCAMENTO
+#define USING_MODE MODE_LANCAMENTO
 // #define USING_MODE MODE_ELEVADOR
 // #define USING_MODE MODE_ASPIRADOR
 // #define USING_MODE MODE_MANUAL
-#define USING_MODE MODE_VIRTUAL
+// #define USING_MODE MODE_VIRTUAL
 
 #include "src/lib/pressets.h"
 
@@ -64,10 +64,10 @@
 /* IMU */
 #define USE_GY80 (0)						//Use GY80 module
 #define USE_GY91 (0)						//Use GY91 module
-#define USE_GY912 (0)						//Use GY912 module
+#define USE_GY912 (1)						//Use GY912 module
 
 /* GNSS/GPS */
-#define USE_NEO_M (REQUIRE_GNSS && 0)		//Use Neo6M/Neo8M/Neo10M GPS module
+#define USE_NEO_M (REQUIRE_GNSS && 1)		//Use Neo6M/Neo8M/Neo10M GPS module
 
 /* Data storage */
 #define USE_SD_SPI (REQUIRE_SD && 1)		//Use SPI SD card module
@@ -195,6 +195,8 @@
 
 #define PERF_Tcom_print (0)				//Print time counter every 100 iterations (for performance tests)
 
+#define P_ANY (PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print)
+
 /********************************** Data Log **********************************/
 
 #define Sgps (USE_STORAGE && USE_GNSS && 1)		//Log GPS data
@@ -210,17 +212,6 @@ With 0, the data only shows up at the moment of the event. */
 #define Sdpl_C (Sdpl && 1)					//Deployments on every line
 
 /*********************************** Derived **********************************/
-
-// #define PRINT (0)							//Print or not things on Serial
-// #define SDCard (1)						//Use SD card
-// #define GPSmode (1)						//Use GPS
-// #define LoRamode (1)						//Serial mode for transmission on LoRa module
-
-// #define ACT_BUZZER (USE_BuZZ && 0)				//Active buzzer in hardware
-// #define PSS_BUZZER (USE_BuZZ && 1)				//Passive buzzer in hardware
-
-// #define BlinkBuzzer (USE_BuZZ && 0)				// Use a LED instead of a buzzer
-// #define RGB (defined(BOARD_HAS_RGB) && 0)								//RGB LED board
 
 #define COMmode (USE_PRINT || USE_LoRa)								//Any communication channel exists
 #define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)	//Any I2C sensor exists
@@ -502,29 +493,6 @@ MonoDeploy Recovery::drogB pins_drogB;
 
 #endif // ApoGee
 
-/*
-#if WUF
-
-#if ELEVATOR
-#define WUFheigh 5
-#else
-#define WUFheigh 50
-#endif // ELEVATOR
-
-#endif // WUF
-*/
-
-/*
-#if WUPS
-
-#if ELEVATOR
-#define WUPSdelay 3
-#else
-#define WUPSdelay 10
-#endif // ELEVATOR
-
-#endif // WUPS
-*/
 
 #if USE_ACCEL
 #if 1 < ((USE_V_BARO) + (USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
@@ -602,15 +570,6 @@ SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to 
 #endif // ARDUINO_ARCH_ESP32
 #endif // USE_STORAGE
 
-// #if USE_GNSS
-// #include "src/lib/GyGPS/GyGPS.h" // Auxiliar para GPS
-// #ifdef ARDUINO_ARCH_ESP32
-// HardwareSerial GpSSerial(1);
-// GyGPS GpS(GpSSerial, 0, SERIAL_8N1, RX_GPS_ESP, TX_GPS_ESP);
-// #else
-// GyGPS GpS(Serial1, 0);
-// #endif // ARDUINO_ARCH_ESP32
-// #endif // USE_GNSS
 
 #if USE_GNSS
 #if 1 < ((USE_V_GNSS) + (USE_NEO_M))
@@ -631,6 +590,7 @@ GyGPS GpS(Serial1, 0);
 
 
 #if USE_LoRa
+
 #if 1 < ((USE_LoRa_DORJI) + (USE_LoRa_E32))
 #error: Múltiplos LoRas definidos
 #elif USE_LoRa_DORJI
@@ -640,6 +600,7 @@ GyGPS GpS(Serial1, 0);
 #else
 #define LoRaDelay 5
 #endif // USE_LoRa_DORJI || USE_LoRa_E32
+
 #ifdef ARDUINO_ARCH_ESP32
 HardwareSerial LoRa(2);
 #else
@@ -654,550 +615,14 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 #endif
 #if USE_LoRa_E32_settable
 
+#include "src/lib/LoRaConfig/LoRaConfig.h"
+
 #define FREQUENCY_900
 #define LoRa_ADDL 0x2A // 42 decimal (Standardized)
 #define LoRa_ADDH 0x00
 #define LoRa_CHAN 0x2A // 42 decimal (904 - 862)
 
-#include "LoRa_E32.h"
-// #include <EEPROM.h>
-#include "src/lib/EEDataRegister/EEMap.h"
-
-// uint16_t LoRaEEAddress = 0x0; // Atualizar este valor no setup
-Configuration configLoRa;
-
-// struct LoRaEEConfig{
-// 	Configuration configuration;
-// 	uint16_t compileHash = 0;
-// 	uint16_t checkSum = 0;
-// };
-
-EEDataRegister<Configuration> loraReg(eeSlotAddress(EE_SLOT_LORA_CONFIG));
-static_assert(EEDataRegister<Configuration>::blockSize() <= EE_SLOT_SIZE,
-	"LoRa: bloco de configuracao excede o slot");
-
-
-LoRa_E32 LoRaConfig(&LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_PIN), UART_BPS_RATE(LoRaBaudRate));
-
-// uint16_t calcCheckSum(const Configuration& configuration)
-// {
-// 	uint16_t sum = 0;
-// 	const byte* p = (const byte*)&configuration;
-// 	for (size_t i = 0; i < sizeof(Configuration); i++) {
-// 		sum += p[i];
-// 	}
-// 	return sum;
-// }
-
-void loadLoRaDefaultConfig()
-{
-	configLoRa.ADDL = LoRa_ADDL;
-	configLoRa.ADDH = LoRa_ADDH;
-	configLoRa.CHAN = LoRa_CHAN;
-
-	// configLoRa.OPTION.fec = FEC_0_OFF;
-	// configLoRa.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
-	// configLoRa.OPTION.ioDriveMode = IO_D_MODE_PUSH_PULLS_PULL_UPS;
-	// configLoRa.OPTION.transmissionPower = POWER_17;
-	// configLoRa.OPTION.wirelessWakeupTime = WAKE_UP_1250;
-
-	// configLoRa.SPED.airDataRate = AIR_DATA_RATE_011_48;
-	// configLoRa.SPED.uartBaudRate = UART_BPS_9600;
-	// configLoRa.SPED.uartParity = MODE_00_8N1;
-}
-
-bool setLoRaConfig()
-{
-	ResponseStructContainer c = LoRaConfig.getConfiguration();
-#if USE_PRINT
-	Serial.println(c.status.getResponseDescription());
-	Serial.println(c.status.code);
-#endif
-
-	if(c.status.code != E32_SUCCESS) {
-		c.close();
-		return false;
-	}
-
-	// It's important get configuration pointer before all other operation
-	Configuration configuration = *(Configuration*)c.data;
-
-	//   printParameters(configuration);
-	configuration.ADDL = configLoRa.ADDL;
-	configuration.ADDH = configLoRa.ADDH;
-	configuration.CHAN = configLoRa.CHAN;
-
-	configuration.OPTION.fec = FEC_1_ON;
-	configuration.OPTION.fixedTransmission = FT_TRANSPARENT_TRANSMISSION;
-	configuration.OPTION.ioDriveMode = IO_D_MODE_PUSH_PULLS_PULL_UPS;
-	configuration.OPTION.transmissionPower = POWER_20;
-	configuration.OPTION.wirelessWakeupTime = WAKE_UP_250;
-
-	configuration.SPED.airDataRate = AIR_DATA_RATE_101_192;
-	// configuration.SPED.uartBaudRate = configLoRa.SPED.uartBaudRate;
-	// configuration.SPED.uartParity = configLoRa.SPED.uartParity;
-
-	// Set configuration changed and set to not hold the configuration
-	ResponseStatus rs = LoRaConfig.setConfiguration(configuration, WRITE_CFG_PWR_DWN_SAVE);
-#if USE_PRINT
-	Serial.println(rs.getResponseDescription());
-	Serial.println(rs.code);
-#endif
-	//   printParameters(configuration);
-	c.close();
-
-	return rs.code == E32_SUCCESS;
-}
-
-bool getLoRaConfig()
-{
-	ResponseStructContainer c = LoRaConfig.getConfiguration();
-	// It's important get configuration pointer before all other operation
-	if(c.status.code != E32_SUCCESS)
-	{
-		c.close();
-		return false;
-	}
-
-	configLoRa = *(Configuration*)c.data;
-
-	c.close();
-
-	return true;
-}
-
-// uint16_t compileTimeHash() {
-// 	const char* date = __DATE__;
-// 	const char* time = __TIME__;
-// 	uint16_t hash = 0;
-// 	while (*date) {
-// 		hash = (hash << 5) - hash + *date++;
-// 	}
-// 	while (*time) {
-// 		hash = (hash << 5) - hash + *time++;
-// 	}
-// 	return hash;
-// }
-
-// void saveLoRaEEConfig(){
-// 	LoRaEEConfig loRaEEAux;
-// 	loRaEEAux.configuration = configLoRa;
-// 	loRaEEAux.compileHash = compileTimeHash();
-// 	loRaEEAux.checkSum = calcCheckSum(configLoRa);
-// 	EEPROM.put(LoRaEEAddress, loRaEEAux);
-// 	#if defined(ARDUINO_ARCH_ESP32)
-// 	EEPROM.commit();
-// 	#endif // defined(ARDUINO_ARCH_ESP32)
-// }
-void saveLoRaEEConfig(){
-	loraReg.data = configLoRa;
-	loraReg.saveIfChanged();
-}
-
-// bool loadLoRaEEConfig() {
-// 	LoRaEEConfig loRaEEAux;
-// 	EEPROM.get(LoRaEEAddress, loRaEEAux);
-
-// 	uint16_t sum = calcCheckSum(loRaEEAux.configuration);
-
-// 	if((sum == loRaEEAux.checkSum) && (loRaEEAux.compileHash == compileTimeHash()) && (loRaEEAux.configuration.HEAD == 0xC0 || loRaEEAux.configuration.HEAD == 0xC2))
-// 	{
-// 		configLoRa = loRaEEAux.configuration;
-// 		return true;
-// 	}
-// 	return false;
-// }
-bool loadLoRaEEConfig() {
-	if (!loraReg.load()) return false;
-	if (!(loraReg.data.HEAD == 0xC0 || loraReg.data.HEAD == 0xC2)) return false;
-	configLoRa = loraReg.data;
-	return true;
-}
-
-#define RX_CHG_FREQ_REQ_HEAD "MUD4R_FR3Q_PFV.CH4N"
-							// CHAN
-#define RX_CHG_FREQ_REQ_MID "_"
-							//	ADDH / ADDL
-#define RX_CHG_FREQ_REQ_TAIL "#"
-
-#define TX_CHG_FREQ_CONFIRM_HEAD "CTZ_FR3Q.CH4N"
-							//	CHAN
-#define TX_CHG_FREQ_CONFIRM_MID "_"
-							// ADDH / ADDL
-#define TX_CHG_FREQ_CONFIRM_TAIL "#"
-
-#define RX_CHG_FREQ_OK "1SSO_MSM"
-
-#define RX_CHG_FREQ_VRFY "MUD0U_MSM"
-
-#define TX_CHG_FREQ_RESP "JUR0_JUR4D1NH0"
-
-#define RX_CHG_FREQ_FINAL "B04"
-
-#define TX_CHG_FREQ_ERROR "N4N4N1N4N40"
-
-const char chgFreqReqHead[] = RX_CHG_FREQ_REQ_HEAD;
-constexpr size_t chgFreqReqHeadLen = sizeof(chgFreqReqHead) - 1;
-
-const char chgFreqReqMid[] = RX_CHG_FREQ_REQ_MID;
-constexpr size_t chgFreqReqMidLen = sizeof(chgFreqReqMid) - 1;
-
-const char chgFreqReqTail[] = RX_CHG_FREQ_REQ_TAIL;
-constexpr size_t chgFreqReqTailLen = sizeof(chgFreqReqTail) - 1;
-
-constexpr size_t chgFreqReqLen = chgFreqReqHeadLen + 2 + chgFreqReqMidLen + 4 + chgFreqReqTailLen;
-
-const char chgFreqCfmHead[] = TX_CHG_FREQ_CONFIRM_HEAD;
-constexpr size_t chgFreqCfmHeadLen = sizeof(chgFreqCfmHead) - 1;
-
-const char chgFreqCfmMid[] = TX_CHG_FREQ_CONFIRM_MID;
-constexpr size_t chgFreqCfmMidLen = sizeof(chgFreqCfmMid) - 1;
-
-const char chgFreqCfmTail[] = TX_CHG_FREQ_CONFIRM_TAIL;
-constexpr size_t chgFreqCfmTailLen = sizeof(chgFreqCfmTail) - 1;
-
-constexpr size_t chgFreqCfmLen = chgFreqCfmHeadLen + 2 + chgFreqCfmMidLen + 4 + chgFreqCfmTailLen;
-
-const char chgFreqOk[] = RX_CHG_FREQ_OK;
-constexpr size_t chgFreqOkLen = sizeof(chgFreqOk) - 1;
-
-const char chgFreqVrfy[] = RX_CHG_FREQ_VRFY;
-constexpr size_t chgFreqVrfyLen = sizeof(chgFreqVrfy) - 1;
-
-const char chgFreqFinal[] = RX_CHG_FREQ_FINAL;
-constexpr size_t chgFreqFinalLen = sizeof(chgFreqFinal) - 1;
-
-inline uint8_t asciiHex2Nibble(char c) {
-  if (c >= '0' && c <= '9') return c - '0';
-  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-  return 0;
-}
-
-uint8_t nibble2AsciiHex(byte val){
-	if (val < 10) return '0' + val;
-	return 'A' + (val - 10);
-}
-
-uint8_t hexFromCharPair(const char* ptr) {
-  return (asciiHex2Nibble(ptr[0]) << 4) | asciiHex2Nibble(ptr[1]);
-}
-
-void embedHexByte(char* target, byte val) {
-  target[0] = nibble2AsciiHex(val >> 4);
-  target[1] = nibble2AsciiHex(val & 0x0F);
-}
-
-unsigned long pauseTelemetryUntil = 0;
-
-void cancelLoRaConfig(bool reverter, Configuration &previousConfig)
-{
-	LoRa.println(TX_CHG_FREQ_ERROR);
-#if USE_PRINT
-	Serial.println(F("[LORA RX] ERRO: Handshake abortado ou configuracao invalida!"));
-#endif
-
-	if(reverter){
-		configLoRa = previousConfig;
-		setLoRaConfig();
-		saveLoRaEEConfig();
-	}
-}
-
-enum HandshakeState {
-	HS_IDLE,
-	HS_WAITING_M_PACKET,
-	HS_SENDING_CFM,
-	HS_WAITING_1SSO,
-	HS_WAITING_MUD0U,
-	HS_WAITING_B04
-};
-
-void updateLoRaFrequency(){
-	static HandshakeState hsState = HS_IDLE;
-	HandshakeState oldState = hsState;
-	static unsigned long stateTimeout = 0;
-	static unsigned long startWait = 0;
-	static Configuration previousConfig;
-	static int CHAN = LoRa_CHAN;
-	static int ADDH = LoRa_ADDH;
-	static int ADDL = LoRa_ADDL;
-	static char recieved[64] = {};
-	static char toSend[chgFreqCfmLen + 1] = {};
-	static unsigned long sendCfmAt = 0;
-
-	int discardLimit = 256; // Safety limit to prevent infinite loops on serial noise
-
-	switch (hsState) {
-		case HS_IDLE: {
-			if (LoRa.available() > 0) {
-				while (LoRa.available() > 0 && LoRa.peek() != 'M' && discardLimit-- > 0) {
-					LoRa.read();
-				}
-				if (LoRa.available() > 0 && LoRa.peek() == 'M') {
-					startWait = millis();
-					hsState = HS_WAITING_M_PACKET;
-				}
-			}
-			break;
-		}
-
-		case HS_WAITING_M_PACKET: {
-			if (LoRa.available() >= chgFreqReqLen) {
-				char tempRec[64] = {};
-				uint8_t count = LoRa.readBytesUntil('\n', tempRec, chgFreqReqLen);
-				tempRec[count] = '\0';
-
-				// Pause telemetry for 6s
-				// extern unsigned long pauseTelemetryUntil;
-				pauseTelemetryUntil = millis() + 6000;
-
-#if USE_PRINT
-				Serial.println(F("\n========== [LORA RX] =========="));
-				Serial.print(F("[LORA RX] Mensagem recebida: "));
-				Serial.println(tempRec);
-#endif
-
-				if (getLoRaConfig()) {
-					previousConfig = configLoRa;
-				} else {
-					previousConfig = configLoRa;
-				}
-
-				bool reqCheck = true;
-				reqCheck &= (strncmp(tempRec, chgFreqReqHead, chgFreqReqHeadLen) == 0);
-				if (reqCheck) {
-					reqCheck &= (strncmp(tempRec + chgFreqReqHeadLen + 2, chgFreqReqMid, chgFreqReqMidLen) == 0);
-				}
-				if (reqCheck) {
-					reqCheck &= (strncmp(tempRec + chgFreqReqHeadLen + 2 + chgFreqReqMidLen + 4, chgFreqReqTail, chgFreqReqTailLen) == 0);
-				}
-
-				if (!reqCheck) {
-#if USE_PRINT
-					Serial.println(F("[LORA RX] ERRO: Header/Separador/Tail invalido"));
-#endif
-					cancelLoRaConfig(false, previousConfig);
-					hsState = HS_IDLE;
-					break;
-				}
-
-				CHAN = hexFromCharPair(tempRec + chgFreqReqHeadLen);
-				if (CHAN > 0x45) {
-#if USE_PRINT
-					Serial.println(F("[LORA RX] ERRO: Canal invalido"));
-#endif
-					cancelLoRaConfig(false, previousConfig);
-					hsState = HS_IDLE;
-					break;
-				}
-
-				ADDH = hexFromCharPair(tempRec + chgFreqReqHeadLen + 2 + chgFreqReqMidLen);
-				ADDL = hexFromCharPair(tempRec + chgFreqReqHeadLen + 2 + chgFreqReqMidLen + 2);
-
-#if USE_PRINT
-				Serial.print(F("[LORA RX] Parse OK! CHAN="));
-				Serial.print(CHAN, DEC);
-				Serial.print(F(" ADDH=0x"));
-				Serial.print(ADDH, HEX);
-				Serial.print(F(" ADDL=0x"));
-				Serial.println(ADDL, HEX);
-#endif
-
-				// char toSend[chgFreqCfmLen + 1] = {};
-				memset(toSend, 0, sizeof(toSend));
-				memcpy(toSend, chgFreqCfmHead, chgFreqCfmHeadLen);
-				embedHexByte(toSend + chgFreqCfmHeadLen, CHAN);
-				memcpy(toSend + chgFreqCfmHeadLen + 2, chgFreqCfmMid, chgFreqCfmMidLen);
-				embedHexByte(toSend + chgFreqCfmHeadLen + 2 + chgFreqCfmMidLen, ADDH);
-				embedHexByte(toSend + chgFreqCfmHeadLen + 2 + chgFreqCfmMidLen + 2, ADDL);
-				memcpy(toSend + chgFreqCfmHeadLen + 2 + chgFreqCfmMidLen + 4, chgFreqCfmTail, chgFreqCfmTailLen);
-				toSend[chgFreqCfmLen] = '\0';
-
-#if USE_PRINT
-				Serial.print(F("[LORA RX] Enviando confirmacao: "));
-				Serial.println(toSend);
-#endif
-				sendCfmAt = millis() + 900;
-				hsState = HS_SENDING_CFM;
-
-// 				delay(900);
-// 				while (LoRa.available() > 0 && discardLimit-- > 0) LoRa.read();
-// 				LoRa.println(toSend);
-
-// #if USE_PRINT
-// 				Serial.println(F("[LORA RX] Aguardando 1SSO_MSM do GS..."));
-// #endif
-// 				stateTimeout = millis() + 5000;
-// 				hsState = HS_WAITING_1SSO;
-			} else if (millis() - startWait >= 100) {
-#if USE_PRINT
-				Serial.print(F("[LORA RX] Bytes insuficientes ou invalido: "));
-				Serial.print(LoRa.available());
-				Serial.print(F(" / "));
-				Serial.print(chgFreqReqLen);
-				Serial.println(F(". Descartando 'M'"));
-#endif
-				LoRa.read();
-				hsState = HS_IDLE;
-			}
-			break;
-		}
-
-		case HS_SENDING_CFM: {
-			if(long (millis() - sendCfmAt) < 0) break; // Esperar mais
-
-			while (LoRa.available() > 0 && discardLimit-- > 0) LoRa.read();
-			LoRa.println(toSend);
-
-#if USE_PRINT
-			Serial.println(F("[LORA RX] Aguardando 1SSO_MSM do GS..."));
-#endif
-			stateTimeout = millis() + 5000;
-			hsState = HS_WAITING_1SSO;
-			break;
-		}
-
-		case HS_WAITING_1SSO: {
-			if (millis() > stateTimeout) {
-#if USE_PRINT
-				Serial.println(F("[LORA RX] TIMEOUT aguardando 1SSO_MSM"));
-#endif
-				cancelLoRaConfig(false, previousConfig);
-				hsState = HS_IDLE;
-				break;
-			}
-
-			if (LoRa.available() > 0) {
-				while (LoRa.available() > 0 && LoRa.peek() != '1' && discardLimit-- > 0) {
-					LoRa.read();
-				}
-				if (LoRa.available() >= chgFreqOkLen) {
-					uint8_t count = LoRa.readBytesUntil('\n', recieved, chgFreqOkLen);
-					recieved[count] = '\0';
-#if USE_PRINT
-					Serial.print(F("[LORA RX] Recebeu: "));
-					Serial.println(recieved);
-#endif
-
-					if (strncmp(recieved, chgFreqOk, chgFreqOkLen) == 0) {
-						configLoRa.ADDL = ADDL;
-						configLoRa.ADDH = ADDH;
-						configLoRa.CHAN = CHAN;
-
-						if (setLoRaConfig()) {
-							saveLoRaEEConfig();
-#if USE_PRINT
-							Serial.println(F("[LORA RX] Frequencia aplicada. Aguardando MUD0U_MSM do GS..."));
-#endif
-							stateTimeout = millis() + 5000;
-							hsState = HS_WAITING_MUD0U;
-						} else {
-							cancelLoRaConfig(true, previousConfig);
-							hsState = HS_IDLE;
-						}
-					} else {
-#if USE_PRINT
-						Serial.println(F("[LORA RX] ERRO: 1SSO_MSM invalido"));
-#endif
-						cancelLoRaConfig(false, previousConfig);
-						hsState = HS_IDLE;
-					}
-				}
-			}
-			break;
-		}
-
-		case HS_WAITING_MUD0U: {
-			if (millis() > stateTimeout) {
-#if USE_PRINT
-				Serial.println(F("[LORA RX] TIMEOUT aguardando MUD0U_MSM"));
-#endif
-				cancelLoRaConfig(true, previousConfig);
-				hsState = HS_IDLE;
-				break;
-			}
-
-			if (LoRa.available() > 0) {
-				while (LoRa.available() > 0 && LoRa.peek() != 'M' && discardLimit-- > 0) {
-					LoRa.read();
-				}
-				if (LoRa.available() >= chgFreqVrfyLen) {
-					uint8_t count = LoRa.readBytesUntil('\n', recieved, chgFreqVrfyLen);
-					recieved[count] = '\0';
-#if USE_PRINT
-					Serial.print(F("[LORA RX] Recebeu: "));
-					Serial.println(recieved);
-#endif
-
-					if (strncmp(recieved, chgFreqVrfy, chgFreqVrfyLen) == 0) {
-#if USE_PRINT
-						Serial.println(F("[LORA RX] Enviando JUR0_JUR4D1NH0..."));
-#endif
-						LoRa.println(TX_CHG_FREQ_RESP);
-#if USE_PRINT
-						Serial.println(F("[LORA RX] Aguardando B04 do GS..."));
-#endif
-						stateTimeout = millis() + 5000;
-						hsState = HS_WAITING_B04;
-					} else {
-#if USE_PRINT
-						Serial.println(F("[LORA RX] ERRO: MUD0U_MSM invalido"));
-#endif
-						cancelLoRaConfig(true, previousConfig);
-						hsState = HS_IDLE;
-					}
-				}
-			}
-			break;
-		}
-
-		case HS_WAITING_B04: {
-			if (millis() > stateTimeout) {
-#if USE_PRINT
-				Serial.println(F("[LORA RX] TIMEOUT aguardando B04"));
-#endif
-				cancelLoRaConfig(true, previousConfig);
-				hsState = HS_IDLE;
-				break;
-			}
-
-			if (LoRa.available() > 0) {
-				while (LoRa.available() > 0 && LoRa.peek() != 'B' && discardLimit-- > 0) {
-					LoRa.read();
-				}
-				if (LoRa.available() >= chgFreqFinalLen) {
-					uint8_t count = LoRa.readBytesUntil('\n', recieved, chgFreqFinalLen);
-					recieved[count] = '\0';
-#if USE_PRINT
-					Serial.print(F("[LORA RX] Recebeu: "));
-					Serial.println(recieved);
-#endif
-
-					if (strncmp(recieved, chgFreqFinal, chgFreqFinalLen) == 0) {
-#if USE_PRINT
-						Serial.println(F("[LORA RX] Mudanca de frequencia concluida com sucesso!"));
-#endif
-					} else {
-#if USE_PRINT
-						Serial.println(F("[LORA RX] ERRO: B04 invalido"));
-#endif
-						cancelLoRaConfig(true, previousConfig);
-					}
-					hsState = HS_IDLE;
-				}
-			}
-			break;
-		}
-	}
-
-	if (hsState == HS_IDLE) {
-		if (oldState != HS_IDLE) pauseTelemetryUntil = 0;
-	} else {
-		pauseTelemetryUntil = millis() + 6000;	// Renova enquanto o handshake estiver vivo
-	}
-}
-
+LoRaConfig configLoRa(LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_PIN), UART_BPS_RATE(LoRaBaudRate), byte(LoRa_ADDL), byte(LoRa_ADDH), byte(LoRa_CHAN));
 
 #endif //USE_LoRa_E32_settable
 #endif // USE_LoRa_E32
@@ -1344,413 +769,14 @@ void setup()
 	digitalWrite(RGB_bPin, !RGB_CMD);
 #endif // USE_RGB
 
-#if AnyDeploy
-	rec.begin();
-#if DualDeploy
-	rec.mainN.setHeightCmd(CURRENT_MODE_P2H_NORMAL);
-#endif // DualDeploy
-#if DELAYED_MAIN
-	rec.mainN.setDelayCmd(sysDelay_main);
-#endif // DELAYED_MAIN
-
-#endif // AnyDeploy
-
-// Main
-#if MainBackup
-#if DualDeploy
-	rec.mainB.setHeightCmd(CURRENT_MODE_P2H_BACKUP);
-#else
-#if DELAYED_MAIN
-	rec.mainB.setDelayCmd(sysDelay + sysDelay_main);
-#else
-	rec.mainB.setDelayCmd(sysDelay);
-#endif // DELAYED_MAIN
-#endif // !DualDeploy
-#endif // MainBackup
-
-// Drogue
-#if DrogueBackup
-	rec.drogB.setDelayCmd(sysDelay);
-#endif // DrogueBackup
-
-
-
-#if ((USE_PRINT) || (PERF_Tcom_print) || (USE_VIRTUAL))
-	Serial.begin(BaudRate);
-
-	#if defined(ARDUINO_ARCH_ESP32)
-	delay(ESP32_WAIT_TIME_MS); // Wait to ESP32 properly start
-	#endif // defined(ARDUINO_ARCH_ESP32)
-
-	Serial.println();
-#if Ps_n
-	Serial.print(F("System number: "));
-	Serial.println(SYSTEM_n);
-#endif // Ps_n
-#endif // ((USE_PRINT) || (PERF_Tcom_print))
-
-
-#if USE_ACT_BUZZER
-	pinMode(buzzPin, OUTPUT);
-	digitalWrite(buzzPin, !buzzCmd);
-#endif // USE_ACT_BUZZER
-#if MORSE_MSG
-	mensageiro.setup();
-
-#if MORSE_INTERRUPT
-	morseInterruptionSetup();
-#endif // MORSE_INTERRUPT
-
-	mensageiro.updateMorse();
-
-#endif // MORSE_MSG
-#if BEEPING
-	beep();
-#endif // BEEPING
-
-#if USE_LoRa
-
-#ifdef ARDUINO_ARCH_ESP32
-	LoRa.begin(LoRaBaudRate, SERIAL_8N1, RX_LORA_ESP, TX_LORA_ESP);
-#else
-	LoRa.begin(LoRaBaudRate);
-#endif // ARDUINO_ARCH_ESP32
-
-#if USE_LoRa_E32
-#if USE_LoRa_E32_settable
-
-	LoRaConfig.begin();
-
-	// #if (USE_LoRa_E32_settable) && (ApoGee)
-	// LoRaEEAddress = apg.getEEAddress() + sizeof(float);
-	// if(LoRaEEAddress + sizeof(LoRaEEConfig) >= (_EEPROM_SIZE)) LoRaEEAddress = 0;
-	// #endif // (USE_LoRa_E32_settable) && (ApoGee)
-
-	loadLoRaDefaultConfig();
-	bool loRaEEValid = loadLoRaEEConfig();
-	setLoRaConfig();
-#else
-	pinMode(M0_LORA_PIN,OUTPUT); digitalWrite(M0_LORA_PIN,LOW);
-	pinMode(M1_LORA_PIN,OUTPUT); digitalWrite(M1_LORA_PIN,LOW);
-#endif  // USE_LoRa_E32_settable
-#endif // USE_LoRa_E32
-
-#endif // USE_LoRa
-
-#if Crst && defined(ARDUINO_ARCH_ESP32)
-	transmit(F("\nReset: "));
-	transmit(resetReasonName(esp_reset_reason()));
-#endif // Crst && defined(ARDUINO_ARCH_ESP32)
-
-#if USE_GNSS
-	GpS.begin();
-	GpS.util.mem = false; // Auxiliar de primeira leitura
-	GpS.util.forT(60);
-	if (GpS)
-	{
-		if (GpS.util.oneTime())
-		{
-#if COMmode
-			transmit(F("\nGPS ok "));
-			transmit(GpS.getLatitude(), 6);
-			transmit(F(", "));
-			transmit(GpS.getLongitude(), 6);
-#endif // COMmode
-		}
-	}
-	else
-	{
-#if COMmode
-		transmit(F("\nGPS err, waiting signal"));
-#endif // COMmode
-	}
-#endif // USE_GNSS
-
-#if WIREmode
-#if ARDUINO_ARCH_ESP32
-	Wire.begin(SDA_I2C_ESP, SCL_I2C_ESP);
-	Wire.setClock(400000);
-	Wire.setTimeOut(3000);
-#else
-	Wire.begin();
-#endif // ARDUINO_ARCH_ESP32
-#endif // WIREmode
-
-#if USE_BARO
-	baro.begin();
-	if (baro)
-	{
-#if (!USE_BMP085)
-		for (short i = 0; i < 50; i++) baro.readAll(); // Contornar tempo de estabilização do filtro interno
-#endif // (!USE_BMP085)
-#if ApoGee
-		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
-		apg.fixZero(CURRENT_MODE_Fix0range, CURRENT_MODE_Fix0diff);
-#endif // ApoGee
-#if COMmode
-		transmit(F("\nBaro ok "));
-#endif // COMmode
-
-#if PapgB
-		if(apg.getFixZero()){
-			Serial.print(F("(Using EEPROM Zero Ref @ < 0x"));
-			Serial.print(apg.getEEAddress(), HEX);
-			Serial.print(F(" >!) "));
-		}
-
-		Serial.print(apg.getZero());
-		Serial.println();
-#elif USE_PRINT
-		Serial.println();
-#endif // USE_PRINT
-
-#if USE_LoRa
-#if ApoGee
-		// When system gets a invalid zero height (reset on flight)
-		if(apg.getFixZero()) {
-
-			#if USE_LoRa_E32_settable
-			LoRa.print(F("(Using EEPROM LoRa settings: ADD < 0x"));
-			LoRa.print(configLoRa.ADDH, HEX);
-			LoRa.print(configLoRa.ADDL, HEX);
-			LoRa.print(F(" > CHAN < 0x"));
-			LoRa.print(configLoRa.CHAN, HEX);
-			LoRa.print(F(" > Ref @ < 0x "));
-			// LoRa.print(LoRaEEAddress, HEX);
-			LoRa.print(loraReg.getAddress(), HEX);
-			LoRa.print(F(" >)! "));
-
-			if(loRaEEValid)
-			{
-				LoRa.println(F("Success!"));
-			}
-			else
-			{
-				LoRa.println(F("Fail, using default LoRa settings"));
-			}
-			#endif // USE_LoRa_E32_settable
-
-			LoRa.print(F("(Using EEPROM Zero Ref @ < 0x"));
-			LoRa.print(apg.getEEAddress(), HEX);
-			LoRa.print(F(" >!) "));
-		}
-		LoRa.println(apg.getZero());
-#endif // ApoGee
-		LoRa.println();
-#endif // USE_LoRa
-
-	}
-	else
-	{
-#if COMmode
-		transmit(F("\nBaro err"));
-#endif // COMmode
-	}
-#endif // USE_BARO
-
-#if USE_ACCEL
-	accel.begin();
-	if (accel)
-	{
-#if COMmode
-		transmit(F("\nAccel ok"));
-#endif // COMmode
-	}
-	else
-	{
-#if COMmode
-		transmit(F("\nAccel err"));
-#endif // COMmode
-	}
-#endif // USE_ACCEL
-
-#if USE_GYRO
-	giro.begin();
-	if (giro)
-	{
-#if COMmode
-		transmit(F("\nGiro ok"));
-#endif // COMmode
-	}
-	else
-	{
-#if COMmode
-		transmit(F("\nGiro err"));
-#endif // COMmode
-	}
-#endif // USE_GYRO
-
-#if USE_MAGN
-	magn.begin();
-	if (magn)
-	{
-#if COMmode
-		transmit(F("\nMagn ok"));
-#endif // COMmode
-	}
-	else
-	{
-#if COMmode
-		transmit(F("\nMagn err"));
-#endif // COMmode
-	}
-#endif // USE_MAGN
-
-#if AnyDeploy && COMmode
-	transmit(rec.mainN.info() ? F("\nIgnMainN ok") : F("\nIgnMainN err"));
-
-#if DualDeploy
-	transmit(rec.drogN.info() ? F("\nIgnDrogN ok") : F("\nIgnDrogN err"));
-#endif // DualDeploy
-
-#if MainBackup
-	transmit(rec.mainB.info() ? F("\nIgnMainB ok") : F("\nIgnMainB err"));
-#endif // MainBackup
-
-#if DrogueBackup
-	transmit(rec.drogB.info() ? F("\nIgnDrogB ok") : F("\nIgnDrogB err"));
-#endif // DrogueBackup
-
-
-#endif // AnyDeploy && COMmode
-
+	beginEverything();			// Begin every module and subsystem
 
 #if USE_STORAGE
-
-#if ARDUINO_ARCH_ESP32
-	SPI_SD.begin(SCK_SD_ESP, MISO_SD_ESP, MOSI_SD_ESP, CS_SD_ESP);
-#endif // ARDUINO_ARCH_ESP32
-	SDC.begin();
-	if (SDC)
-	{
-#if COMmode
-		transmit(F("\nSD start OK "));
-		transmit(SDC.getFname());
-#endif // COMmode
-
-		//////////////////File Header//////////////////
-
-#if Srst && defined(ARDUINO_ARCH_ESP32)
-		SDC.theFile.print(F("Reset reason:\t"));
-		SDC.theFile.print(int(esp_reset_reason()));
-		SDC.theFile.print(F(" <"));
-		SDC.theFile.print(resetReasonName(esp_reset_reason()));
-		SDC.theFile.println(F(">"));
-#endif // Srst && defined(ARDUINO_ARCH_ESP32)
-#if ApoGee
-		SDC.theFile.print(F("Liftoff flag:\t"));
-		SDC.theFile.print(apg.getLiftoff());
-		SDC.theFile.println();
-		SDC.theFile.print(F("Start at:\t"));
-		SDC.theFile.print(apg.getZero());
-		SDC.theFile.print(F("\tm\tZero spread:\t"));
-		SDC.theFile.print(apg.getSpread());
-		SDC.theFile.print(F("\tm"));
-		if(apg.getFixZero()) {
-			SDC.theFile.print(F("\t(Using EEPROM Zero Ref @ < 0x"));
-			SDC.theFile.print(apg.getEEAddress(), HEX);
-			SDC.theFile.print(F(" >!) "));
-		}
-		SDC.theFile.println();
-#endif // ApoGee
-
-		///////////////////////////////////////////////
-
-		SDC.theFile.println(F(
-			"tempo.s\t"
-#if USE_ACCEL
-			"mps2.x.accel\tmps2.y.accel\tmps2.z.accel\t"
-#endif // USE_ACCEL
-#if USE_GYRO
-			"dps.x.gyros\tdps.y.gyros\tdps.z.gyros\t"
-#endif // USE_GYRO
-#if USE_MAGN
-			"uT.x.magn\tuT.y.magn\tuT.z.magn\t"
-#endif // USE_MAGN
-#if USE_BARO
-			"c.baro\tpa.baro\t"
-#endif // USE_BARO
-#if ApoGee
-			"m.h.baro\t"
-#endif // ApoGee
-#if Sgps
-			"lat.GPS\tlon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\tnew.GPS\t"
-#endif // Sgps
-#if Sapg
-			"alpha.apg\tsigma.apg\t"
-#endif // Sapg
-#if Sdpl_C
-			"on.mainN\tfire.mainN\t"
-#if DualDeploy
-			"on.drogN\tfire.drogN\t"
-#endif // DualDeploy
-#if MainBackup
-			"on.mainB\tfire.mainB\t"
-#endif // MainBackup
-#if DrogueBackup
-			"on.drogB\tfire.drogB\t"
-#endif // DrogueBackup
-#endif // Sdpl_C
-
-#if Shea
-			"ok.mainN\t"
-#if DualDeploy
-			"ok.drogN\t"
-#endif // DualDeploy
-#if MainBackup
-			"ok.mainB\t"
-#endif // MainBackup
-#if DrogueBackup
-			"ok.drogB\t"
-#endif // DrogueBackup
-#endif // Shea
-
-#if Semg
-			"emrg\t"
-#endif // Semg
-
-
-		));
-
-		///////////////////////////////////////////////
-/*
-		SDC.theFile.println(F(
-			"seg\t"
-#if USE_ACCEL
-			"X\tY\tZ\t"
-#endif // USE_ACCEL
-#if USE_GYRO
-			"X\tY\tZ\t"
-#endif // USE_GYRO
-#if USE_MAGN
-			"X\tY\tZ\t"
-#endif // USE_MAGN
-#if USE_BARO
-			"C\tPascal\t"
-#endif // USE_BARO
-#if ApoGee
-			"m\t"
-#endif // ApoGee
-#if USE_GNSS
-			"Latitude\tLongitude\tAltitude (m)\tspeed\tSat\tPrec\t"
-#endif // USE_GNSS
-		));
-*/
-		///////////////////////////////////////////////
-
-		SDC.close();
-	}
-	else
-	{
-
-#if COMmode
-		transmit(F("\nSD err"));
-#endif // COMmode
-	}
+	printHeaderSD();			// Build header in file
 #endif // USE_STORAGE
 
 #if COMmode
-		transmitln(F(" "));
+	transmitln(F(" "));
 #endif // COMmode
 
 #if USE_VIRTUAL
@@ -1768,167 +794,9 @@ void setup()
 
 	////////////////RBF directive////////////////
 
-
-#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-	Serial.println(F(
-#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-#if Lcom
-	"loop\t"
-#endif // Lcom
-
-#if PERF_Tcom_print
-	"temp\t"
-#endif // PERF_Tcom_print
-
-#if Tcom
-	"tempo.s\t"
-#endif // Tcom
-
-
-#if PaclX
-	"mps2.x.accel\t"
-#endif // PaclX
-#if PaclY
-	"mps2.y.accel\t"
-#endif // PaclY
-#if PaclZ
-	"mps2.z.accel\t"
-#endif // PaclZ
-
-
-#if PgirX
-	"dps.x.gyros\t"
-#endif // PgirX
-#if PgirY
-	"dps.y.gyros\t"
-#endif // PgirY
-#if PgirZ
-	"dps.z.gyros\t"
-#endif // PgirZ
-
-
-#if PmagX
-	"uT.x.magn\t"
-#endif // PmagX
-#if PmagY
-	"uT.y.magn\t"
-#endif // PmagY
-#if PmagZ
-	"uT.z.magn\t"
-#endif // PmagZ
-
-
-#if PbarT
-	"c.baro\t"
-#endif // PbarT
-#if PbarP
-	"pa.baro\t"
-#endif // PbarP
-
-#if PapgH
-	"m.h.baro\t"
-#endif // PapgH
-#if PapgP
-	"m.max.apg\tt.max.apg\t"
-#endif // PapgP
-#if PapgA
-	"alpha.apg\t"
-#endif // PapgA
-#if PapgS
-	"sigma.apg\t"
-#endif // PapgS
-#if PapgM
-	"max.sigma.apg\t"
-#endif // PapgM
-
-#if Pgps
-	"Lat.GPS\tLon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\t"
-#endif // Pgps
-
-#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-));
-#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-/*
-#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-	Serial.println(F(
-#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-#if Lcom
-	"\t"
-#endif // Lcom
-
-#if PERF_Tcom_print
-	"s\t"
-#endif // PERF_Tcom_print
-
-#if Tcom
-	"s\t"
-#endif // Tcom
-
-
-#if PaclX
-	"X\t"
-#endif // PaclX
-#if PaclY
-	"Y\t"
-#endif // PaclY
-#if PaclZ
-	"Z\t"
-#endif // PaclZ
-
-
-#if PgirX
-	"X\t"
-#endif // PgirX
-#if PgirY
-	"Y\t"
-#endif // PgirY
-#if PgirZ
-	"Z\t"
-#endif // PgirZ
-
-
-#if PmagX
-	"X\t"
-#endif // PmagX
-#if PmagY
-	"Y\t"
-#endif // PmagY
-#if PmagZ
-	"Z\t"
-#endif // PmagZ
-
-
-#if PbarT
-	"C\t"
-#endif // PbarT
-#if PbarP
-	"Pascal\t"
-#endif // PbarP
-
-#if PapgH
-	"m\t"
-#endif // PapgH
-#if PapgP
-	"Max h\tMax t\t"
-#endif // PapgP
-#if PapgA
-	"Alpha\t"
-#endif // PapgA
-#if PapgS
-	"Sigma\t"
-#endif // PapgS
-#if PapgM
-	"Max S\t"
-#endif // PapgM
-
-#if Pgps
-	"Latitude\tLongitude\tAltitude\tSpeed (m/s)\tSat\tPrec\t"
-#endif // Pgps
-
-#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-	));
-#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print
-*/
+#if P_ANY
+	printHeaderSerial();		// Show header in Serial
+#endif // P_ANY
 
 #if USE_STORAGE
 	SDC.util.begin();
@@ -2050,6 +918,271 @@ void loop()
 #pragma endregion
 
 #pragma region Modules
+
+
+//////////////////////////////////////////////////////BET//////////////////////////////////////////////////////
+
+inline void beginEverything()
+{
+
+#if AnyDeploy
+	rec.begin();
+#endif // AnyDeploy
+
+#if DualDeploy
+	rec.mainN.setHeightCmd(CURRENT_MODE_P2H_NORMAL);
+#endif // DualDeploy
+#if DELAYED_MAIN
+	rec.mainN.setDelayCmd(sysDelay_main);
+#endif // DELAYED_MAIN
+
+// Main
+#if MainBackup
+#if DualDeploy
+	rec.mainB.setHeightCmd(CURRENT_MODE_P2H_BACKUP);
+#else
+#if DELAYED_MAIN
+	rec.mainB.setDelayCmd(sysDelay + sysDelay_main);
+#else
+	rec.mainB.setDelayCmd(sysDelay);
+#endif // DELAYED_MAIN
+#endif // !DualDeploy
+#endif // MainBackup
+
+// Drogue
+#if DrogueBackup
+	rec.drogB.setDelayCmd(sysDelay);
+#endif // DrogueBackup
+
+#if ((USE_PRINT) || (PERF_Tcom_print) || (USE_VIRTUAL))
+	Serial.begin(BaudRate);
+
+	#if defined(ARDUINO_ARCH_ESP32)
+	delay(ESP32_WAIT_TIME_MS); // Wait to ESP32 properly start
+	#endif // defined(ARDUINO_ARCH_ESP32)
+
+	Serial.println();
+#if Ps_n
+	Serial.print(F("System number: "));
+	Serial.println(SYSTEM_n);
+#endif // Ps_n
+#endif // ((USE_PRINT) || (PERF_Tcom_print))
+
+
+#if USE_ACT_BUZZER
+	pinMode(buzzPin, OUTPUT);
+	digitalWrite(buzzPin, !buzzCmd);
+#endif // USE_ACT_BUZZER
+#if MORSE_MSG
+	mensageiro.setup();
+
+#if MORSE_INTERRUPT
+	morseInterruptionSetup();
+#endif // MORSE_INTERRUPT
+
+	mensageiro.updateMorse();
+
+#endif // MORSE_MSG
+#if BEEPING
+	beep();
+#endif // BEEPING
+
+#if USE_LoRa
+
+#ifdef ARDUINO_ARCH_ESP32
+	LoRa.begin(LoRaBaudRate, SERIAL_8N1, RX_LORA_ESP, TX_LORA_ESP);
+#else
+	LoRa.begin(LoRaBaudRate);
+#endif // ARDUINO_ARCH_ESP32
+
+#if USE_LoRa_E32
+#if USE_LoRa_E32_settable
+	configLoRa.begin();
+#else
+	pinMode(M0_LORA_PIN,OUTPUT); digitalWrite(M0_LORA_PIN,LOW);
+	pinMode(M1_LORA_PIN,OUTPUT); digitalWrite(M1_LORA_PIN,LOW);
+#endif  // USE_LoRa_E32_settable
+#endif // USE_LoRa_E32
+
+#endif // USE_LoRa
+
+#if Crst && defined(ARDUINO_ARCH_ESP32)
+	transmit(F("\nReset: "));
+	transmit(resetReasonName(esp_reset_reason()));
+#endif // Crst && defined(ARDUINO_ARCH_ESP32)
+
+#if USE_GNSS
+	GpS.begin();
+	GpS.util.mem = false; // Auxiliar de primeira leitura
+	GpS.util.forT(60);
+	if (GpS)
+	{
+		if (GpS.util.oneTime())
+		{
+#if COMmode
+			transmit(F("\nGPS ok "));
+			transmit(GpS.getLatitude(), 6);
+			transmit(F(", "));
+			transmit(GpS.getLongitude(), 6);
+#endif // COMmode
+		}
+	}
+	else
+	{
+#if COMmode
+		transmit(F("\nGPS err, waiting signal"));
+#endif // COMmode
+	}
+#endif // USE_GNSS
+
+#if WIREmode
+#if ARDUINO_ARCH_ESP32
+	Wire.begin(SDA_I2C_ESP, SCL_I2C_ESP);
+	Wire.setClock(400000);
+	Wire.setTimeOut(3000);
+#else
+	Wire.begin();
+#endif // ARDUINO_ARCH_ESP32
+#endif // WIREmode
+
+#if USE_BARO
+	baro.begin();
+	if (baro)
+	{
+#if (!USE_BMP085)
+		for (short i = 0; i < 50; i++) baro.readAll(); // Contornar tempo de estabilização do filtro interno
+#endif // (!USE_BMP085)
+#if ApoGee
+		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
+		apg.fixZero(CURRENT_MODE_Fix0range, CURRENT_MODE_Fix0diff);
+#endif // ApoGee
+#if COMmode
+		transmit(F("\nBaro ok "));
+#endif // COMmode
+
+#if PapgB
+		if(apg.getFixZero()){
+			Serial.print(F("(Using EEPROM Zero Ref @ < 0x"));
+			Serial.print(apg.getEEAddress(), HEX);
+			Serial.print(F(" >!) "));
+		}
+
+		Serial.print(apg.getZero());
+		Serial.println();
+#elif USE_PRINT
+		Serial.println();
+#endif // USE_PRINT
+
+#if USE_LoRa
+#if ApoGee
+		// When system gets a invalid zero height (reset on flight)
+		if(apg.getFixZero()) {
+
+			#if USE_LoRa_E32_settable
+			LoRa.print(F("(Using EEPROM LoRa settings: ADD < 0x"));
+			LoRa.print(configLoRa.getCurrentConfigurations().ADDH, HEX);
+			LoRa.print(configLoRa.getCurrentConfigurations().ADDL, HEX);
+			LoRa.print(F(" > CHAN < 0x"));
+			LoRa.print(configLoRa.getCurrentConfigurations().CHAN, HEX);
+			LoRa.print(F(" > Ref @ < 0x "));
+			LoRa.print(configLoRa.getEEAddress(), HEX);
+			LoRa.print(F(" >)! "));
+
+			if(configLoRa.getEEValid())
+			{
+				LoRa.println(F("Success!"));
+			}
+			else
+			{
+				LoRa.println(F("Fail, using default LoRa settings"));
+			}
+			#endif // USE_LoRa_E32_settable
+
+			LoRa.print(F("(Using EEPROM Zero Ref @ < 0x"));
+			LoRa.print(apg.getEEAddress(), HEX);
+			LoRa.print(F(" >!) "));
+		}
+		LoRa.println(apg.getZero());
+#endif // ApoGee
+		LoRa.println();
+#endif // USE_LoRa
+
+	}
+	else
+	{
+#if COMmode
+		transmit(F("\nBaro err"));
+#endif // COMmode
+	}
+#endif // USE_BARO
+
+#if USE_ACCEL
+	accel.begin();
+	if (accel)
+	{
+#if COMmode
+		transmit(F("\nAccel ok"));
+#endif // COMmode
+	}
+	else
+	{
+#if COMmode
+		transmit(F("\nAccel err"));
+#endif // COMmode
+	}
+#endif // USE_ACCEL
+
+#if USE_GYRO
+	giro.begin();
+	if (giro)
+	{
+#if COMmode
+		transmit(F("\nGiro ok"));
+#endif // COMmode
+	}
+	else
+	{
+#if COMmode
+		transmit(F("\nGiro err"));
+#endif // COMmode
+	}
+#endif // USE_GYRO
+
+#if USE_MAGN
+	magn.begin();
+	if (magn)
+	{
+#if COMmode
+		transmit(F("\nMagn ok"));
+#endif // COMmode
+	}
+	else
+	{
+#if COMmode
+		transmit(F("\nMagn err"));
+#endif // COMmode
+	}
+#endif // USE_MAGN
+
+#if AnyDeploy && COMmode
+	transmit(rec.mainN.info() ? F("\nIgnMainN ok") : F("\nIgnMainN err"));
+
+#if DualDeploy
+	transmit(rec.drogN.info() ? F("\nIgnDrogN ok") : F("\nIgnDrogN err"));
+#endif // DualDeploy
+
+#if MainBackup
+	transmit(rec.mainB.info() ? F("\nIgnMainB ok") : F("\nIgnMainB err"));
+#endif // MainBackup
+
+#if DrogueBackup
+	transmit(rec.drogB.info() ? F("\nIgnDrogB ok") : F("\nIgnDrogB err"));
+#endif // DrogueBackup
+
+
+#endif // AnyDeploy && COMmode
+}
+
 //////////////////////////////////////////////////////RBF//////////////////////////////////////////////////////
 
 #if RBF
@@ -2098,7 +1231,7 @@ inline void RemoveBefore()
 		else if (rbfHelper.eachT(2)) rbfHelper.oneTimeReset();
 #if USE_LoRa
 #if USE_LoRa_E32_settable
-		updateLoRaFrequency();
+		configLoRa.updateFrequency();
 #endif // USE_LoRa_E32_settable
 		LoRaSend();
 #endif // USE_LoRa
@@ -2115,7 +1248,7 @@ inline void RemoveBefore()
 	} while (!rbf);
 
 #if USE_LoRa_E32_settable
-	pauseTelemetryUntil = 0;	// Garante telemetria ativa ao entrar em voo
+	configLoRa.discardPauseTelemetry(); // Garante telemetria ativa ao entrar em voo
 #endif // USE_LoRa_E32_settable
 
 #if BEEPING
@@ -2168,7 +1301,7 @@ inline void WaitUntilFlight(float minHeight)
 	do
 	{
 		#if USE_LoRa_E32_settable
-		updateLoRaFrequency();
+		configLoRa.updateFrequency();
 		#endif // USE_LoRa_E32_settable
 
 		WaitUntil();
@@ -2216,7 +1349,7 @@ inline void WaitUntilFlight(float minHeight)
 	while (abs(apg.getHeight()) < minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
 
 #if USE_LoRa_E32_settable
-	pauseTelemetryUntil = 0;	// Garante telemetria ativa ao entrar em voo
+	configLoRa.discardPauseTelemetry(); // Garante telemetria ativa ao entrar em voo
 #endif // USE_LoRa_E32_settable
 
 #if MORSE_MSG
@@ -2716,7 +1849,7 @@ inline void beep()
 inline void LoRaSend()
 {
 #if USE_LoRa_E32_settable
-	if (millis() < pauseTelemetryUntil) return;
+	if (configLoRa.isTelemetryPaused()) return;
 #endif // USE_LoRa_E32_settable
 
 	/*
@@ -3137,6 +2270,304 @@ inline void readEverything()
 
 #endif // AnyDeploy && (RBF || WUF)
 }
+
+#if USE_STORAGE
+inline void printHeaderSD()
+{
+
+#if ARDUINO_ARCH_ESP32
+	SPI_SD.begin(SCK_SD_ESP, MISO_SD_ESP, MOSI_SD_ESP, CS_SD_ESP);
+#endif // ARDUINO_ARCH_ESP32
+	SDC.begin();
+	if (SDC)
+	{
+#if COMmode
+		transmit(F("\nSD start OK "));
+		transmit(SDC.getFname());
+#endif // COMmode
+
+		//////////////////File Header//////////////////
+
+#if Srst && defined(ARDUINO_ARCH_ESP32)
+		SDC.theFile.print(F("Reset reason:\t"));
+		SDC.theFile.print(int(esp_reset_reason()));
+		SDC.theFile.print(F(" <"));
+		SDC.theFile.print(resetReasonName(esp_reset_reason()));
+		SDC.theFile.println(F(">"));
+#endif // Srst && defined(ARDUINO_ARCH_ESP32)
+#if ApoGee
+		SDC.theFile.print(F("Liftoff flag:\t"));
+		SDC.theFile.print(apg.getLiftoff());
+		SDC.theFile.println();
+		SDC.theFile.print(F("Start at:\t"));
+		SDC.theFile.print(apg.getZero());
+		SDC.theFile.print(F("\tm\tZero spread:\t"));
+		SDC.theFile.print(apg.getSpread());
+		SDC.theFile.print(F("\tm"));
+		if(apg.getFixZero()) {
+			SDC.theFile.print(F("\t(Using EEPROM Zero Ref @ < 0x"));
+			SDC.theFile.print(apg.getEEAddress(), HEX);
+			SDC.theFile.print(F(" >!) "));
+		}
+		SDC.theFile.println();
+#endif // ApoGee
+
+		///////////////////////////////////////////////
+
+		SDC.theFile.println(F(
+			"tempo.s\t"
+#if USE_ACCEL
+			"mps2.x.accel\tmps2.y.accel\tmps2.z.accel\t"
+#endif // USE_ACCEL
+#if USE_GYRO
+			"dps.x.gyros\tdps.y.gyros\tdps.z.gyros\t"
+#endif // USE_GYRO
+#if USE_MAGN
+			"uT.x.magn\tuT.y.magn\tuT.z.magn\t"
+#endif // USE_MAGN
+#if USE_BARO
+			"c.baro\tpa.baro\t"
+#endif // USE_BARO
+#if ApoGee
+			"m.h.baro\t"
+#endif // ApoGee
+#if Sgps
+			"lat.GPS\tlon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\tnew.GPS\t"
+#endif // Sgps
+#if Sapg
+			"alpha.apg\tsigma.apg\t"
+#endif // Sapg
+#if Sdpl_C
+			"on.mainN\tfire.mainN\t"
+#if DualDeploy
+			"on.drogN\tfire.drogN\t"
+#endif // DualDeploy
+#if MainBackup
+			"on.mainB\tfire.mainB\t"
+#endif // MainBackup
+#if DrogueBackup
+			"on.drogB\tfire.drogB\t"
+#endif // DrogueBackup
+#endif // Sdpl_C
+
+#if Shea
+			"ok.mainN\t"
+#if DualDeploy
+			"ok.drogN\t"
+#endif // DualDeploy
+#if MainBackup
+			"ok.mainB\t"
+#endif // MainBackup
+#if DrogueBackup
+			"ok.drogB\t"
+#endif // DrogueBackup
+#endif // Shea
+
+#if Semg
+			"emrg\t"
+#endif // Semg
+
+
+		));
+
+		///////////////////////////////////////////////
+/*
+		SDC.theFile.println(F(
+			"seg\t"
+#if USE_ACCEL
+			"X\tY\tZ\t"
+#endif // USE_ACCEL
+#if USE_GYRO
+			"X\tY\tZ\t"
+#endif // USE_GYRO
+#if USE_MAGN
+			"X\tY\tZ\t"
+#endif // USE_MAGN
+#if USE_BARO
+			"C\tPascal\t"
+#endif // USE_BARO
+#if ApoGee
+			"m\t"
+#endif // ApoGee
+#if USE_GNSS
+			"Latitude\tLongitude\tAltitude (m)\tspeed\tSat\tPrec\t"
+#endif // USE_GNSS
+		));
+*/
+		///////////////////////////////////////////////
+
+		SDC.close();
+	}
+	else
+	{
+
+#if COMmode
+		transmit(F("\nSD err"));
+#endif // COMmode
+	}
+}
+#endif // USE_STORAGE
+
+
+#if P_ANY
+inline void printHeaderSerial()
+{
+
+	Serial.println(F(
+#if Lcom
+	"loop\t"
+#endif // Lcom
+
+#if PERF_Tcom_print
+	"temp\t"
+#endif // PERF_Tcom_print
+
+#if Tcom
+	"tempo.s\t"
+#endif // Tcom
+
+
+#if PaclX
+	"mps2.x.accel\t"
+#endif // PaclX
+#if PaclY
+	"mps2.y.accel\t"
+#endif // PaclY
+#if PaclZ
+	"mps2.z.accel\t"
+#endif // PaclZ
+
+
+#if PgirX
+	"dps.x.gyros\t"
+#endif // PgirX
+#if PgirY
+	"dps.y.gyros\t"
+#endif // PgirY
+#if PgirZ
+	"dps.z.gyros\t"
+#endif // PgirZ
+
+
+#if PmagX
+	"uT.x.magn\t"
+#endif // PmagX
+#if PmagY
+	"uT.y.magn\t"
+#endif // PmagY
+#if PmagZ
+	"uT.z.magn\t"
+#endif // PmagZ
+
+
+#if PbarT
+	"c.baro\t"
+#endif // PbarT
+#if PbarP
+	"pa.baro\t"
+#endif // PbarP
+
+#if PapgH
+	"m.h.baro\t"
+#endif // PapgH
+#if PapgP
+	"m.max.apg\tt.max.apg\t"
+#endif // PapgP
+#if PapgA
+	"alpha.apg\t"
+#endif // PapgA
+#if PapgS
+	"sigma.apg\t"
+#endif // PapgS
+#if PapgM
+	"max.sigma.apg\t"
+#endif // PapgM
+
+#if Pgps
+	"Lat.GPS\tLon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\t"
+#endif // Pgps
+	));
+
+/*
+	Serial.println(F(
+#if Lcom
+	"\t"
+#endif // Lcom
+
+#if PERF_Tcom_print
+	"s\t"
+#endif // PERF_Tcom_print
+
+#if Tcom
+	"s\t"
+#endif // Tcom
+
+
+#if PaclX
+	"X\t"
+#endif // PaclX
+#if PaclY
+	"Y\t"
+#endif // PaclY
+#if PaclZ
+	"Z\t"
+#endif // PaclZ
+
+
+#if PgirX
+	"X\t"
+#endif // PgirX
+#if PgirY
+	"Y\t"
+#endif // PgirY
+#if PgirZ
+	"Z\t"
+#endif // PgirZ
+
+
+#if PmagX
+	"X\t"
+#endif // PmagX
+#if PmagY
+	"Y\t"
+#endif // PmagY
+#if PmagZ
+	"Z\t"
+#endif // PmagZ
+
+
+#if PbarT
+	"C\t"
+#endif // PbarT
+#if PbarP
+	"Pascal\t"
+#endif // PbarP
+
+#if PapgH
+	"m\t"
+#endif // PapgH
+#if PapgP
+	"Max h\tMax t\t"
+#endif // PapgP
+#if PapgA
+	"Alpha\t"
+#endif // PapgA
+#if PapgS
+	"Sigma\t"
+#endif // PapgS
+#if PapgM
+	"Max S\t"
+#endif // PapgM
+
+#if Pgps
+	"Latitude\tLongitude\tAltitude\tSpeed (m/s)\tSat\tPrec\t"
+#endif // Pgps
+
+	));
+*/
+}
+#endif // P_ANY
+
 #pragma endregion
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
