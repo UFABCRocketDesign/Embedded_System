@@ -5,10 +5,13 @@
 #ifndef _MODES_H
 #define _MODES_H
 
-#define MODE_LANCAMENTO 0
-#define MODE_ELEVADOR 1
-#define MODE_ASPIRADOR 2
-#define MODE_MANUAL 3
-#define MODE_VIRTUAL 9
+#define MODE_LANCAMENTO 00
+	#define MODE_LANCAMENTO_1K 01
+	#define MODE_LANCAMENTO_3K 02
+	#define MODE_LANCAMENTO_10K 03
+#define MODE_ELEVADOR 10
+#define MODE_ASPIRADOR 20
+#define MODE_MANUAL 30
+#define MODE_VIRTUAL 90
 
 #endif // _MODES_H
