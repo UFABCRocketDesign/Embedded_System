@@ -112,7 +112,7 @@ bool MonoDeploy::getEmergency() {
 void MonoDeploy::refresh()
 {
 	Tnow = micros() - TimeZero;
-	if (useM && Tnow >= TimeZero + Tmax && !getApogee()) sealApogee(true);
+	if (useM && Tnow >= Tmax && !getApogee()) sealApogee(true);
 	if (getApogee())
 	{
 		if (useH && !useH_A) // If use Height and not reached yet

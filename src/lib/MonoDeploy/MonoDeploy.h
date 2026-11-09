@@ -11,6 +11,8 @@
 #include "WProgram.h"
 #endif
 
+#define SERVO_MODE 0
+
 #if SERVO_MODE
 #include <Servo.h>
 #endif // SERVO_MODE

@@ -5,7 +5,14 @@
 #ifndef _DECLARATIONS_HPP
 #define _DECLARATIONS_HPP
 
-#include "./Classes.h"
+// #include "./Classes.h"
+
+#include "Helpful/Helpful.h" // Auxiliares de codigo
+
+
+// #include "MediaMovel/MediaMovel.h" // Media Movel Legado [substituida por MovingAverage]
+#include "MovingAverage/MovingAverage.h" // Media movel simples
+#include "SerialFilter/SerialFilter.h" // Media movel em cascata
 
 #if USE_VIRTUAL
 #include "./VirtualBridge/VirtualBridge.h"
@@ -201,9 +208,9 @@ MonoDeploy Recovery::drogB pins_drogB;
 
 
 #if USE_ACCEL
-#if 1 < ((USE_V_BARO) + (USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
+#if 1 < ((USE_V_ACCEL) + (USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
 #error: Múltiplos acelerômetros definidos
-#elif USE_V_BARO
+#elif USE_V_ACCEL
 #include "./VirtualAccel/VirtualAccel.h"	// Acelerometro Virtual
 VirtualAccel accel;
 #elif USE_ADXL345
@@ -357,6 +364,7 @@ LoRaConfig configLoRa(LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_
 #endif // USE_LoRa
 
 #if TalkingBoard
+#include "ComProtocol/ComProtocol.h" // Protocolo de comunicacao entre placas [descontinuado]
 ComProtocol Talk(Serial2, 9600);			//Declaration of communication protocol object
 #endif // TalkingBoard
 

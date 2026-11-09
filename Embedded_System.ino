@@ -872,8 +872,6 @@ inline void SerialSend()
 	Serial.print('\t');
 	Serial.print(GpS.getKph());
 	Serial.print('\t');
-	Serial.print(GpS.getMps());
-	Serial.print('\t');
 #endif // Pgps
 #if PapgW
 	if (Gutil.mem)
@@ -1477,8 +1475,8 @@ inline void readEverything()
 	} else {
 #if MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " B"; // -...
-		baroHasData = false;
 #endif  // MORSE_MSG
+		baroHasData = false;
 	}
 #endif // USE_BARO
 #if USE_ACCEL
@@ -1795,7 +1793,7 @@ inline void printHeaderSerial()
 #endif // PapgM
 
 #if Pgps
-	"Lat.GPS\tLon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\t"
+	"Lat.GPS\tLon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\tchars.GPS\tdate.GPS\ttime.GPS\tKph.GPS\t"
 #endif // Pgps
 	));
 

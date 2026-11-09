@@ -14,7 +14,4 @@
 *.vcxproj*
 *.a
 *.idb
-Initial/.vs/*
-Initial/Debug/*
-Initial/x64/*
 .vscode/*
