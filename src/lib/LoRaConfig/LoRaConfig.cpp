@@ -1,4 +1,4 @@
-#include "LoRaConfig.h"
+#include "LoRaConfig.hpp"
 
 inline uint8_t LoRaConfig::asciiHex2Nibble(char c) {
 	if (c >= '0' && c <= '9') return c - '0';

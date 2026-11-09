@@ -3,7 +3,7 @@
 #ifndef _AK8963_h
 #define _AK8963_h
 
-#include "../Magn/Magn.h"
+#include "../Magn/Magn.hpp"
 
 #define MPU9250_ADDRESS_M (uint8_t(0b01101000))
 

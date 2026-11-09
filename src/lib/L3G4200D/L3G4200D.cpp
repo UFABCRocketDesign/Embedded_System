@@ -1,4 +1,4 @@
-#include "L3G4200D.h"
+#include "L3G4200D.hpp"
 
 ///Giroscopio
 L3G4200D::L3G4200D(long sc, float recalT) : Gyro(sc, 0x69, recalT)

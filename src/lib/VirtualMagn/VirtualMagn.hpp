@@ -5,8 +5,8 @@
 #ifndef _VIRTUALMAGN_H
 #define _VIRTUALMAGN_H
 
-#include "../Magn/Magn.h"
-#include "../VirtualBridge/VirtualBridge.h"
+#include "../Magn/Magn.hpp"
+#include "../VirtualBridge/VirtualBridge.hpp"
 
 class VirtualMagn : public Magn
 {

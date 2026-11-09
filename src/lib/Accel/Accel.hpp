@@ -4,8 +4,8 @@
 #define _ACCEL_h
 
 #include <Wire.h>
-#include "../Sens/Sens.h"
-#include "../TriA/TriA.h"
+#include "../Sens/Sens.hpp"
+#include "../TriA/TriA.hpp"
 
 class Accel : public Sens, public TriA
 {

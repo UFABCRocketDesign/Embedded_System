@@ -5,7 +5,7 @@
 #ifndef _SERIALFILTER_h
 #define _SERIALFILTER_h
 
-#include "../MovingAverage/MovingAverage.h" // Media movel simples
+#include "../MovingAverage/MovingAverage.hpp" // Media movel simples
 
 class SerialFilter
 {

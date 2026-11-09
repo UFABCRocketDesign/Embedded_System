@@ -5,7 +5,7 @@
 #ifndef _EE_MAP_h
 #define _EE_MAP_h
 
-#include "EEDataRegister.h"
+#include "EEDataRegister.hpp"
 
 // Slots de tamanho uniforme. E isto que permite ao mapa nao conhecer
 // nenhum tipo de dado: quem guarda o que fica com cada dono, e aqui

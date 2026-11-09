@@ -5,7 +5,7 @@
 #ifndef _ADXL345_h
 #define _ADXL345_h
 
-#include "../Accel/Accel.h"
+#include "../Accel/Accel.hpp"
 
 class ADXL345 : public Accel
 {

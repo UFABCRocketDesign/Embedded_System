@@ -5,8 +5,8 @@
 #ifndef _VIRTUALGYRO_H
 #define _VIRTUALGYRO_H
 
-#include "../Gyro/Gyro.h"
-#include "../VirtualBridge/VirtualBridge.h"
+#include "../Gyro/Gyro.hpp"
+#include "../VirtualBridge/VirtualBridge.hpp"
 
 class VirtualGyro : public Gyro
 {

@@ -5,7 +5,7 @@
 #ifndef _L3G4200D_h
 #define _L3G4200D_h
 
-#include "../Gyro/Gyro.h"
+#include "../Gyro/Gyro.hpp"
 
 class L3G4200D : public Gyro
 {

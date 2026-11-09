@@ -3,7 +3,7 @@
 #ifndef _MPU9250_GYRO_h
 #define _MPU9250_GYRO_h
 
-#include "../Gyro/Gyro.h"
+#include "../Gyro/Gyro.hpp"
 
 #define MPU9250_ADDRESS_G 0b01101000
 

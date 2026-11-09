@@ -1,4 +1,4 @@
-#include "TriA.h"
+#include "TriA.hpp"
 
 /// Triaxial
 float TriA::getX()

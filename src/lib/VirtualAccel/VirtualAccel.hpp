@@ -5,8 +5,8 @@
 #ifndef _VIRTUALACCEL_H
 #define _VIRTUALACCEL_H
 
-#include "../Accel/Accel.h"
-#include "../VirtualBridge/VirtualBridge.h"
+#include "../Accel/Accel.hpp"
+#include "../VirtualBridge/VirtualBridge.hpp"
 
 class VirtualAccel : public Accel
 {

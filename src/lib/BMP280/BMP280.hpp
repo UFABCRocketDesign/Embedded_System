@@ -3,7 +3,7 @@
 #ifndef _BMP280_H
 #define _BMP280_H
 
-#include "../Baro/Baro.h"
+#include "../Baro/Baro.hpp"
 #include <Wire.h>
 
 #define BMP280_ADDRESS 0b01110110

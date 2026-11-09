@@ -4,7 +4,7 @@
 #define _ICM20948_GYRO_h
 
 #include <Wire.h>
-#include "../Gyro/Gyro.h"
+#include "../Gyro/Gyro.hpp"
 
 #define ICM20948_ADDRESS_G 0x68
 #define PWR_MGMT_1 0x06

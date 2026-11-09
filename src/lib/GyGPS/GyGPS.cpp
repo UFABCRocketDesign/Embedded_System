@@ -1,4 +1,4 @@
-#include "GyGPS.h"
+#include "GyGPS.hpp"
 
 ///Dados do GPS
 GyGPS::GyGPS(HardwareSerial &S, short gmt, uint32_t config, int8_t rxPin, int8_t txPin) :

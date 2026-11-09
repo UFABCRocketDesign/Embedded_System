@@ -1,4 +1,4 @@
-#include "Accel.h"
+#include "Accel.hpp"
 
 
 Accel::Accel(long sc, uint8_t address, float recalT)

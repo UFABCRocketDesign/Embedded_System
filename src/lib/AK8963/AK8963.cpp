@@ -1,4 +1,4 @@
-#include "AK8963.h"
+#include "AK8963.hpp"
 
 AK8963::AK8963(float recalT) : Magn(MPU9250_MAG_ADDRESS, recalT)
 {

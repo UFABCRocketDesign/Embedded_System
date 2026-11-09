@@ -1,4 +1,4 @@
-#include "Term.h"
+#include "Term.hpp"
 
 ///Termometro
 Term::Term(byte aPin) :Apin(aPin)

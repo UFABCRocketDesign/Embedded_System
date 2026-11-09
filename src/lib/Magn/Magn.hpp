@@ -6,8 +6,8 @@
 #define _MAGN_h
 
 #include <Wire.h>
-#include "../Sens/Sens.h"
-#include "../TriA/TriA.h"
+#include "../Sens/Sens.hpp"
+#include "../TriA/TriA.hpp"
 
 class Magn : public Sens, public TriA
 {

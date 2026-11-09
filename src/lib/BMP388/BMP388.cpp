@@ -1,4 +1,4 @@
-#include "BMP388.h"
+#include "BMP388.hpp"
 
 BMP388::BMP388(float recalT, uint8_t addr) : Baro(addr, recalT) {}
 

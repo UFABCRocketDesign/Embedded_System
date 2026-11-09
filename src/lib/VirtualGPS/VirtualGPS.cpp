@@ -1,4 +1,4 @@
-#include "VirtualGPS.h"
+#include "VirtualGPS.hpp"
 
 VirtualGPS::VirtualGPS(VirtualBridge &bridge, float recalT) :
 GNSS(0, recalT),

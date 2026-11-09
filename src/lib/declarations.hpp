@@ -5,33 +5,30 @@
 #ifndef _DECLARATIONS_HPP
 #define _DECLARATIONS_HPP
 
-// #include "./Classes.h"
+#include "Helpful/Helpful.hpp" // Auxiliares de codigo
 
-#include "Helpful/Helpful.h" // Auxiliares de codigo
-
-
-// #include "MediaMovel/MediaMovel.h" // Media Movel Legado [substituida por MovingAverage]
-#include "MovingAverage/MovingAverage.h" // Media movel simples
-#include "SerialFilter/SerialFilter.h" // Media movel em cascata
+// #include "MediaMovel/MediaMovel.hpp" // Media Movel Legado [substituida por MovingAverage]
+#include "MovingAverage/MovingAverage.hpp" // Media movel simples
+#include "SerialFilter/SerialFilter.hpp" // Media movel em cascata
 
 #if USE_VIRTUAL
-#include "./VirtualBridge/VirtualBridge.h"
+#include "./VirtualBridge/VirtualBridge.hpp"
 #endif // USE_VIRTUAL
 
 #if USE_BARO
 #if 1 < ((USE_V_BARO) + (USE_BMP085) + (USE_BMP280) + (USE_BMP388))
 #error: Múltiplos barômetros definidos
 #elif USE_V_BARO
-#include "./VirtualBaro/VirtualBaro.h"	// Barometro Virtual
+#include "./VirtualBaro/VirtualBaro.hpp"	// Barometro Virtual
 VirtualBaro baro;
 #elif USE_BMP085
-#include "./BMP085/BMP085.h"				// Barometro BMP085
+#include "./BMP085/BMP085.hpp"				// Barometro BMP085
 BMP085 baro;									//Barometer object declaration
 #elif USE_BMP280
-#include "./BMP280/BMP280.h"				// Barometro BMP280
+#include "./BMP280/BMP280.hpp"				// Barometro BMP280
 BMP280 baro;									//Barometer object declaration
 #elif USE_BMP388
-#include "./BMP388/BMP388.h"				// Barometro BMP388
+#include "./BMP388/BMP388.hpp"				// Barometro BMP388
 BMP388 baro;									//Barometer object declaration
 #endif // USE_BMP085 / USE_BMP280
 // MovingAverage MM_baro[2]{ (2),(2) };			//Array declaration of the moving average filter objects
@@ -40,7 +37,7 @@ bool baroHasData = false;
 #endif // USE_BARO
 
 #if ApoGee
-#include "./Apogeu/Apogeu.h" // Processamento de altitude e deteccao de apogeu
+#include "./Apogeu/Apogeu.hpp" // Processamento de altitude e deteccao de apogeu
 
 Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define LapsMaxT 5							//Maximum time of delay until emergency state declaration by the delay in sensor response. (seconds)
@@ -48,7 +45,7 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 
 
 #if AnyDeploy
-#include "./MonoDeploy/MonoDeploy.h" // Acionamento de paraquedas simples
+#include "./MonoDeploy/MonoDeploy.hpp" // Acionamento de paraquedas simples
 
 const bool MonoDeploy::command = IGN_CMD;
 
@@ -211,16 +208,16 @@ MonoDeploy Recovery::drogB pins_drogB;
 #if 1 < ((USE_V_ACCEL) + (USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
 #error: Múltiplos acelerômetros definidos
 #elif USE_V_ACCEL
-#include "./VirtualAccel/VirtualAccel.h"	// Acelerometro Virtual
+#include "./VirtualAccel/VirtualAccel.hpp"	// Acelerometro Virtual
 VirtualAccel accel;
 #elif USE_ADXL345
-#include "./ADXL345/ADXL345.h" // Accelerometer ADXL345
+#include "./ADXL345/ADXL345.hpp" // Accelerometer ADXL345
 ADXL345 accel;									//Accelerometer object declaration
 #elif USE_MPU9250_ACCEL
-#include "./MPU9250_ACCEL/MPU9250_ACCEL.h" // Accelerometer MPU9250_ACCEL
+#include "./MPU9250_ACCEL/MPU9250_ACCEL.hpp" // Accelerometer MPU9250_ACCEL
 MPU9250_ACCEL accel(16);									//Accelerometer object declaration
 #elif USE_ICM20948_ACCEL
-#include "./ICM20948_ACCEL/ICM20948_ACCEL.h" // Accelerometer MPU9250_ACCEL
+#include "./ICM20948_ACCEL/ICM20948_ACCEL.hpp" // Accelerometer MPU9250_ACCEL
 ICM20948_ACCEL accel(16);									//Accelerometer object declaration
 #endif // USE_ADXL345 / USE_MPU9250_ACCEL
 //MovingAverage MM_accel[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
@@ -231,16 +228,16 @@ float MM_accel[3]{};
 #if 1 < ((USE_V_GYRO) + (USE_L3G4200D) + (USE_MPU9250_GYRO) + (USE_ICM20948_GYRO))
 #error: Múltiplos giroscópios definidos
 #elif USE_V_GYRO
-#include "./VirtualGyro/VirtualGyro.h"	// Gyroscope Virtual
+#include "./VirtualGyro/VirtualGyro.hpp"	// Gyroscope Virtual
 VirtualGyro giro;
 #elif USE_L3G4200D
-#include "./L3G4200D/L3G4200D.h" // Gyroscope L3G4200D
+#include "./L3G4200D/L3G4200D.hpp" // Gyroscope L3G4200D
 L3G4200D giro(2000);							//Gyroscope object declaration
 #elif USE_MPU9250_GYRO
-#include "./MPU9250_GYRO/MPU9250_GYRO.h" // Gyroscope MPU9250_GYRO
+#include "./MPU9250_GYRO/MPU9250_GYRO.hpp" // Gyroscope MPU9250_GYRO
 MPU9250_GYRO giro(2000);							//Gyroscope object declaration
 #elif USE_ICM20948_GYRO
-#include "./ICM20948_GYRO/ICM20948_GYRO.h" // Gyroscope MPU9250_GYRO
+#include "./ICM20948_GYRO/ICM20948_GYRO.hpp" // Gyroscope MPU9250_GYRO
 ICM20948_GYRO giro(2000);							//Gyroscope object declaration
 #endif // USE_L3G4200D / USE_MPU9250_GYRO
 //MovingAverage MM_giro[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
@@ -251,16 +248,16 @@ float MM_giro[3]{};
 #if 1 < ((USE_V_MAGN) + (USE_HMC5883) + (USE_AK8963) + (USE_AK09916))
 #error: Múltiplos magnetômetros definidos
 #elif USE_V_MAGN
-#include "./VirtualMagn/VirtualMagn.h"	// Magnetometro Virtual
+#include "./VirtualMagn/VirtualMagn.hpp"	// Magnetometro Virtual
 VirtualMagn magn;
 #elif USE_HMC5883
-#include "./HMC5883/HMC5883.h" // Magnetometer HMC5883
+#include "./HMC5883/HMC5883.hpp" // Magnetometer HMC5883
 HMC5883 magn;									//Magnetometer object declaration
 #elif USE_AK8963
-#include "./AK8963/AK8963.h" // Magnetometer AK8963
+#include "./AK8963/AK8963.hpp" // Magnetometer AK8963
 AK8963 magn;									//Magnetometer object declaration
 #elif USE_AK09916
-#include "./AK09916/AK09916.h" // Magnetometer USE_AK09916
+#include "./AK09916/AK09916.hpp" // Magnetometer USE_AK09916
 AK09916 magn;									//Magnetometer object declaration
 #endif // USE_HMC5883 / USE_AK8963
 //MovingAverage MM_magn[3]{ (5),(5),(5) };	//Array declaration of the moving average filter objects
@@ -274,7 +271,7 @@ float MM_magn[3]{};
 #if ARDUINO_ARCH_ESP32
 	SPIClass SPI_SD(FSPI);
 #endif // ARDUINO_ARCH_ESP32
-#include "./SDCH/SDCH.h" // Auxiliar para gerenciamento de cartao SD
+#include "./SDCH/SDCH.hpp" // Auxiliar para gerenciamento de cartao SD
 
 #if ARDUINO_ARCH_ESP32
 SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME, "txt", SPI_SD);						//Declaration of object to help SD card file management
@@ -288,10 +285,10 @@ SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to 
 #if 1 < ((USE_V_GNSS) + (USE_NEO_M))
 #error: Multiplos GPS definidos
 #elif USE_V_GNSS
-#include "./VirtualGPS/VirtualGPS.h"	// GPS Virtual
+#include "./VirtualGPS/VirtualGPS.hpp"	// GPS Virtual
 VirtualGPS GpS;
 #elif USE_NEO_M
-#include "./GyGPS/GyGPS.h"			// Auxiliar para GPS
+#include "./GyGPS/GyGPS.hpp"			// Auxiliar para GPS
 #ifdef ARDUINO_ARCH_ESP32
 HardwareSerial GpSSerial(1);
 GyGPS GpS(GpSSerial, 0, SERIAL_8N1, RX_GPS_ESP, TX_GPS_ESP);
@@ -328,7 +325,7 @@ Helpful LRutil;								//Declaration of helpful object to telemetry system
 #endif
 #if USE_LoRa_E32_settable
 
-#include "./LoRaConfig/LoRaConfig.h"
+#include "./LoRaConfig/LoRaConfig.hpp"
 
 #define FREQUENCY_900
 #define LoRa_ADDL 0x2A // 42 decimal (Standardized)
@@ -364,7 +361,7 @@ LoRaConfig configLoRa(LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_
 #endif // USE_LoRa
 
 #if TalkingBoard
-#include "ComProtocol/ComProtocol.h" // Protocolo de comunicacao entre placas [descontinuado]
+#include "ComProtocol/ComProtocol.hpp" // Protocolo de comunicacao entre placas [descontinuado]
 ComProtocol Talk(Serial2, 9600);			//Declaration of communication protocol object
 #endif // TalkingBoard
 
@@ -397,7 +394,7 @@ unsigned short sysC = 0;
 
 // #define MORSE_INTERRUPT (1)				// Use interrupt to avoid beep bugs
 
-#include "./Morse/Morse.h"
+#include "./Morse/Morse.hpp"
 
 #define ALARM_DELAY 10					// Delay after alarm when all systems working properly
 

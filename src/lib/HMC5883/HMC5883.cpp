@@ -1,4 +1,4 @@
-#include "HMC5883.h"
+#include "HMC5883.hpp"
 
 ///Magnetometro
 HMC5883::HMC5883(float recalT) : Magn(0x1E, recalT)

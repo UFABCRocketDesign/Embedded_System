@@ -3,7 +3,7 @@
 #ifndef _MPU9250_ACCEL_h
 #define _MPU9250_ACCEL_h
 
-#include "../Accel/Accel.h"
+#include "../Accel/Accel.hpp"
 
 #define MPU9250_ADDRESS_A 0b01101000
 

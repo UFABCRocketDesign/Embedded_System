@@ -1,4 +1,4 @@
-#include "Baro.h"
+#include "Baro.hpp"
 
 ///Barometro
 Baro::Baro(uint8_t address, float recalT) :Sens(address, recalT)

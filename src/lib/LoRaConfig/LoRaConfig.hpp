@@ -28,8 +28,8 @@
 #define TX_CHG_FREQ_ERROR "N4N4N1N4N40"
 
 #include "LoRa_E32.h"
-#include "../EEDataRegister/EEDataRegister.h"
-#include "../EEDataRegister/EEMap.h"
+#include "../EEDataRegister/EEDataRegister.hpp"
+#include "../EEDataRegister/EEMap.hpp"
 
 class LoRaConfig
 {

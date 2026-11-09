@@ -14,7 +14,7 @@
 #include <SPI.h>
 #include <SD.h>
 
-#include "../Helpful/Helpful.h"
+#include "../Helpful/Helpful.hpp"
 
 class SDCH
 {

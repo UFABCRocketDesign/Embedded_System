@@ -1,4 +1,4 @@
-#include "ComProtocol.h"
+#include "ComProtocol.hpp"
 
 ComProtocol::ComProtocol(HardwareSerial &S, unsigned long baud) : Com(S), baudRate(baud)
 {

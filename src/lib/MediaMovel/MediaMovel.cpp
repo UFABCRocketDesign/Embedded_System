@@ -1,4 +1,4 @@
-#include "MediaMovel.h"
+#include "MediaMovel.hpp"
 
 ///Filtro de media movel
 MediaMovel::MediaMovel(int n) : N(n)

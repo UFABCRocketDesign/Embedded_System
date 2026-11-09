@@ -1,4 +1,4 @@
-#include "BMP085.h"
+#include "BMP085.hpp"
 
 ///Barometro
 BMP085::BMP085(float recalT) : Baro(0x77, recalT)

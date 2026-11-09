@@ -1,4 +1,4 @@
-#include "MovingAverage.h"
+#include "MovingAverage.hpp"
 
 MovingAverage::MovingAverage(int n) : N(n), Vals(n)
 {

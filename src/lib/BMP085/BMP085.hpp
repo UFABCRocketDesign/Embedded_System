@@ -5,7 +5,7 @@
 #ifndef _BMP085_h
 #define _BMP085_h
 
-#include "../Baro/Baro.h"
+#include "../Baro/Baro.hpp"
 
 class BMP085 : public Baro
 {

@@ -1,4 +1,4 @@
-#include "AK09916.h"
+#include "AK09916.hpp"
 
 AK09916::AK09916(float recalT) : Magn(ICM20948_ADDRESS_M, recalT)
 {

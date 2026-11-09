@@ -1,4 +1,4 @@
-#include "VirtualMagn.h"
+#include "VirtualMagn.hpp"
 
 ///Aceleometro
 VirtualMagn::VirtualMagn(VirtualBridge &bridge, float recalT) : Magn(0, recalT), br(bridge), hX(-1), hY(-1), hZ(-1), lastSeq(0)

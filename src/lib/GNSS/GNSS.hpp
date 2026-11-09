@@ -11,8 +11,8 @@
 #include "WProgram.h"
 #endif
 
-#include "../Sens/Sens.h"
-#include "../Helpful/Helpful.h"
+#include "../Sens/Sens.hpp"
+#include "../Helpful/Helpful.hpp"
 
 class GNSS : public Sens
 {

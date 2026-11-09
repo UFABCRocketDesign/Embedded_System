@@ -1,4 +1,4 @@
-#include "MPU9250_GYRO.h"
+#include "MPU9250_GYRO.hpp"
 
 MPU9250_GYRO::MPU9250_GYRO(long sc, float recalT) : Gyro(sc, MPU9250_ADDRESS_G, recalT)
 {

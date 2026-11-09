@@ -1,4 +1,4 @@
-#include "Sens.h"
+#include "Sens.hpp"
 
 /// Sensor base class
 Sens::Sens(uint8_t add, float recalT) : address(add), recalibrateT((long)(recalT * 1000000))

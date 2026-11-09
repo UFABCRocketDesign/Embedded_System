@@ -19,8 +19,8 @@
 #include <TinyGPS.h>
 #endif // USE_TINY_PLUS
 
-#include "../GNSS/GNSS.h"
-#include "../Helpful/Helpful.h"
+#include "../GNSS/GNSS.hpp"
+#include "../Helpful/Helpful.hpp"
 
 class GyGPS : public GNSS
 {

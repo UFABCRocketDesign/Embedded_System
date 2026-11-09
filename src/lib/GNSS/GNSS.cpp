@@ -1,4 +1,4 @@
-#include "GNSS.h"
+#include "GNSS.hpp"
 
 ///Base dos GNSS
 GNSS::GNSS(uint8_t address, float recalT) : Sens(address, recalT)

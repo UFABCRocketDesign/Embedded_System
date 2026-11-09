@@ -1,4 +1,4 @@
-#include "VirtualAccel.h"
+#include "VirtualAccel.hpp"
 
 ///Aceleometro
 VirtualAccel::VirtualAccel(VirtualBridge &bridge, float recalT) : Accel(-1, 0, recalT), br(bridge), hX(-1), hY(-1), hZ(-1), lastSeq(0)

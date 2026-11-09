@@ -1,4 +1,4 @@
-#include "ICM20948_GYRO.h"
+#include "ICM20948_GYRO.hpp"
 
 ICM20948_GYRO::ICM20948_GYRO(long sc, float recalT) : Gyro(sc, ICM20948_ADDRESS_G, recalT)
 {

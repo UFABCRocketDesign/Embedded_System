@@ -1,4 +1,4 @@
-#include "SerialFilter.h"
+#include "SerialFilter.hpp"
 
 SerialFilter::SerialFilter(int n, int v) : N(n)
 {

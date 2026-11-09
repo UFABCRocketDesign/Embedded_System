@@ -5,8 +5,8 @@
 #ifndef _VIRTUALBARO_h
 #define _VIRTUALBARO_h
 
-#include "../Baro/Baro.h"
-#include "../VirtualBridge/VirtualBridge.h"
+#include "../Baro/Baro.hpp"
+#include "../VirtualBridge/VirtualBridge.hpp"
 
 class VirtualBaro : public Baro
 {

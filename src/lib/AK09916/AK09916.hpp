@@ -3,7 +3,7 @@
 #ifndef _AK09916_h
 #define _AK09916_h
 
-#include "../Magn/Magn.h"
+#include "../Magn/Magn.hpp"
 
 #define ICM20948_ADDRESS_M 0x0C
 #define MAG_WIA2 0x01

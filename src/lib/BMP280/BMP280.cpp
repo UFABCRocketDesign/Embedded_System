@@ -1,4 +1,4 @@
-#include "BMP280.h"
+#include "BMP280.hpp"
 
 BMP280::BMP280(float recalT) : Baro(BMP280_ADDRESS, recalT) {}
 

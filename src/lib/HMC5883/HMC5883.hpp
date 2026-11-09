@@ -5,7 +5,7 @@
 #ifndef _HMC5883_h
 #define _HMC5883_h
 
-#include "../Magn/Magn.h"
+#include "../Magn/Magn.hpp"
 
 class HMC5883 : public Magn
 {

@@ -5,8 +5,8 @@
 #ifndef _VIRTUALGPS_H
 #define _VIRTUALGPS_H
 
-#include "../GNSS/GNSS.h"
-#include "../VirtualBridge/VirtualBridge.h"
+#include "../GNSS/GNSS.hpp"
+#include "../VirtualBridge/VirtualBridge.hpp"
 
 class VirtualGPS : public GNSS
 {

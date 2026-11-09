@@ -1,4 +1,4 @@
-#include "ADXL345.h"
+#include "ADXL345.hpp"
 
 ///Acelerometro
 ADXL345::ADXL345(float recalT) : Accel(-1, 0x53, recalT)

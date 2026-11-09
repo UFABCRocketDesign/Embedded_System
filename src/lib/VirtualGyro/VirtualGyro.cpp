@@ -1,4 +1,4 @@
-#include "VirtualGyro.h"
+#include "VirtualGyro.hpp"
 
 ///Giroscopio
 VirtualGyro::VirtualGyro(VirtualBridge &bridge, float recalT) : Gyro(-1, 0, recalT), br(bridge), hX(-1), hY(-1), hZ(-1), lastSeq(0)

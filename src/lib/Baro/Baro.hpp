@@ -6,7 +6,7 @@
 #define _BARO_h
 
 #include <Wire.h>
-#include "../Sens/Sens.h"
+#include "../Sens/Sens.hpp"
 
 class Baro : public Sens
 {

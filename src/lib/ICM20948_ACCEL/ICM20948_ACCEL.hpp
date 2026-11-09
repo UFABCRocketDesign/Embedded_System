@@ -9,7 +9,7 @@
 // #include "WProgram.h"
 // #endif
 #include <Wire.h>
-#include "../Accel/Accel.h"
+#include "../Accel/Accel.hpp"
 
 #define ICM20948_ADDRESS_A 0x68
 #define PWR_MGMT_1 0x06

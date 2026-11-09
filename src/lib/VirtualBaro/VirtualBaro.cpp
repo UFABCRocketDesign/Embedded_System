@@ -1,4 +1,4 @@
-#include "VirtualBaro.h"
+#include "VirtualBaro.hpp"
 
 ///Barometro
 VirtualBaro::VirtualBaro(VirtualBridge &bridge, float recalT) : Baro(0, recalT), br(bridge), hP(-1), hT(-1), lastSeq(0)

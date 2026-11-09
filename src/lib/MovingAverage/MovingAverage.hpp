@@ -11,7 +11,7 @@
 #include "WProgram.h"
 #endif
 
-#include "../RoundArray/RoundArray.h"
+#include "../RoundArray/RoundArray.hpp"
 
 class MovingAverage
 {

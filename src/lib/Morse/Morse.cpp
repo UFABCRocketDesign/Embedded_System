@@ -1,4 +1,4 @@
-#include "Morse.h"
+#include "Morse.hpp"
 
 // For letters
 const char *const Morse::letters[] _MORSE_MEMORY_ATTR = {

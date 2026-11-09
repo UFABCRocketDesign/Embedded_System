@@ -12,14 +12,14 @@
 #endif
 
 #ifdef ARDUINO_AVR_MEGA2560
-	#include "../SerialFilter/SerialFilter.h"
+	#include "../SerialFilter/SerialFilter.hpp"
 #else
-	#include "../MovingAverage/MovingAverage.h"
+	#include "../MovingAverage/MovingAverage.hpp"
 #endif // ARDUINO_AVR_MEGA2560
 
 #include <EEPROM.h>
-// #include "../EEDataRegister/EEDataRegister.h"
-#include "../EEDataRegister/EEMap.h"
+// #include "../EEDataRegister/EEDataRegister.hpp"
+#include "../EEDataRegister/EEMap.hpp"
 
 // #define _GERAL_TIME uint32_t(unsigned(/*S*/ 10*(__TIME__[6] - '0') + (__TIME__[7] - '0')) + 60 * \
 //                             (unsigned(/*M*/ 10*(__TIME__[3] - '0') + (__TIME__[4] - '0')) + 60 * \

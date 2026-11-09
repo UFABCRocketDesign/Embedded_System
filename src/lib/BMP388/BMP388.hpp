@@ -3,7 +3,7 @@
 #ifndef _BMP388_H
 #define _BMP388_H
 
-#include "../Baro/Baro.h"
+#include "../Baro/Baro.hpp"
 #include <Wire.h>
 
 #define BMP388_ADDRESS_DEFAULT 0x76

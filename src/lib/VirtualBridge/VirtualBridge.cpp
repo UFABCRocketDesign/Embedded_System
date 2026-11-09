@@ -1,4 +1,4 @@
-#include "VirtualBridge.h"
+#include "VirtualBridge.hpp"
 
 // A instancia do sistema. A porta vem de VB_SERIAL_PORT (default: Serial).
 VirtualBridge& Bridge = VirtualBridge::getInstance(VB_SERIAL_PORT);
