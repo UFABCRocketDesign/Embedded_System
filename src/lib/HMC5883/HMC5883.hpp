@@ -1,9 +1,9 @@
-// HMC5883.h
+// HMC5883.hpp
 
 #pragma once
 
-#ifndef _HMC5883_h
-#define _HMC5883_h
+#ifndef _HMC5883_HPP
+#define _HMC5883_HPP
 
 #include "../Magn/Magn.hpp"
 

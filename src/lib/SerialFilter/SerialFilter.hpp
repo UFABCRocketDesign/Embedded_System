@@ -1,9 +1,9 @@
-// SerialFilter.h
+// SerialFilter.hpp
 
 #pragma once
 
-#ifndef _SERIALFILTER_h
-#define _SERIALFILTER_h
+#ifndef _SERIALFILTER_HPP
+#define _SERIALFILTER_HPP
 
 #include "../MovingAverage/MovingAverage.hpp" // Media movel simples
 

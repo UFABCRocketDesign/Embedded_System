@@ -1,9 +1,9 @@
-// MediaMovel.h
+// MediaMovel.hpp
 
 #pragma once
 
-#ifndef _MEDIAMOVEL_h
-#define _MEDIAMOVEL_h
+#ifndef _MEDIAMOVEL_HPP
+#define _MEDIAMOVEL_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

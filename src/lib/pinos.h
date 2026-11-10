@@ -1,9 +1,9 @@
-// pinos.h
+// pinos.hpp
 
 #pragma once
 
-#ifndef _PINOS_H
-#define _PINOS_H
+#ifndef _PINOS_HPP
+#define _PINOS_HPP
 
 #ifdef USING_BOARD
 

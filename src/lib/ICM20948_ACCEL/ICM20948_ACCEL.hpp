@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _ICM20948_ACCEL_h
-#define _ICM20948_ACCEL_h
+#ifndef _ICM20948_ACCEL_HPP
+#define _ICM20948_ACCEL_HPP
 
 // #if defined(ARDUINO) && ARDUINO >= 100
 // #include "Arduino.h"

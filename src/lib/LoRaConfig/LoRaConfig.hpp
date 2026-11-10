@@ -1,9 +1,9 @@
-// LoRaConfig.h
+// LoRaConfig.hpp
 
 #pragma once
 
-#ifndef _LORA_CONFIG_h
-#define _LORA_CONFIG_h
+#ifndef _LORA_CONFIG_HPP
+#define _LORA_CONFIG_HPP
 
 #define RX_CHG_FREQ_REQ_HEAD "MUD4R_FR3Q_PFV.CH4N"
 							// CHAN
@@ -184,7 +184,7 @@ class LoRaConfig
 
 };
 
-#endif // _LORA_CONFIG_h
+#endif // _LORA_CONFIG_HPP
 
 #if 0
 

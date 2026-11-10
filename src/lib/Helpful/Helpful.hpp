@@ -1,9 +1,9 @@
-// Helpful.h
+// Helpful.hpp
 
 #pragma once
 
-#ifndef _HELPFUL_h
-#define _HELPFUL_h
+#ifndef _HELPFUL_HPP
+#define _HELPFUL_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

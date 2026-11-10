@@ -1,9 +1,9 @@
-// BMP085.h
+// BMP085.hpp
 
 #pragma once
 
-#ifndef _BMP085_h
-#define _BMP085_h
+#ifndef _BMP085_HPP
+#define _BMP085_HPP
 
 #include "../Baro/Baro.hpp"
 

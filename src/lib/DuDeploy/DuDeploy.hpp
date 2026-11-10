@@ -1,9 +1,9 @@
-// DuDeploy.h
+// DuDeploy.hpp
 
 #pragma once
 
-#ifndef _DUDEPLOY_h
-#define _DUDEPLOY_h
+#ifndef _DUDEPLOY_HPP
+#define _DUDEPLOY_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

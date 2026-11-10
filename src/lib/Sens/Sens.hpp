@@ -1,9 +1,9 @@
-// Sens.h
+// Sens.hpp
 
 #pragma once
 
-#ifndef _SENS_h
-#define _SENS_h
+#ifndef _SENS_HPP
+#define _SENS_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

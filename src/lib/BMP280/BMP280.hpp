@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _BMP280_H
-#define _BMP280_H
+#ifndef _BMP280_HPP
+#define _BMP280_HPP
 
 #include "../Baro/Baro.hpp"
 #include <Wire.h>

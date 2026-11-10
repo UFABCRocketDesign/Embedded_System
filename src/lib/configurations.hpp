@@ -5,7 +5,7 @@
 #ifndef _CONFIGURATIONS_HPP
 #define _CONFIGURATIONS_HPP
 
-#define BaudRate 115200
+#define SERIAL_BAUD_RATE 115200
 
 /********************************* Subsystems *********************************/
 
@@ -31,7 +31,7 @@
 #define USE_GY912 (1)						//Use GY912 module
 
 /* GNSS/GPS */
-#define USE_NEO_M (REQUIRE_GNSS && 1)		//Use Neo6M/Neo8M/Neo10M GPS module
+#define USE_GNSS_NEO_M (REQUIRE_GNSS && 1)		//Use Neo6M/Neo8M/Neo10M GPS module
 
 /* Data storage */
 #define USE_SD_SPI (REQUIRE_SD && 1)		//Use SPI SD card module
@@ -67,48 +67,48 @@
 #define USE_RGB (REQUIRE_RGB && defined(BOARD_HAS_RGB))			//Board RGB LED
 
 /************ Double Board ************/
-#define TalkingBoard (0)										//When two boards are connected for redundancy system
+#define USE_BOARD_LINK (0)										//When two boards are connected for redundancy system
 
 /*************** Buzzer ***************/
-#define USE_ACT_BUZZER (REQUIRE_BUZZ && 0)						//Active buzzer
-#define USE_PSS_BUZZER (REQUIRE_BUZZ && 1)						//Passive buzzer
-#define USE_BLINK_BUZZ (REQUIRE_BUZZ && 0)						//LED_BUILTIN instead of a buzzer
+#define USE_BUZZER_ACTIVE (REQUIRE_BUZZ && 0)						//Active buzzer
+#define USE_BUZZER_PASSIVE (REQUIRE_BUZZ && 1)						//Passive buzzer
+#define USE_BUZZER_AS_LED (REQUIRE_BUZZ && 0)						//LED_BUILTIN instead of a buzzer
 
 /*************** VIRTUAL **************/
-#define USE_V_BARO (REQUIRE_BARO && (USE_VIRTUAL && 1))			//Use Virtual Barometer
-#define USE_V_ACCEL (REQUIRE_ACCEL && (USE_VIRTUAL && 1))		//Use Virtual Accelerometer
-#define USE_V_GYRO (REQUIRE_GYRO && (USE_VIRTUAL && 1))			//Use Virtual Gyroscope
-#define USE_V_MAGN (REQUIRE_MAGN && (USE_VIRTUAL && 1))			//Use Virtual Magnetometer
-#define USE_V_GNSS  (REQUIRE_GNSS && (USE_VIRTUAL && 1))		//Use Virtual GNSS
+#define USE_VIRTUALBARO (REQUIRE_BARO && (USE_VIRTUAL && 1))			//Use Virtual Barometer
+#define USE_VIRTUALACCEL (REQUIRE_ACCEL && (USE_VIRTUAL && 1))		//Use Virtual Accelerometer
+#define USE_VIRTUALGYRO (REQUIRE_GYRO && (USE_VIRTUAL && 1))			//Use Virtual Gyroscope
+#define USE_VIRTUALMAGN (REQUIRE_MAGN && (USE_VIRTUAL && 1))			//Use Virtual Magnetometer
+#define USE_VIRTUALGNSS  (REQUIRE_GNSS && (USE_VIRTUAL && 1))		//Use Virtual GNSS
 
 /******************************** Capabilities ********************************/
 #define USE_PRINT (REQUIRE_PRINT)		// Use serial debug output
-#define USE_BARO ((USE_V_BARO) || (USE_BMP085) || (USE_BMP280) || (USE_BMP388))				// Use any Barometer
-#define USE_ACCEL ((USE_V_ACCEL) || (USE_ADXL345) || (USE_MPU9250_ACCEL) || (USE_ICM20948_ACCEL))	// Use any Accelerometer
-#define USE_GYRO ((USE_V_GYRO) || (USE_L3G4200D) || (USE_MPU9250_GYRO) || (USE_ICM20948_GYRO))		// Use any Gyroscope
-#define USE_MAGN ((USE_V_MAGN) || (USE_HMC5883) || (USE_AK8963) || (USE_AK09916))			// Use any Magnetometer
-#define USE_GNSS ((USE_NEO_M) || (USE_V_GNSS))	// Use any GNSS
+#define USE_BARO ((USE_VIRTUALBARO) || (USE_BMP085) || (USE_BMP280) || (USE_BMP388))				// Use any Barometer
+#define USE_ACCEL ((USE_VIRTUALACCEL) || (USE_ADXL345) || (USE_MPU9250_ACCEL) || (USE_ICM20948_ACCEL))	// Use any Accelerometer
+#define USE_GYRO ((USE_VIRTUALGYRO) || (USE_L3G4200D) || (USE_MPU9250_GYRO) || (USE_ICM20948_GYRO))		// Use any Gyroscope
+#define USE_MAGN ((USE_VIRTUALMAGN) || (USE_HMC5883) || (USE_AK8963) || (USE_AK09916))			// Use any Magnetometer
+#define USE_GNSS ((USE_GNSS_NEO_M) || (USE_VIRTUALGNSS))	// Use any GNSS
 #define USE_LoRa ((USE_LoRa_DORJI) || (USE_LoRa_E32))	// Use any radio
 #define USE_STORAGE ((USE_SD_SPI))				// Use any storage
-#define USE_BuZZ ((USE_ACT_BUZZER) || (USE_PSS_BUZZER) || (USE_BLINK_BUZZ))	//Buzzer mode
+#define USE_BuZZ ((USE_BUZZER_ACTIVE) || (USE_BUZZER_PASSIVE) || (USE_BUZZER_AS_LED))	//Buzzer mode
 
 /*********************************** Flight ***********************************/
 
-#define ApoGee (USE_BARO && 1)				//Detection of apogee
+#define USE_APOGEE_DETECTION (USE_BARO && 1)				//Detection of apogee
 
-#define RBF (0)								//Remove Before Flight
-#define WU (ApoGee && 1)					//Wait Until Directives
-#define WUF (WU && 1)						//Wait Until Flight
-#define WUPS (WU && 1)						//Wait Until Pressure Stabilize
+#define USE_SOFTWARE_REMOVE_BEFORE_FLIGHT (0)								//Remove Before Flight
+#define USE_WAIT_UNTIL_ROUTINES (USE_APOGEE_DETECTION && 1)					//Wait Until Directives
+#define USE_WAIT_UNTIL_FLIGHT (USE_WAIT_UNTIL_ROUTINES && 1)						//Wait Until Flight
+#define USE_WAIT_PRESSURE_STABLE (USE_WAIT_UNTIL_ROUTINES && 1)						//Wait Until Pressure Stabilize
 
-#define AnyDeploy (REQUIRE_DEPLOY && ApoGee && defined(BOARD_HAS_IGN_1) && 1)				//Any Parachute Deployment
-#define DualDeploy (AnyDeploy && defined(BOARD_HAS_IGN_3) && 1)			//Dual Parachute Deployment
-#define DrogueBackup (AnyDeploy && defined(BOARD_HAS_IGN_2) && DualDeploy && 1)	//Drogue Redundancy mode
-#define MainBackup (AnyDeploy && defined(BOARD_HAS_IGN_4) && 1)					//Main Redundancy mode
+#define USE_DEPLOY (REQUIRE_DEPLOY && USE_APOGEE_DETECTION && defined(BOARD_HAS_IGN_1) && 1)				//Any Parachute Deployment
+#define USE_DUAL_DEPLOY (USE_DEPLOY && defined(BOARD_HAS_IGN_3) && 1)			//Dual Parachute Deployment
+#define USE_DROGUE_BACKUP (USE_DEPLOY && defined(BOARD_HAS_IGN_2) && USE_DUAL_DEPLOY && 1)	//Drogue Redundancy mode
+#define USE_MAIN_BACKUP (USE_DEPLOY && defined(BOARD_HAS_IGN_4) && 1)					//Main Redundancy mode
 
-#define DELAYED_MAIN (AnyDeploy && 1)			//Aways delay main deployment
+#define USE_MAIN_DELAYED (USE_DEPLOY && 1)			//Aways delay main deployment
 
-#define ForceSysC (0)						//Force the working systems counter outside RBF and WUF
+#define FORCE_SYSTEM_COUNT (0)						//Force the working systems counter outside USE_SOFTWARE_REMOVE_BEFORE_FLIGHT and USE_WAIT_UNTIL_FLIGHT
 
 /*********************************** Options **********************************/
 
@@ -118,8 +118,8 @@
 #define USE_LoRa_KEYVALUE (USE_LoRa && 1)	// Send LoRa data Using Key-value pair
 
 /*********** Buzzer Options ***********/
-#define MORSE_MSG  (USE_BuZZ && 1)				//Morse beeping
-#define BEEPING (USE_BuZZ && 0)					//Buzzer mode
+#define USE_MORSE_MSG  (USE_BuZZ && 1)				//Morse beeping
+#define USE_BEEP_SYSTEM_COUNT (USE_BuZZ && 0)					//Buzzer mode
 
 /******************************** Data Analysis *******************************/
 
@@ -138,14 +138,14 @@
 #define PmagY (USE_PRINT && USE_MAGN && 1)		//Print magnetometer Y axis data
 #define PmagZ (USE_PRINT && USE_MAGN && 1)		//Print magnetometer Z axis data
 
-#define papgI (USE_PRINT && ApoGee && 1)		//Print MonoDeploy.info of every instance
-#define PapgW (USE_PRINT && ApoGee && 1)		//Print apogee information when detected
-#define PapgH (USE_PRINT && ApoGee && 1)		//Print altimeter data
-#define PapgB (USE_PRINT && ApoGee && 1)		//Print altimeter base
-#define PapgP (USE_PRINT && ApoGee && 0)		//Print current apogee information
-#define PapgA (USE_PRINT && ApoGee && 1)		//Print apogee alpha
-#define PapgS (USE_PRINT && ApoGee && 1)		//Print apogee sigma
-#define PapgM (USE_PRINT && ApoGee && 0)		//Print apogee sigma max
+#define papgI (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print MonoDeploy.info of every instance
+#define PapgW (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee information when detected
+#define PapgH (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print altimeter data
+#define PapgB (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print altimeter base
+#define PapgP (USE_PRINT && USE_APOGEE_DETECTION && 0)		//Print current apogee information
+#define PapgA (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee alpha
+#define PapgS (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee sigma
+#define PapgM (USE_PRINT && USE_APOGEE_DETECTION && 0)		//Print apogee sigma max
 
 #define Pgps (USE_PRINT && USE_GNSS && 1)		//Print GPS informations
 #define Psep (USE_PRINT && 0)					//Print visual separator
@@ -153,9 +153,9 @@
 #define Tcom (USE_PRINT && 1)					//Print time counter
 #define Lcom (USE_PRINT && 0)					//Print loop counter
 #define Ncom (USE_PRINT && 0)					//Print eachN counter
-#define Ps_n (USE_PRINT && 1)					//Print SYSTEM_n
+#define Ps_n (USE_PRINT && 1)					//Print SYSTEM_COUNT
 
-#define PWMapg (ApoGee && 1)				//Show the apogee coefficient in a LED
+#define PWMapg (USE_APOGEE_DETECTION && 1)				//Show the apogee coefficient in a LED
 
 #define PERF_Tcom_print (0)				//Print time counter every 100 iterations (for performance tests)
 
@@ -164,10 +164,10 @@
 /********************************** Data Log **********************************/
 
 #define Sgps (USE_STORAGE && USE_GNSS && 1)		//Log GPS data
-#define Sapg (USE_STORAGE && ApoGee && 1)		//Log apogee alpha and sigma
-#define Sdpl (USE_STORAGE && AnyDeploy && 1)	//Log parachute deployment state
-#define Shea (USE_STORAGE && AnyDeploy && 1)	//Log parachute health (igniter continuity)
-#define Semg (USE_STORAGE && AnyDeploy && 1)	//Log emergency state
+#define Sapg (USE_STORAGE && USE_APOGEE_DETECTION && 1)		//Log apogee alpha and sigma
+#define Sdpl (USE_STORAGE && USE_DEPLOY && 1)	//Log parachute deployment state
+#define Shea (USE_STORAGE && USE_DEPLOY && 1)	//Log parachute health (igniter continuity)
+#define Semg (USE_STORAGE && USE_DEPLOY && 1)	//Log emergency state
 #define Srst (USE_STORAGE && 1)					//Log reset reason on file header
 
 /* Continuous columns: repeat the last known value on every line.
@@ -177,12 +177,12 @@ With 0, the data only shows up at the moment of the event. */
 
 /*********************************** Derived **********************************/
 
-#define COMmode (USE_PRINT || USE_LoRa)								//Any communication channel exists
-#define WIREmode (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)	//Any I2C sensor exists
+#define HAS_COMM_CHANNEL (USE_PRINT || USE_LoRa)								//Any communication channel exists
+#define HAS_I2C_SENSOR (USE_BARO || USE_ACCEL || USE_GYRO || USE_MAGN)	//Any I2C sensor exists
 
-#define Crst (COMmode && 1)			//Report reset reason on Serial/LoRa
+#define REPORT_RESET_REASON (HAS_COMM_CHANNEL && 1)			//Report reset reason on Serial/LoRa
 
-constexpr uint8_t SYSTEM_n = ( 0
+constexpr uint8_t SYSTEM_COUNT = ( 0
 	#if USE_STORAGE
 	+ 1
 	#endif // USE_STORAGE
@@ -201,18 +201,18 @@ constexpr uint8_t SYSTEM_n = ( 0
 	#if USE_GNSS
 	+ 1
 	#endif // USE_GNSS
-	#if AnyDeploy
+	#if USE_DEPLOY
 	+ 1
-	#endif // AnyDeploy
-	#if DualDeploy
+	#endif // USE_DEPLOY
+	#if USE_DUAL_DEPLOY
 	+ 1
-	#endif // DualDeploy
-	#if DrogueBackup
+	#endif // USE_DUAL_DEPLOY
+	#if USE_DROGUE_BACKUP
 	+ 1
-	#endif // DrogueBackup
-	#if MainBackup
+	#endif // USE_DROGUE_BACKUP
+	#if USE_MAIN_BACKUP
 	+ 1
-	#endif // MainBackup
+	#endif // USE_MAIN_BACKUP
 ); //Expected count of systems functioning for flight
 
 /*********************************** Guards ***********************************/
@@ -241,7 +241,7 @@ constexpr uint8_t SYSTEM_n = ( 0
 #if REQUIRE_BUZZ && !USE_BuZZ
 #error: REQUIRE_BUZZ ligado mas nenhum tipo de buzzer selecionado
 #endif
-#if REQUIRE_DEPLOY && !AnyDeploy
+#if REQUIRE_DEPLOY && !USE_DEPLOY
 #error: REQUIRE_DEPLOY ligado mas nenhum acionamento selecionado
 #endif
 #if REQUIRE_RGB && !USE_RGB
@@ -250,11 +250,11 @@ constexpr uint8_t SYSTEM_n = ( 0
 #if USE_PRINT && (USING_MODE == MODE_LANCAMENTO)
 #warning USE_PRINT ligado em build de LANCAMENTO - o Serial rouba tempo do loop
 #endif
-#if RBF && (USING_MODE == MODE_LANCAMENTO)
-#warning RBF ligado em build de LANCAMENTO - metodo abandonado, confira o jumper
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT && (USING_MODE == MODE_LANCAMENTO)
+#warning USE_SOFTWARE_REMOVE_BEFORE_FLIGHT ligado em build de LANCAMENTO - metodo abandonado, confira o jumper
 #endif
-#if ForceSysC && (USING_MODE == MODE_LANCAMENTO)
-#warning ForceSysC ligado em build de LANCAMENTO - o buzzer vai apitar a contagem de sistemas durante o voo
+#if FORCE_SYSTEM_COUNT && (USING_MODE == MODE_LANCAMENTO)
+#warning FORCE_SYSTEM_COUNT ligado em build de LANCAMENTO - o buzzer vai apitar a contagem de sistemas durante o voo
 #endif
 
 #endif // _CONFIGURATIONS_HPP

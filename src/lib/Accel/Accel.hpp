@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _ACCEL_h
-#define _ACCEL_h
+#ifndef _ACCEL_HPP
+#define _ACCEL_HPP
 
 #include <Wire.h>
 #include "../Sens/Sens.hpp"

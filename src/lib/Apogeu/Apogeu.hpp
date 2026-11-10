@@ -1,9 +1,9 @@
-// Apogeu.h
+// Apogeu.hpp
 
 #pragma once
 
-#ifndef _APOGEU_h
-#define _APOGEU_h
+#ifndef _APOGEU_HPP
+#define _APOGEU_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

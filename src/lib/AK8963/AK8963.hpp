@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _AK8963_h
-#define _AK8963_h
+#ifndef _AK8963_HPP
+#define _AK8963_HPP
 
 #include "../Magn/Magn.hpp"
 

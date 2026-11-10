@@ -1,9 +1,9 @@
-// VirtualMagn.h
+// VirtualMagn.hpp
 
 #pragma once
 
-#ifndef _VIRTUALMAGN_H
-#define _VIRTUALMAGN_H
+#ifndef _VIRTUALMAGN_HPP
+#define _VIRTUALMAGN_HPP
 
 #include "../Magn/Magn.hpp"
 #include "../VirtualBridge/VirtualBridge.hpp"

@@ -1,4 +1,4 @@
-// VirtualBridge.h
+// VirtualBridge.hpp
 
 // Recebe pela UART linhas no formato "Chave:valor" e mantem o ultimo valor
 // de cada chave. Serve de fonte de dados para sensores simulados que herdam
@@ -9,8 +9,8 @@
 
 #pragma once
 
-#ifndef _VIRTUAL_BRIDGE_h
-#define _VIRTUAL_BRIDGE_h
+#ifndef _VIRTUAL_BRIDGE_HPP
+#define _VIRTUAL_BRIDGE_HPP
 
 #include <Arduino.h>
 #include <stdlib.h>
@@ -131,4 +131,4 @@ private:
 
 extern VirtualBridge& Bridge;
 
-#endif // _VIRTUAL_BRIDGE_h
+#endif // _VIRTUAL_BRIDGE_HPP

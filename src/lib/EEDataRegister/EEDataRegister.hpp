@@ -1,9 +1,9 @@
-// EEDataRegister.h
+// EEDataRegister.hpp
 
 #pragma once
 
-#ifndef _EE_DATA_REGISTER_h
-#define _EE_DATA_REGISTER_h
+#ifndef _EE_DATA_REGISTER_HPP
+#define _EE_DATA_REGISTER_HPP
 
 #include <stdint.h>
 #include <stddef.h>
@@ -141,4 +141,4 @@ class EEDataRegister{
 
 #include "EEDataRegister.tpp"
 
-#endif // _EE_DATA_REGISTER_h
+#endif // _EE_DATA_REGISTER_HPP

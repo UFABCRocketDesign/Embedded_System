@@ -1,9 +1,9 @@
-// RoundArray.h
+// RoundArray.hpp
 
 #pragma once
 
-#ifndef _ROUNDARRAY_h
-#define _ROUNDARRAY_h
+#ifndef _ROUNDARRAY_HPP
+#define _ROUNDARRAY_HPP
 
 template <typename type>
 class RoundArray

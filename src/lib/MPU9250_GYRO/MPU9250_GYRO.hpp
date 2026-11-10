@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _MPU9250_GYRO_h
-#define _MPU9250_GYRO_h
+#ifndef _MPU9250_GYRO_HPP
+#define _MPU9250_GYRO_HPP
 
 #include "../Gyro/Gyro.hpp"
 

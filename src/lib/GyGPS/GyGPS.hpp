@@ -1,9 +1,9 @@
-// GyGPS.h
+// GyGPS.hpp
 
 #pragma once
 
-#ifndef _GYGPS_h
-#define _GYGPS_h
+#ifndef _GYGPS_HPP
+#define _GYGPS_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

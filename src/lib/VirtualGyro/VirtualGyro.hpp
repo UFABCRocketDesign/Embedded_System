@@ -1,9 +1,9 @@
-// VirtualGyro.h
+// VirtualGyro.hpp
 
 #pragma once
 
-#ifndef _VIRTUALGYRO_H
-#define _VIRTUALGYRO_H
+#ifndef _VIRTUALGYRO_HPP
+#define _VIRTUALGYRO_HPP
 
 #include "../Gyro/Gyro.hpp"
 #include "../VirtualBridge/VirtualBridge.hpp"

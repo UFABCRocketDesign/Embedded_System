@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _MPU9250_ACCEL_h
-#define _MPU9250_ACCEL_h
+#ifndef _MPU9250_ACCEL_HPP
+#define _MPU9250_ACCEL_HPP
 
 #include "../Accel/Accel.hpp"
 

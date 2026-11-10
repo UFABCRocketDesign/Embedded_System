@@ -1,9 +1,9 @@
-// VirtualBaro.h
+// VirtualBaro.hpp
 
 #pragma once
 
-#ifndef _VIRTUALBARO_h
-#define _VIRTUALBARO_h
+#ifndef _VIRTUALBARO_HPP
+#define _VIRTUALBARO_HPP
 
 #include "../Baro/Baro.hpp"
 #include "../VirtualBridge/VirtualBridge.hpp"

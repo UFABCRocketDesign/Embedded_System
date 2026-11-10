@@ -1,9 +1,9 @@
-// MonoDeploy.h
+// MonoDeploy.hpp
 
 #pragma once
 
-#ifndef _MONODEPLOY_h
-#define _MONODEPLOY_h
+#ifndef _MONODEPLOY_HPP
+#define _MONODEPLOY_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

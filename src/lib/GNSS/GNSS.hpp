@@ -1,9 +1,9 @@
-// GNSS.h
+// GNSS.hpp
 
 #pragma once
 
-#ifndef _GNSS_h
-#define _GNSS_h
+#ifndef _GNSS_HPP
+#define _GNSS_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
@@ -59,4 +59,4 @@ public:
 	bool isNew();
 };
 
-#endif // _GNSS_h
+#endif // _GNSS_HPP

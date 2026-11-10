@@ -1,9 +1,9 @@
-// Gyro.h
+// Gyro.hpp
 
 #pragma once
 
-#ifndef _GYRO_h
-#define _GYRO_h
+#ifndef _GYRO_HPP
+#define _GYRO_HPP
 
 #include <Wire.h>
 #include "../Sens/Sens.hpp"

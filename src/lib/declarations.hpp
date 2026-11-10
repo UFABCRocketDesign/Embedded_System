@@ -16,9 +16,9 @@
 #endif // USE_VIRTUAL
 
 #if USE_BARO
-#if 1 < ((USE_V_BARO) + (USE_BMP085) + (USE_BMP280) + (USE_BMP388))
+#if 1 < ((USE_VIRTUALBARO) + (USE_BMP085) + (USE_BMP280) + (USE_BMP388))
 #error: Múltiplos barômetros definidos
-#elif USE_V_BARO
+#elif USE_VIRTUALBARO
 #include "./VirtualBaro/VirtualBaro.hpp"	// Barometro Virtual
 VirtualBaro baro;
 #elif USE_BMP085
@@ -36,7 +36,7 @@ float MM_baro[2]{};
 bool baroHasData = false;
 #endif // USE_BARO
 
-#if ApoGee
+#if USE_APOGEE_DETECTION
 #include "./Apogeu/Apogeu.hpp" // Processamento de altitude e deteccao de apogeu
 
 Apogeu apg(10, 15, 50);						//Apogee checker object declaration
@@ -44,30 +44,30 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #define EM_mainN_DELAY 60					// Seconds before forced deployment
 
 
-#if AnyDeploy
+#if USE_DEPLOY
 #include "./MonoDeploy/MonoDeploy.hpp" // Acionamento de paraquedas simples
 
 const bool MonoDeploy::command = IGN_CMD;
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 #define EM_drogN_DELAY 10					// Seconds before forced deployment
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if DrogueBackup || MainBackup
+#if USE_DROGUE_BACKUP || USE_MAIN_BACKUP
 #define sysDelay 2.5
-#endif // DrogueBackup || MainBackup
+#endif // USE_DROGUE_BACKUP || USE_MAIN_BACKUP
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 #define EM_mainB_DELAY 65					// Seconds before forced deployment
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DELAYED_MAIN
+#if USE_MAIN_DELAYED
 #define sysDelay_main 1.0
-#endif // DELAYED_MAIN
+#endif // USE_MAIN_DELAYED
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 #define EM_drogB_DELAY 15					// Seconds before forced deployment
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 
 #define pins_drogN (IGN_1, HEAL_1) /*act1*/
@@ -80,34 +80,34 @@ struct Recovery
 {
 	static MonoDeploy mainN;
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 	static MonoDeploy drogN;
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 	static MonoDeploy mainB;
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 	static MonoDeploy drogB;
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 	static bool begin()
 	{
 		bool aux = true;
 		aux &= mainN.begin();
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 		aux &= drogN.begin();
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 		aux &= mainB.begin();
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 		aux &= drogB.begin();
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 		return aux;
 	}
@@ -116,17 +116,17 @@ struct Recovery
 		if(state) MonoDeploy::sealApogee(true);
 		mainN.emergency(state, EM_mainN_DELAY);
 
-		#if DualDeploy
+		#if USE_DUAL_DEPLOY
 				drogN.emergency(state, EM_drogN_DELAY);
-		#endif // DualDeploy
+		#endif // USE_DUAL_DEPLOY
 
-		#if MainBackup
+		#if USE_MAIN_BACKUP
 			mainB.emergency(state, EM_mainB_DELAY);
-		#endif // MainBackup
+		#endif // USE_MAIN_BACKUP
 
-		#if DrogueBackup
+		#if USE_DROGUE_BACKUP
 				drogB.emergency(state, EM_drogB_DELAY);
-		#endif // DrogueBackup
+		#endif // USE_DROGUE_BACKUP
 
 	}
 	static bool getGlobalState()
@@ -134,17 +134,17 @@ struct Recovery
 		bool aux = false;
 		aux |= mainN.getGlobalState();
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 		aux |= drogN.getGlobalState();
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 		aux |= mainB.getGlobalState();
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 		aux |= drogB.getGlobalState();
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 		return aux;
 	}
@@ -152,17 +152,17 @@ struct Recovery
 	{
 		mainN.refresh();
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 		drogN.refresh();
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 		mainB.refresh();
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 		drogB.refresh();
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 	}
 	static void resetTimer()
@@ -185,29 +185,29 @@ struct Recovery
 
 MonoDeploy Recovery::mainN pins_mainN;
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 MonoDeploy Recovery::drogN pins_drogN;
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 MonoDeploy Recovery::mainB pins_mainB;
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 MonoDeploy Recovery::drogB pins_drogB;
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 #else
 	#warning Essa compilacao nao realiza disparo de paraquedas
-#endif // AnyDeploy
+#endif // USE_DEPLOY
 
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 
 
 #if USE_ACCEL
-#if 1 < ((USE_V_ACCEL) + (USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
+#if 1 < ((USE_VIRTUALACCEL) + (USE_ADXL345) + (USE_MPU9250_ACCEL) + (USE_ICM20948_ACCEL))
 #error: Múltiplos acelerômetros definidos
-#elif USE_V_ACCEL
+#elif USE_VIRTUALACCEL
 #include "./VirtualAccel/VirtualAccel.hpp"	// Acelerometro Virtual
 VirtualAccel accel;
 #elif USE_ADXL345
@@ -225,9 +225,9 @@ float MM_accel[3]{};
 #endif // USE_ACCEL
 
 #if USE_GYRO
-#if 1 < ((USE_V_GYRO) + (USE_L3G4200D) + (USE_MPU9250_GYRO) + (USE_ICM20948_GYRO))
+#if 1 < ((USE_VIRTUALGYRO) + (USE_L3G4200D) + (USE_MPU9250_GYRO) + (USE_ICM20948_GYRO))
 #error: Múltiplos giroscópios definidos
-#elif USE_V_GYRO
+#elif USE_VIRTUALGYRO
 #include "./VirtualGyro/VirtualGyro.hpp"	// Gyroscope Virtual
 VirtualGyro giro;
 #elif USE_L3G4200D
@@ -245,9 +245,9 @@ float MM_giro[3]{};
 #endif // USE_GYRO
 
 #if USE_MAGN
-#if 1 < ((USE_V_MAGN) + (USE_HMC5883) + (USE_AK8963) + (USE_AK09916))
+#if 1 < ((USE_VIRTUALMAGN) + (USE_HMC5883) + (USE_AK8963) + (USE_AK09916))
 #error: Múltiplos magnetômetros definidos
-#elif USE_V_MAGN
+#elif USE_VIRTUALMAGN
 #include "./VirtualMagn/VirtualMagn.hpp"	// Magnetometro Virtual
 VirtualMagn magn;
 #elif USE_HMC5883
@@ -282,12 +282,12 @@ SDCH SDC(SD_CS_PIN, CURRENT_MODE_PROJECT_NAME);						//Declaration of object to 
 
 
 #if USE_GNSS
-#if 1 < ((USE_V_GNSS) + (USE_NEO_M))
+#if 1 < ((USE_VIRTUALGNSS) + (USE_GNSS_NEO_M))
 #error: Multiplos GPS definidos
-#elif USE_V_GNSS
+#elif USE_VIRTUALGNSS
 #include "./VirtualGPS/VirtualGPS.hpp"	// GPS Virtual
 VirtualGPS GpS;
-#elif USE_NEO_M
+#elif USE_GNSS_NEO_M
 #include "./GyGPS/GyGPS.hpp"			// Auxiliar para GPS
 #ifdef ARDUINO_ARCH_ESP32
 HardwareSerial GpSSerial(1);
@@ -295,7 +295,7 @@ GyGPS GpS(GpSSerial, 0, SERIAL_8N1, RX_GPS_ESP, TX_GPS_ESP);
 #else
 GyGPS GpS(Serial1, 0);
 #endif // ARDUINO_ARCH_ESP32
-#endif // USE_V_GNSS / USE_NEO_M
+#endif // USE_VIRTUALGNSS / USE_GNSS_NEO_M
 #endif // USE_GNSS
 
 
@@ -360,37 +360,37 @@ LoRaConfig configLoRa(LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_
 
 #endif // USE_LoRa
 
-#if TalkingBoard
+#if USE_BOARD_LINK
 #include "ComProtocol/ComProtocol.hpp" // Protocolo de comunicacao entre placas [descontinuado]
 ComProtocol Talk(Serial2, 9600);			//Declaration of communication protocol object
-#endif // TalkingBoard
+#endif // USE_BOARD_LINK
 
 #if ((USE_PRINT) || (PERF_Tcom_print))
 #endif // ((USE_PRINT) || (PERF_Tcom_print))
 
 Helpful Gutil;								//Declaration of helpful object to general cases
 
-#if RBF
-#define RBFpin 2							//Pin that the RBF system is connected
-#endif // RBF
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
+#define RBFpin 2							//Pin that the USE_SOFTWARE_REMOVE_BEFORE_FLIGHT system is connected
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 
-#if RBF || WUF || ForceSysC
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 unsigned short sysC = 0;
-#endif // RBF || WUF || ForceSysC
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 
 
 #if USE_BuZZ
-#if 1 < ((USE_ACT_BUZZER) + (USE_PSS_BUZZER) + (USE_BLINK_BUZZ))
+#if 1 < ((USE_BUZZER_ACTIVE) + (USE_BUZZER_PASSIVE) + (USE_BUZZER_AS_LED))
 #error: Multiplos tipos de buzzer definidos
 #endif
 
-#if USE_BLINK_BUZZ
+#if USE_BUZZER_AS_LED
 #define buzzPin LED_BUILTIN
 #define buzzCmd HIGH
-#endif // USE_BLINK_BUZZ
+#endif // USE_BUZZER_AS_LED
 #endif // USE_BuZZ
 
-#if MORSE_MSG
+#if USE_MORSE_MSG
 
 // #define MORSE_INTERRUPT (1)				// Use interrupt to avoid beep bugs
 
@@ -398,34 +398,34 @@ unsigned short sysC = 0;
 
 #define ALARM_DELAY 10					// Delay after alarm when all systems working properly
 
-#if USE_ACT_BUZZER
+#if USE_BUZZER_ACTIVE
 MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
 // MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . # . > . [ . ] . { . }");
-#elif USE_PSS_BUZZER
+#elif USE_BUZZER_PASSIVE
 Morse mensageiro(buzzPin, "~ ");
 // Morse mensageiro(buzzPin, CURRENT_MODE_PROJECT_NAME);
-#endif  // USE_ACT_BUZZER / USE_PSS_BUZZER
+#endif  // USE_BUZZER_ACTIVE / USE_BUZZER_PASSIVE
 
 #if MORSE_INTERRUPT
 MORSE_INTERRPUT_PRESET(mensageiro);
 #endif // MORSE_INTERRUPT
 
 Helpful Mutil;
-#endif // MORSE_MSG
+#endif // USE_MORSE_MSG
 
-#if BEEPING
+#if USE_BEEP_SYSTEM_COUNT
 #define holdT .1
 Helpful beeper;
-#endif // BEEPING
+#endif // USE_BEEP_SYSTEM_COUNT
 
-#if COMmode
+#if HAS_COMM_CHANNEL
 template <typename T> void transmit(T message);
 template <typename T> void transmitln(T message);
 template <typename T, typename R> void transmit(T message, R value);
 template <typename T, typename R> void transmitln(T message, R value);
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 
-#if (Srst || Crst) && defined(ARDUINO_ARCH_ESP32)
+#if (Srst || REPORT_RESET_REASON) && defined(ARDUINO_ARCH_ESP32)
 // Nome do motivo de reinicio. O numero fica no log para scripts;
 // o nome, para quem le o arquivo depois do voo.
 // https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/misc_system_api.html#_CPPv416esp_reset_reasonv
@@ -450,7 +450,7 @@ const __FlashStringHelper* resetReasonName(esp_reset_reason_t reset)
 		default:                 return F("UNKNOWN");
 	}
 }
-#endif // (Srst || Crst) && defined(ARDUINO_ARCH_ESP32)
+#endif // (Srst || REPORT_RESET_REASON) && defined(ARDUINO_ARCH_ESP32)
 
 
 

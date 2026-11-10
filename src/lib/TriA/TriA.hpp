@@ -1,9 +1,9 @@
-// TriA.h
+// TriA.hpp
 
 #pragma once
 
-#ifndef _TRIA_h
-#define _TRIA_h
+#ifndef _TRIA_HPP
+#define _TRIA_HPP
 
 class TriA
 {

@@ -1,9 +1,9 @@
-// VirtualGPS.h
+// VirtualGPS.hpp
 
 #pragma once
 
-#ifndef _VIRTUALGPS_H
-#define _VIRTUALGPS_H
+#ifndef _VIRTUALGPS_HPP
+#define _VIRTUALGPS_HPP
 
 #include "../GNSS/GNSS.hpp"
 #include "../VirtualBridge/VirtualBridge.hpp"

@@ -1,9 +1,9 @@
-// VirtualAccel.h
+// VirtualAccel.hpp
 
 #pragma once
 
-#ifndef _VIRTUALACCEL_H
-#define _VIRTUALACCEL_H
+#ifndef _VIRTUALACCEL_HPP
+#define _VIRTUALACCEL_HPP
 
 #include "../Accel/Accel.hpp"
 #include "../VirtualBridge/VirtualBridge.hpp"

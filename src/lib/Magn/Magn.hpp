@@ -1,9 +1,9 @@
-// Magn.h
+// Magn.hpp
 
 #pragma once
 
-#ifndef _MAGN_h
-#define _MAGN_h
+#ifndef _MAGN_HPP
+#define _MAGN_HPP
 
 #include <Wire.h>
 #include "../Sens/Sens.hpp"

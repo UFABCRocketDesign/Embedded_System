@@ -1,9 +1,9 @@
-// MovingAverage.h
+// MovingAverage.hpp
 
 #pragma once
 
-#ifndef _MOVINGAVERAGE_h
-#define _MOVINGAVERAGE_h
+#ifndef _MOVINGAVERAGE_HPP
+#define _MOVINGAVERAGE_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

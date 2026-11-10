@@ -1,9 +1,9 @@
-// L3G4200D.h
+// L3G4200D.hpp
 
 #pragma once
 
-#ifndef _L3G4200D_h
-#define _L3G4200D_h
+#ifndef _L3G4200D_HPP
+#define _L3G4200D_HPP
 
 #include "../Gyro/Gyro.hpp"
 

@@ -1,9 +1,9 @@
-// SDCH.h
+// SDCH.hpp
 
 #pragma once
 
-#ifndef _SDCH_h
-#define _SDCH_h
+#ifndef _SDCH_HPP
+#define _SDCH_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

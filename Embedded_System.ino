@@ -35,7 +35,7 @@
 // #define USING_MODE MODE_MANUAL
 // #define USING_MODE MODE_VIRTUAL
 
-#include "src/lib/pressets.h"
+#include "src/lib/presets.h"
 
 #pragma endregion
 
@@ -60,16 +60,16 @@
 #pragma region Setup
 void setup()
 {
-#if defined(ARDUINO_ARCH_ESP32) && (ApoGee || USE_LoRa_E32_settable)
+#if defined(ARDUINO_ARCH_ESP32) && (USE_APOGEE_DETECTION || USE_LoRa_E32_settable)
 	EEPROM.begin(_EEPROM_SIZE);
-#endif // defined(ARDUINO_ARCH_ESP32) && (ApoGee || USE_LoRa_E32_settable)
+#endif // defined(ARDUINO_ARCH_ESP32) && (USE_APOGEE_DETECTION || USE_LoRa_E32_settable)
 #if PWMapg
 	pinMode(PWMout, OUTPUT);
 #endif // PWMapg
 
-#if RBF
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 	pinMode(RBFpin, INPUT_PULLUP);
-#endif // RBF
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 
 #if USE_RGB
 	pinMode(RGB_rPin, OUTPUT);
@@ -86,9 +86,9 @@ void setup()
 	printHeaderSD();			// Build header in file
 #endif // USE_STORAGE
 
-#if COMmode
+#if HAS_COMM_CHANNEL
 	transmitln(F(" "));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 
 #if USE_VIRTUAL
 	if(Bridge.count() >= VB_MAX_SENSORS)
@@ -97,13 +97,13 @@ void setup()
 	}
 #endif // USE_VIRTUAL
 
-	////////////////RBF directive////////////////
+	////////////////USE_SOFTWARE_REMOVE_BEFORE_FLIGHT directive////////////////
 
-#if RBF
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 	RemoveBefore();
-#endif // RBF
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 
-	////////////////RBF directive////////////////
+	////////////////USE_SOFTWARE_REMOVE_BEFORE_FLIGHT directive////////////////
 
 #if P_ANY
 	printHeaderSerial();		// Show header in Serial
@@ -113,16 +113,16 @@ void setup()
 	SDC.util.begin();
 #endif // USE_STORAGE
 
-	////////////////WUF directive////////////////
+	////////////////USE_WAIT_UNTIL_FLIGHT directive////////////////
 
-#if WUF
+#if USE_WAIT_UNTIL_FLIGHT
 	WaitUntilFlight(CURRENT_MODE_WUFheigh);
-#if COMmode
+#if HAS_COMM_CHANNEL
 	transmit(F("LiftOff confirmed"));
-#endif // COMmode
-#endif // WUF
+#endif // HAS_COMM_CHANNEL
+#endif // USE_WAIT_UNTIL_FLIGHT
 
-	////////////////WUF directive////////////////
+	////////////////USE_WAIT_UNTIL_FLIGHT directive////////////////
 
 	Gutil.begin();
 
@@ -130,22 +130,22 @@ void setup()
 	LRutil.begin();
 #endif // USE_LoRa
 
-#if ApoGee
+#if USE_APOGEE_DETECTION
 	apg.resetTimer();
-#endif // ApoGee
-#if AnyDeploy
+#endif // USE_APOGEE_DETECTION
+#if USE_DEPLOY
 	rec.resetTimer();
-#endif // AnyDeploy
-#if ApoGee && WUF
+#endif // USE_DEPLOY
+#if USE_APOGEE_DETECTION && USE_WAIT_UNTIL_FLIGHT
 	apg.markLiftoff();	// persiste 'ja decolou neste build' (apos os timers)
-#endif // ApoGee && WUF
+#endif // USE_APOGEE_DETECTION && USE_WAIT_UNTIL_FLIGHT
 
-#if WUPS
+#if USE_WAIT_PRESSURE_STABLE
 	WaitUntilPressureStabilize(CURRENT_MODE_WUPSdelay);
-#if COMmode
+#if HAS_COMM_CHANNEL
 	transmit(F("Pressure Stabilize timer expired"));
-#endif // COMmode
-#endif // WUPS
+#endif // HAS_COMM_CHANNEL
+#endif // USE_WAIT_PRESSURE_STABLE
 
 }
 #pragma endregion
@@ -155,16 +155,16 @@ void setup()
 #pragma region Loop
 void loop()
 {
-#if RBF || WUF || ForceSysC
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 	sysC = 0;
-#endif // RBF || WUF || ForceSysC
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 
 	Gutil.counter();
 	readEverything();
 
-#if ApoGee
+#if USE_APOGEE_DETECTION
 	if(baroHasData) apg.calcHeight(baro.getPressure());
-#if AnyDeploy
+#if USE_DEPLOY
 	rec.emergency(baro.getTimeLapse() > 1000000 * LapsMaxT);
 	if (rec.getGlobalState())
 	{
@@ -179,7 +179,7 @@ void loop()
 		if (rec.getApogee()) Gutil.mem = 1;
 	}
 	else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(Mutil.oneTime())
 		{
 			mensageiro.msgAux = F("| ~ | # | ^ | < | > | [ | ] | { | } | _ | $ | % A ");
@@ -194,13 +194,13 @@ void loop()
 		#if !MORSE_INTERRUPT
 		mensageiro.updateMorse();
 		#endif // !MORSE_INTERRUPT
-#endif // MORSE_MSG
-#if BEEPING
-		beep(SYSTEM_n); //rec
-#endif // BEEPING
+#endif // USE_MORSE_MSG
+#if USE_BEEP_SYSTEM_COUNT
+		beep(SYSTEM_COUNT); //rec
+#endif // USE_BEEP_SYSTEM_COUNT
 	}
-#endif // AnyDeploy
-#endif // ApoGee
+#endif // USE_DEPLOY
+#endif // USE_APOGEE_DETECTION
 #if PWMapg
 	analogWrite(PWMout, (char)(apg.getSigma() * 255));
 #endif // PWMapg
@@ -217,14 +217,14 @@ void loop()
 	LoRaSend();
 #endif // USE_LoRa
 
-#if MORSE_MSG && ForceSysC && (!MORSE_INTERRUPT)
+#if USE_MORSE_MSG && FORCE_SYSTEM_COUNT && (!MORSE_INTERRUPT)
 	mensageiro.updateMorse();
-#endif // MORSE_MSG  && ForceSysC && (!MORSE_INTERRUPT)
-#if BEEPING && ForceSysC
+#endif // USE_MORSE_MSG  && FORCE_SYSTEM_COUNT && (!MORSE_INTERRUPT)
+#if USE_BEEP_SYSTEM_COUNT && FORCE_SYSTEM_COUNT
 	beep(sysC);
-#elif BEEPING && !WUF && !RBF && !ApoGee
+#elif USE_BEEP_SYSTEM_COUNT && !USE_WAIT_UNTIL_FLIGHT && !USE_SOFTWARE_REMOVE_BEFORE_FLIGHT && !USE_APOGEE_DETECTION
 	beep(1);
-#endif // BEEPING && !WUF && !RBF && !ApoGee
+#endif // USE_BEEP_SYSTEM_COUNT && !USE_WAIT_UNTIL_FLIGHT && !USE_SOFTWARE_REMOVE_BEFORE_FLIGHT && !USE_APOGEE_DETECTION
 }
 #pragma endregion
 
@@ -236,37 +236,37 @@ void loop()
 inline void beginEverything()
 {
 
-#if AnyDeploy
+#if USE_DEPLOY
 	rec.begin();
-#endif // AnyDeploy
+#endif // USE_DEPLOY
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 	rec.mainN.setHeightCmd(CURRENT_MODE_P2H_NORMAL);
-#endif // DualDeploy
-#if DELAYED_MAIN
+#endif // USE_DUAL_DEPLOY
+#if USE_MAIN_DELAYED
 	rec.mainN.setDelayCmd(sysDelay_main);
-#endif // DELAYED_MAIN
+#endif // USE_MAIN_DELAYED
 
 // Main
-#if MainBackup
-#if DualDeploy
+#if USE_MAIN_BACKUP
+#if USE_DUAL_DEPLOY
 	rec.mainB.setHeightCmd(CURRENT_MODE_P2H_BACKUP);
 #else
-#if DELAYED_MAIN
+#if USE_MAIN_DELAYED
 	rec.mainB.setDelayCmd(sysDelay + sysDelay_main);
 #else
 	rec.mainB.setDelayCmd(sysDelay);
-#endif // DELAYED_MAIN
-#endif // !DualDeploy
-#endif // MainBackup
+#endif // USE_MAIN_DELAYED
+#endif // !USE_DUAL_DEPLOY
+#endif // USE_MAIN_BACKUP
 
 // Drogue
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 	rec.drogB.setDelayCmd(sysDelay);
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 #if ((USE_PRINT) || (PERF_Tcom_print) || (USE_VIRTUAL))
-	Serial.begin(BaudRate);
+	Serial.begin(SERIAL_BAUD_RATE);
 
 	#if defined(ARDUINO_ARCH_ESP32)
 	delay(ESP32_WAIT_TIME_MS); // Wait to ESP32 properly start
@@ -275,16 +275,16 @@ inline void beginEverything()
 	Serial.println();
 #if Ps_n
 	Serial.print(F("System number: "));
-	Serial.println(SYSTEM_n);
+	Serial.println(SYSTEM_COUNT);
 #endif // Ps_n
 #endif // ((USE_PRINT) || (PERF_Tcom_print))
 
 
-#if USE_ACT_BUZZER
+#if USE_BUZZER_ACTIVE
 	pinMode(buzzPin, OUTPUT);
 	digitalWrite(buzzPin, !buzzCmd);
-#endif // USE_ACT_BUZZER
-#if MORSE_MSG
+#endif // USE_BUZZER_ACTIVE
+#if USE_MORSE_MSG
 	mensageiro.setup();
 
 #if MORSE_INTERRUPT
@@ -293,10 +293,10 @@ inline void beginEverything()
 
 	mensageiro.updateMorse();
 
-#endif // MORSE_MSG
-#if BEEPING
+#endif // USE_MORSE_MSG
+#if USE_BEEP_SYSTEM_COUNT
 	beep();
-#endif // BEEPING
+#endif // USE_BEEP_SYSTEM_COUNT
 
 #if USE_LoRa
 
@@ -317,10 +317,10 @@ inline void beginEverything()
 
 #endif // USE_LoRa
 
-#if Crst && defined(ARDUINO_ARCH_ESP32)
+#if REPORT_RESET_REASON && defined(ARDUINO_ARCH_ESP32)
 	transmit(F("\nReset: "));
 	transmit(resetReasonName(esp_reset_reason()));
-#endif // Crst && defined(ARDUINO_ARCH_ESP32)
+#endif // REPORT_RESET_REASON && defined(ARDUINO_ARCH_ESP32)
 
 #if USE_GNSS
 	GpS.begin();
@@ -330,23 +330,23 @@ inline void beginEverything()
 	{
 		if (GpS.util.oneTime())
 		{
-#if COMmode
+#if HAS_COMM_CHANNEL
 			transmit(F("\nGPS ok "));
 			transmit(GpS.getLatitude(), 6);
 			transmit(F(", "));
 			transmit(GpS.getLongitude(), 6);
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 		}
 	}
 	else
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nGPS err, waiting signal"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 #endif // USE_GNSS
 
-#if WIREmode
+#if HAS_I2C_SENSOR
 #if ARDUINO_ARCH_ESP32
 	Wire.begin(SDA_I2C_ESP, SCL_I2C_ESP);
 	Wire.setClock(400000);
@@ -354,7 +354,7 @@ inline void beginEverything()
 #else
 	Wire.begin();
 #endif // ARDUINO_ARCH_ESP32
-#endif // WIREmode
+#endif // HAS_I2C_SENSOR
 
 #if USE_BARO
 	baro.begin();
@@ -363,13 +363,13 @@ inline void beginEverything()
 #if (!USE_BMP085)
 		for (short i = 0; i < 50; i++) baro.readAll(); // Contornar tempo de estabilização do filtro interno
 #endif // (!USE_BMP085)
-#if ApoGee
+#if USE_APOGEE_DETECTION
 		for (short i = 0; i < 100; i++) if (baro) apg.addZero(baro.getPressure());
 		apg.fixZero(CURRENT_MODE_Fix0range, CURRENT_MODE_Fix0diff);
-#endif // ApoGee
-#if COMmode
+#endif // USE_APOGEE_DETECTION
+#if HAS_COMM_CHANNEL
 		transmit(F("\nBaro ok "));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 
 #if PapgB
 		if(apg.getFixZero()){
@@ -385,7 +385,7 @@ inline void beginEverything()
 #endif // USE_PRINT
 
 #if USE_LoRa
-#if ApoGee
+#if USE_APOGEE_DETECTION
 		// When system gets a invalid zero height (reset on flight)
 		if(apg.getFixZero()) {
 
@@ -414,16 +414,16 @@ inline void beginEverything()
 			LoRa.print(F(" >!) "));
 		}
 		LoRa.println(apg.getZero());
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 		LoRa.println();
 #endif // USE_LoRa
 
 	}
 	else
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nBaro err"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 #endif // USE_BARO
 
@@ -431,15 +431,15 @@ inline void beginEverything()
 	accel.begin();
 	if (accel)
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nAccel ok"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 	else
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nAccel err"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 #endif // USE_ACCEL
 
@@ -447,15 +447,15 @@ inline void beginEverything()
 	giro.begin();
 	if (giro)
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nGiro ok"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 	else
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nGiro err"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 #endif // USE_GYRO
 
@@ -463,40 +463,40 @@ inline void beginEverything()
 	magn.begin();
 	if (magn)
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nMagn ok"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 	else
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nMagn err"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 #endif // USE_MAGN
 
-#if AnyDeploy && COMmode
+#if USE_DEPLOY && HAS_COMM_CHANNEL
 	transmit(rec.mainN.info() ? F("\nIgnMainN ok") : F("\nIgnMainN err"));
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 	transmit(rec.drogN.info() ? F("\nIgnDrogN ok") : F("\nIgnDrogN err"));
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 	transmit(rec.mainB.info() ? F("\nIgnMainB ok") : F("\nIgnMainB err"));
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 	transmit(rec.drogB.info() ? F("\nIgnDrogB ok") : F("\nIgnDrogB err"));
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 
-#endif // AnyDeploy && COMmode
+#endif // USE_DEPLOY && HAS_COMM_CHANNEL
 }
 
-//////////////////////////////////////////////////////RBF//////////////////////////////////////////////////////
+////////////////////////////////////////////USE_SOFTWARE_REMOVE_BEFORE_FLIGHT///////////////////////////////////////////
 
-#if RBF
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 inline void RemoveBefore()
 {
 	bool rbf = 0;
@@ -511,7 +511,7 @@ inline void RemoveBefore()
 #if USE_PRINT
 			Serial.print(sysC);
 			Serial.print(F(" parts of "));
-			Serial.print(SYSTEM_n);
+			Serial.print(SYSTEM_COUNT);
 			Serial.print(F(" working, waiting...\t"));
 #if USE_BARO
 			Serial.print(baro.getTemperature());
@@ -547,14 +547,14 @@ inline void RemoveBefore()
 		LoRaSend();
 #endif // USE_LoRa
 
-#if BEEPING
+#if USE_BEEP_SYSTEM_COUNT
 		///////////////////////////////////////
 
 		beep(sysC);
 
 		///////////////////////////////////////
 
-#endif // BEEPING
+#endif // USE_BEEP_SYSTEM_COUNT
 
 	} while (!rbf);
 
@@ -562,32 +562,32 @@ inline void RemoveBefore()
 	configLoRa.discardPauseTelemetry(); // Garante telemetria ativa ao entrar em voo
 #endif // USE_LoRa_E32_settable
 
-#if BEEPING
+#if USE_BEEP_SYSTEM_COUNT
 	beep();
-#endif // BEEPING
+#endif // USE_BEEP_SYSTEM_COUNT
 }
-#endif // RBF
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 
-//////////////////////////////////////////////////////WU//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////USE_WAIT_UNTIL_ROUTINES//////////////////////////////////////////////////////
 
-#if WU
+#if USE_WAIT_UNTIL_ROUTINES
 inline void WaitUntil()
 {
 	sysC = 0;
-	#if MORSE_MSG
+	#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux = "";
-	#endif // MORSE_MSG
+	#endif // USE_MORSE_MSG
 			Gutil.counter();
 			readEverything();
 
-	#if ApoGee
+	#if USE_APOGEE_DETECTION
 			if(baroHasData) apg.calcHeight(baro.getPressure());
 			apg.apgSigma();
 			apg.apgAlpha();
 	#if PapgM
 			Gutil.comparer(apg.getSigma());
 	#endif // PapgM
-	#endif // ApoGee
+	#endif // USE_APOGEE_DETECTION
 	#if PWMapg
 			analogWrite(PWMout, (char)(apg.getSigma() * 255));
 	#endif // PWMapg
@@ -604,9 +604,9 @@ inline void WaitUntil()
 			LoRaSend();
 	#endif // USE_LoRa
 }
-#endif // WU
+#endif // USE_WAIT_UNTIL_ROUTINES
 
-#if WUF
+#if USE_WAIT_UNTIL_FLIGHT
 inline void WaitUntilFlight(float minHeight)
 {
 	do
@@ -617,7 +617,7 @@ inline void WaitUntilFlight(float minHeight)
 
 		WaitUntil();
 
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		// if(Mutil.oneTime()) if(mensageiro.msgAux.length() > 0) mensageiro.setNextMessage("# "+mensageiro.msgAux);
 		// if(mensageiro.updateMorse()) Mutil.oneTimeReset();
 
@@ -651,10 +651,10 @@ inline void WaitUntilFlight(float minHeight)
 				}
 			}
 		}
-#endif // MORSE_MSG
-#if BEEPING
+#endif // USE_MORSE_MSG
+#if USE_BEEP_SYSTEM_COUNT
 		beep(sysC);
-#endif // BEEPING
+#endif // USE_BEEP_SYSTEM_COUNT
 
 	}
 	while (abs(apg.getHeight()) < minHeight && !(baro.getTimeLapse() > 1000000 * LapsMaxT));
@@ -663,17 +663,17 @@ inline void WaitUntilFlight(float minHeight)
 	configLoRa.discardPauseTelemetry(); // Garante telemetria ativa ao entrar em voo
 #endif // USE_LoRa_E32_settable
 
-#if MORSE_MSG
+#if USE_MORSE_MSG
 	mensageiro.setQuiet();
 	Mutil.oneTimeReset();
-#endif // MORSE_MSG
-#if BEEPING
+#endif // USE_MORSE_MSG
+#if USE_BEEP_SYSTEM_COUNT
 	beep();
-#endif // BEEPING
+#endif // USE_BEEP_SYSTEM_COUNT
 }
-#endif // WUF
+#endif // USE_WAIT_UNTIL_FLIGHT
 
-#if WUPS
+#if USE_WAIT_PRESSURE_STABLE
 inline void WaitUntilPressureStabilize(float waitTime) {
 	Gutil.forT(waitTime);
 	while (Gutil.forT())
@@ -683,7 +683,7 @@ inline void WaitUntilPressureStabilize(float waitTime) {
 	// Ensure that apogee point was not given during pressure anomaly
 	apg.resetAptPt();
 }
-#endif // WUPS
+#endif // USE_WAIT_PRESSURE_STABLE
 
 //////////////////////////////////////////////////////SPT//////////////////////////////////////////////////////
 
@@ -882,8 +882,8 @@ inline void SerialSend()
 		Serial.print(apg.getApgTm());
 		Serial.print(F(" s\t"));
 	}
-#if COMmode
-#if AnyDeploy
+#if HAS_COMM_CHANNEL
+#if USE_DEPLOY
 	if (rec.getGlobalState())
 	{
 		if (rec.mainN.getState(0))
@@ -896,7 +896,7 @@ inline void SerialSend()
 			Serial.print(F("m\t"));
 		}
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 		if (rec.drogN.getState(0))
 		{
 #if USE_STORAGE
@@ -906,9 +906,9 @@ inline void SerialSend()
 			Serial.print(rec.drogN.getDeploymentHeight());
 			Serial.print(F("m\t"));
 		}
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 		if (rec.mainB.getState(0))
 		{
 #if USE_STORAGE
@@ -918,9 +918,9 @@ inline void SerialSend()
 			Serial.print(rec.mainB.getDeploymentHeight());
 			Serial.print(F("m\t"));
 		}
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 		if (rec.drogB.getState(0))
 		{
 #if USE_STORAGE
@@ -931,10 +931,10 @@ inline void SerialSend()
 			Serial.print(F("m\t"));
 		}
 
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 	}
-#endif // AnyDeploy
-#endif // COMmode
+#endif // USE_DEPLOY
+#endif // HAS_COMM_CHANNEL
 
 #endif // PapgW
 
@@ -966,9 +966,9 @@ inline void SDSend()
 #endif // USE_MAGN
 #if USE_BARO
 			for (short i = 0; i < 2; i++) { SDC.theFile.print(MM_baro[i]);		SDC.tab(); }
-#if ApoGee
+#if USE_APOGEE_DETECTION
 			SDC.theFile.print(apg.getHeight()); SDC.tab();
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 
 #endif // USE_BARO
 
@@ -1005,38 +1005,38 @@ inline void SDSend()
 #if Sdpl_C
 			SDC.theFile.print(rec.mainN.getGlobalState(0));	SDC.tab(); //Main normal ja acionou
 			SDC.theFile.print(rec.mainN.getState(1));		SDC.tab(); //Main normal disparando agora
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 			SDC.theFile.print(rec.drogN.getGlobalState(0));	SDC.tab();
 			SDC.theFile.print(rec.drogN.getState(1));		SDC.tab();
-#endif // DualDeploy
-#if MainBackup
+#endif // USE_DUAL_DEPLOY
+#if USE_MAIN_BACKUP
 			SDC.theFile.print(rec.mainB.getGlobalState(0));	SDC.tab();
 			SDC.theFile.print(rec.mainB.getState(1));		SDC.tab();
-#endif // MainBackup
-#if DrogueBackup
+#endif // USE_MAIN_BACKUP
+#if USE_DROGUE_BACKUP
 			SDC.theFile.print(rec.drogB.getGlobalState(0));	SDC.tab();
 			SDC.theFile.print(rec.drogB.getState(1));		SDC.tab();
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 #endif // Sdpl_C
 
 #if Shea
 			SDC.theFile.print(rec.mainN.info());			SDC.tab(); //Continuidade main normal
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 			SDC.theFile.print(rec.drogN.info());			SDC.tab();
-#endif // DualDeploy
-#if MainBackup
+#endif // USE_DUAL_DEPLOY
+#if USE_MAIN_BACKUP
 			SDC.theFile.print(rec.mainB.info());			SDC.tab();
-#endif // MainBackup
-#if DrogueBackup
+#endif // USE_MAIN_BACKUP
+#if USE_DROGUE_BACKUP
 			SDC.theFile.print(rec.drogB.info());			SDC.tab();
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 #endif // Shea
 
 #if Semg
 			SDC.theFile.print(rec.mainN.getEmergency());	SDC.tab(); //Estado de emergencia
 #endif // Semg
 
-#if ApoGee
+#if USE_APOGEE_DETECTION
 			//if (apg.getApogeu(0.9, 0))
 			if (Gutil.mem)
 			{
@@ -1049,7 +1049,7 @@ inline void SDSend()
 					SDC.theFile.print(F(" s"));
 					SDC.tab();
 				}
-#if AnyDeploy
+#if USE_DEPLOY
 				if (rec.mainN.getState(0))
 				{
 #if USE_LoRa
@@ -1060,7 +1060,7 @@ inline void SDSend()
 					SDC.theFile.print(F("m\t"));
 				}
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 				if (rec.drogN.getState(0))
 				{
 #if USE_LoRa
@@ -1070,9 +1070,9 @@ inline void SDSend()
 					SDC.theFile.print(rec.drogN.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 				if (rec.mainB.getState(0))
 				{
 #if USE_LoRa
@@ -1082,9 +1082,9 @@ inline void SDSend()
 					SDC.theFile.print(rec.mainB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 				if (rec.drogB.getState(0))
 				{
 #if USE_LoRa
@@ -1094,43 +1094,43 @@ inline void SDSend()
 					SDC.theFile.print(rec.drogB.getDeploymentHeight());
 					SDC.theFile.print(F("m\t"));
 				}
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
 
-#endif // AnyDeploy
+#endif // USE_DEPLOY
 
 			}
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 			SDC.theFile.println();
 			SDC.close();
-#if RBF || WUF || ForceSysC
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 			sysC++;
-#endif // RBF || WUF || ForceSysC
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 
 		}
 		else
 		{
 			SDC.util.mem = 1;
-#if MORSE_MSG
+#if USE_MORSE_MSG
 			if(!mensageiro.getQuiet()) mensageiro.msgAux += " S"; // ...
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 		}
 	}
 	else{
 		if (SDC.util.eachT(15)) if (SDC.begin()) SDC.util.mem = 0;
-		#if MORSE_MSG
+		#if USE_MORSE_MSG
 			if(!mensageiro.getQuiet()) mensageiro.msgAux += " S"; // ...
-		#endif  // MORSE_MSG
+		#endif  // USE_MORSE_MSG
 	}
 }
 #endif // USE_STORAGE
 
 //////////////////////////////////////////////////////BZZ//////////////////////////////////////////////////////
 
-#if BEEPING
+#if USE_BEEP_SYSTEM_COUNT
 inline void beep(unsigned int N)
 {
-	if (beeper.eachT(holdT*SYSTEM_n * 4) || beeper.oneTime())
+	if (beeper.eachT(holdT*SYSTEM_COUNT * 4) || beeper.oneTime())
 	{
 		beeper.mem = buzzCmd;
 		beeper.counterReset();
@@ -1150,7 +1150,7 @@ inline void beep()
 	digitalWrite(buzzPin, !buzzCmd);
 	beeper.counterReset();
 }
-#endif // BEEPING
+#endif // USE_BEEP_SYSTEM_COUNT
 
 //////////////////////////////////////////////////////LRM//////////////////////////////////////////////////////
 
@@ -1244,7 +1244,7 @@ inline void LoRaSend()
 			));
 		}
 #endif // USE_GNSS
-#if ApoGee
+#if USE_APOGEE_DETECTION
 #if USE_LoRa_KEYVALUE
 		LoRa.print(F(LoRa_KEY_HEIGTH)); // >>H<<eight
 #endif // USE_LoRa_KEYVALUE
@@ -1252,7 +1252,7 @@ inline void LoRaSend()
 		LoRa.print('\t');
 		// LoRa.print(apg.getSigma(), 3);
 		// LoRa.print('\t');
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 #if USE_STORAGE
 #if USE_LoRa_KEYVALUE
 		LoRa.print(F(LoRa_KEY_SD)); // >>s<<D
@@ -1260,7 +1260,7 @@ inline void LoRaSend()
 		LoRa.print(!SDC.util.mem);
 		LoRa.print('\t');
 #endif // USE_STORAGE
-#if ApoGee
+#if USE_APOGEE_DETECTION
 		if (Gutil.mem)
 		{
 			LoRa.print(F(LoRa_KEY_APG_HEIGHT)); // >>a<<pogee height
@@ -1281,10 +1281,10 @@ inline void LoRaSend()
 		"~\t"
 	));
 #endif // USE_LoRa_CONTIGUOUS
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 		//LRutil.oneTimeReset();
 
-#if AnyDeploy
+#if USE_DEPLOY
 	if (
 #if USE_LoRa_CONTIGUOUS
 		rec.mainN.getGlobalState(1)
@@ -1312,7 +1312,7 @@ inline void LoRaSend()
 	));
 #endif // USE_LoRa_CONTIGUOUS
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 	if (
 #if USE_LoRa_CONTIGUOUS
 		rec.drogN.getGlobalState(1)
@@ -1339,9 +1339,9 @@ inline void LoRaSend()
 		"~\t"
 	));
 #endif // USE_LoRa_CONTIGUOUS
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 	if (
 #if USE_LoRa_CONTIGUOUS
 		rec.mainB.getGlobalState(1)
@@ -1368,9 +1368,9 @@ inline void LoRaSend()
 		"~\t"
 	));
 #endif // USE_LoRa_CONTIGUOUS
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 	if (
 #if USE_LoRa_CONTIGUOUS
 		rec.drogB.getGlobalState(1)
@@ -1397,9 +1397,9 @@ inline void LoRaSend()
 		"~\t"
 	));
 #endif // USE_LoRa_CONTIGUOUS
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
-#endif // AnyDeploy
+#endif // USE_DEPLOY
 #if USE_BARO
 #if USE_LoRa_KEYVALUE
 		LoRa.print(F(LoRa_KEY_TEMPERATURE)); // >>c<< temperatura
@@ -1413,7 +1413,7 @@ inline void LoRaSend()
 
 //////////////////////////////////////////////////////COM//////////////////////////////////////////////////////
 
-#if COMmode
+#if HAS_COMM_CHANNEL
 template <typename T> void transmit(T message)
 {
 #if USE_PRINT
@@ -1454,7 +1454,7 @@ template <typename T, typename R> void transmitln(T message, R value)
 #endif // USE_LoRa
 }
 
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 
 //////////////////////////////////////////////////////RET//////////////////////////////////////////////////////
 
@@ -1468,14 +1468,14 @@ inline void readEverything()
 	{
 		MM_baro[0] = baro.getTemperature();
 		MM_baro[1] = baro.getPressure();
-#if RBF || WUF || ForceSysC
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 		sysC++;
-#endif // RBF || WUF || ForceSysC
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 		baroHasData = true;
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " B"; // -...
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 		baroHasData = false;
 	}
 #endif // USE_BARO
@@ -1485,13 +1485,13 @@ inline void readEverything()
 		MM_accel[0] = accel.getX();
 		MM_accel[1] = accel.getY();
 		MM_accel[2] = accel.getZ();
-#if RBF || WUF || ForceSysC
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 		sysC++;
-#endif // RBF || WUF || ForceSysC
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " A"; // .-
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 	}
 #endif // USE_ACCEL
 #if USE_GYRO
@@ -1500,13 +1500,13 @@ inline void readEverything()
 		MM_giro[0] = giro.getX();
 		MM_giro[1] = giro.getY();
 		MM_giro[2] = giro.getZ();
-#if RBF || WUF || ForceSysC
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 		sysC++;
-#endif // RBF || WUF || ForceSysC
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " G"; // --.
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 	}
 #endif // USE_GYRO
 #if USE_MAGN
@@ -1515,69 +1515,69 @@ inline void readEverything()
 		MM_magn[0] = magn.getX();
 		MM_magn[1] = magn.getY();
 		MM_magn[2] = magn.getZ();
-#if RBF || WUF || ForceSysC
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 		sysC++;
-#endif // RBF || WUF || ForceSysC
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " M"; // --
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 	}
 #endif // USE_MAGN
 #if USE_GNSS
 	if (GpS) GpS.util.forT(10);
 	if (!GpS.util.mem) if (GpS.isNew()) GpS.util.mem = true; // Auxiliar de primeira leitura bem sucedida
 	if (GpS.util.forT()) {
-#if RBF || WUF || ForceSysC
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 		sysC++;
-#endif // RBF || WUF || ForceSysC
+#endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " L"; // .-..
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 }
 
 #endif // USE_GNSS
-#if AnyDeploy && (RBF || WUF)
+#if USE_DEPLOY && (USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT)
 	if (rec.mainN.info()) {
 		sysC++;
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmn"; // .-. -- -.
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 	}
 
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 	if (rec.drogN.info()) {
 		sysC++;
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdn"; // .-. -.. -.
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 	}
-#endif // DualDeploy
+#endif // USE_DUAL_DEPLOY
 
-#if MainBackup
+#if USE_MAIN_BACKUP
 	if (rec.mainB.info()) {
 		sysC++;
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rmb"; // .-. -- -...
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 	}
-#endif // MainBackup
+#endif // USE_MAIN_BACKUP
 
-#if DrogueBackup
+#if USE_DROGUE_BACKUP
 	if (rec.drogB.info()) {
 		sysC++;
 	} else {
-#if MORSE_MSG
+#if USE_MORSE_MSG
 		if(!mensageiro.getQuiet()) mensageiro.msgAux += " Rdb"; // .-. -.. -...
-#endif  // MORSE_MSG
+#endif  // USE_MORSE_MSG
 	}
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 
-#endif // AnyDeploy && (RBF || WUF)
+#endif // USE_DEPLOY && (USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT)
 }
 
 #if USE_STORAGE
@@ -1590,10 +1590,10 @@ inline void printHeaderSD()
 	SDC.begin();
 	if (SDC)
 	{
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nSD start OK "));
 		transmit(SDC.getFname());
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 
 		//////////////////File Header//////////////////
 
@@ -1604,7 +1604,7 @@ inline void printHeaderSD()
 		SDC.theFile.print(resetReasonName(esp_reset_reason()));
 		SDC.theFile.println(F(">"));
 #endif // Srst && defined(ARDUINO_ARCH_ESP32)
-#if ApoGee
+#if USE_APOGEE_DETECTION
 		SDC.theFile.print(F("Liftoff flag:\t"));
 		SDC.theFile.print(apg.getLiftoff());
 		SDC.theFile.println();
@@ -1619,7 +1619,7 @@ inline void printHeaderSD()
 			SDC.theFile.print(F(" >!) "));
 		}
 		SDC.theFile.println();
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 
 		///////////////////////////////////////////////
 
@@ -1637,9 +1637,9 @@ inline void printHeaderSD()
 #if USE_BARO
 			"c.baro\tpa.baro\t"
 #endif // USE_BARO
-#if ApoGee
+#if USE_APOGEE_DETECTION
 			"m.h.baro\t"
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 #if Sgps
 			"lat.GPS\tlon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\tnew.GPS\t"
 #endif // Sgps
@@ -1648,28 +1648,28 @@ inline void printHeaderSD()
 #endif // Sapg
 #if Sdpl_C
 			"on.mainN\tfire.mainN\t"
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 			"on.drogN\tfire.drogN\t"
-#endif // DualDeploy
-#if MainBackup
+#endif // USE_DUAL_DEPLOY
+#if USE_MAIN_BACKUP
 			"on.mainB\tfire.mainB\t"
-#endif // MainBackup
-#if DrogueBackup
+#endif // USE_MAIN_BACKUP
+#if USE_DROGUE_BACKUP
 			"on.drogB\tfire.drogB\t"
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 #endif // Sdpl_C
 
 #if Shea
 			"ok.mainN\t"
-#if DualDeploy
+#if USE_DUAL_DEPLOY
 			"ok.drogN\t"
-#endif // DualDeploy
-#if MainBackup
+#endif // USE_DUAL_DEPLOY
+#if USE_MAIN_BACKUP
 			"ok.mainB\t"
-#endif // MainBackup
-#if DrogueBackup
+#endif // USE_MAIN_BACKUP
+#if USE_DROGUE_BACKUP
 			"ok.drogB\t"
-#endif // DrogueBackup
+#endif // USE_DROGUE_BACKUP
 #endif // Shea
 
 #if Semg
@@ -1695,9 +1695,9 @@ inline void printHeaderSD()
 #if USE_BARO
 			"C\tPascal\t"
 #endif // USE_BARO
-#if ApoGee
+#if USE_APOGEE_DETECTION
 			"m\t"
-#endif // ApoGee
+#endif // USE_APOGEE_DETECTION
 #if USE_GNSS
 			"Latitude\tLongitude\tAltitude (m)\tspeed\tSat\tPrec\t"
 #endif // USE_GNSS
@@ -1710,9 +1710,9 @@ inline void printHeaderSD()
 	else
 	{
 
-#if COMmode
+#if HAS_COMM_CHANNEL
 		transmit(F("\nSD err"));
-#endif // COMmode
+#endif // HAS_COMM_CHANNEL
 	}
 }
 #endif // USE_STORAGE

@@ -1,8 +1,8 @@
-// shield.h
+// shield.hpp
 
 #pragma once
-#ifndef _BOARDS_H
-#define _BOARDS_H
+#ifndef _BOARDS_HPP
+#define _BOARDS_HPP
 
 // Arduino Mega Based
 #define MEGA_STACK_DADOS_ACIONAMENTO_2019 19

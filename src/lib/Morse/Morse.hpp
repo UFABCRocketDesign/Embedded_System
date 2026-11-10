@@ -1,9 +1,9 @@
-// Morse.h
+// Morse.hpp
 
 #pragma once
 
-#ifndef _MORSE_h
-#define _MORSE_h
+#ifndef _MORSE_HPP
+#define _MORSE_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"

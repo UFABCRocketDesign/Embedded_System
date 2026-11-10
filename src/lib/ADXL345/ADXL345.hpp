@@ -1,9 +1,9 @@
-// ADXL345.h
+// ADXL345.hpp
 
 #pragma once
 
-#ifndef _ADXL345_h
-#define _ADXL345_h
+#ifndef _ADXL345_HPP
+#define _ADXL345_HPP
 
 #include "../Accel/Accel.hpp"
 

@@ -1,9 +1,9 @@
-// ComProtocol.h
+// ComProtocol.hpp
 
 #pragma once
 
-#ifndef _COMPROTOCOL_h
-#define _COMPROTOCOL_h
+#ifndef _COMPROTOCOL_HPP
+#define _COMPROTOCOL_HPP
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
@@ -24,7 +24,7 @@ public:
 		SecndDNorm, // Second Deploy Normal
 		FirstDBack, // First Deploy Backup
 		SecndDBack, // Seconf Deploy Backup
-		WUFDrctvOf, // Run out of WUF directive
+		WUFDrctvOf, // Run out of USE_WAIT_UNTIL_FLIGHT directive
 		SystemBoot	// When System turn on
 	};
 	ComProtocol(HardwareSerial &S, unsigned long baud);

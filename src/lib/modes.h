@@ -1,9 +1,9 @@
-// modes.h
+// modes.hpp
 
 #pragma once
 
-#ifndef _MODES_H
-#define _MODES_H
+#ifndef _MODES_HPP
+#define _MODES_HPP
 
 #define MODE_LANCAMENTO 00
 	#define MODE_LANCAMENTO_1K 01
@@ -14,4 +14,4 @@
 #define MODE_MANUAL 30
 #define MODE_VIRTUAL 90
 
-#endif // _MODES_H
+#endif // _MODES_HPP

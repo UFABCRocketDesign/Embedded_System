@@ -2,8 +2,8 @@
 
 #pragma once
 
-#ifndef _EE_MAP_h
-#define _EE_MAP_h
+#ifndef _EE_MAP_HPP
+#define _EE_MAP_HPP
 
 #include "EEDataRegister.hpp"
 
@@ -31,4 +31,4 @@ constexpr uint16_t eeSlotAddress(uint8_t slot) {
 static_assert(EE_MAP_BASE + EE_MAP_TOTAL <= _EEPROM_SIZE,
 	"EEPROM: o mapa nao cabe na memoria disponivel");
 
-#endif // _EE_MAP_h
+#endif // _EE_MAP_HPP

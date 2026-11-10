@@ -1,9 +1,9 @@
-// Baro.h
+// Baro.hpp
 
 #pragma once
 
-#ifndef _BARO_h
-#define _BARO_h
+#ifndef _BARO_HPP
+#define _BARO_HPP
 
 #include <Wire.h>
 #include "../Sens/Sens.hpp"

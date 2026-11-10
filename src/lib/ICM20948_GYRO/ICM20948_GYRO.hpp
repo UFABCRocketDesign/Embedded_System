@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _ICM20948_GYRO_h
-#define _ICM20948_GYRO_h
+#ifndef _ICM20948_GYRO_HPP
+#define _ICM20948_GYRO_HPP
 
 #include <Wire.h>
 #include "../Gyro/Gyro.hpp"

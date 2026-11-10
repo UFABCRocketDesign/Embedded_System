@@ -1,9 +1,9 @@
-// pressets.h
+// presets.hpp
 
 #pragma once
 
-#ifndef _PRESSETS_H
-#define _PRESSETS_H
+#ifndef _PRESETS_HPP
+#define _PRESETS_HPP
 
 #ifdef USING_MODE
 
@@ -129,4 +129,4 @@
 
 #endif
 
-#endif // _PRESSETS_H
+#endif // _PRESETS_HPP
