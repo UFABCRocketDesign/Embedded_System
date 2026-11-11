@@ -50,8 +50,10 @@ struct ZeroRef {
 
 class Apogeu
 {
-	const unsigned int N, R, Rl1;
-	const float S;
+	const unsigned int N; // tamanho da média móvel que suaviza a altura
+	const unsigned int R; // quantas alturas recentes ficam no histórico
+	const unsigned int Rl1;
+	const float S; // queda (m) abaixo do pico usada pelo critério Beta
 	const float Rf;
 	// const uint16_t eeAddress = _GERAL_TIME % (_EEPROM_SIZE - sizeof(float));
 	EEDataRegister<ZeroRef> zeroReg{eeSlotAddress(EE_SLOT_APOGEU_ZERO)};

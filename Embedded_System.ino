@@ -63,12 +63,12 @@ void setup()
 #if defined(ARDUINO_ARCH_ESP32) && (USE_APOGEE_DETECTION || USE_LoRa_E32_settable)
 	EEPROM.begin(_EEPROM_SIZE);
 #endif // defined(ARDUINO_ARCH_ESP32) && (USE_APOGEE_DETECTION || USE_LoRa_E32_settable)
-#if PWMapg
+#if USE_APOGEE_LED
 	pinMode(PWMout, OUTPUT);
-#endif // PWMapg
+#endif // USE_APOGEE_LED
 
 #if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
-	pinMode(RBFpin, INPUT_PULLUP);
+	pinMode(RBF_PIN, INPUT_PULLUP);
 #endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 
 #if USE_RGB
@@ -105,9 +105,9 @@ void setup()
 
 	////////////////USE_SOFTWARE_REMOVE_BEFORE_FLIGHT directive////////////////
 
-#if P_ANY
+#if PRINT_ANY
 	printHeaderSerial();		// Show header in Serial
-#endif // P_ANY
+#endif // PRINT_ANY
 
 #if USE_STORAGE
 	SDC.util.begin();
@@ -173,9 +173,9 @@ void loop()
 		rec.sealApogee(apg.getApogeu(0.8f));
 		rec.putHeight(apg.getHeight());
 		rec.refresh();
-#if PapgM
+#if PRINT_APOGEE_SIGMA_MAX
 		Gutil.comparer(apg.getSigma());
-#endif // PapgM
+#endif // PRINT_APOGEE_SIGMA_MAX
 		if (rec.getApogee()) Gutil.mem = 1;
 	}
 	else {
@@ -201,13 +201,13 @@ void loop()
 	}
 #endif // USE_DEPLOY
 #endif // USE_APOGEE_DETECTION
-#if PWMapg
+#if USE_APOGEE_LED
 	analogWrite(PWMout, (char)(apg.getSigma() * 255));
-#endif // PWMapg
+#endif // USE_APOGEE_LED
 
-#if ((USE_PRINT) || (PERF_Tcom_print))
+#if ((USE_PRINT) || (PRINT_PERFORMANCE_TIMING))
 	SerialSend();
-#endif // ((USE_PRINT) || (PERF_Tcom_print))
+#endif // ((USE_PRINT) || (PRINT_PERFORMANCE_TIMING))
 
 #if USE_STORAGE
 	SDSend();
@@ -265,7 +265,7 @@ inline void beginEverything()
 	rec.drogB.setDelayCmd(sysDelay);
 #endif // USE_DROGUE_BACKUP
 
-#if ((USE_PRINT) || (PERF_Tcom_print) || (USE_VIRTUAL))
+#if ((USE_PRINT) || (PRINT_PERFORMANCE_TIMING) || (USE_VIRTUAL))
 	Serial.begin(SERIAL_BAUD_RATE);
 
 	#if defined(ARDUINO_ARCH_ESP32)
@@ -273,16 +273,16 @@ inline void beginEverything()
 	#endif // defined(ARDUINO_ARCH_ESP32)
 
 	Serial.println();
-#if Ps_n
+#if PRINT_SYSTEM_COUNT
 	Serial.print(F("System number: "));
 	Serial.println(SYSTEM_COUNT);
-#endif // Ps_n
-#endif // ((USE_PRINT) || (PERF_Tcom_print))
+#endif // PRINT_SYSTEM_COUNT
+#endif // ((USE_PRINT) || (PRINT_PERFORMANCE_TIMING))
 
 
 #if USE_BUZZER_ACTIVE
-	pinMode(buzzPin, OUTPUT);
-	digitalWrite(buzzPin, !buzzCmd);
+	pinMode(BUZZER_PIN, OUTPUT);
+	digitalWrite(BUZZER_PIN, !BUZZER_ON_LEVEL);
 #endif // USE_BUZZER_ACTIVE
 #if USE_MORSE_MSG
 	mensageiro.setup();
@@ -371,7 +371,7 @@ inline void beginEverything()
 		transmit(F("\nBaro ok "));
 #endif // HAS_COMM_CHANNEL
 
-#if PapgB
+#if PRINT_GROUND_REFERENCE
 		if(apg.getFixZero()){
 			Serial.print(F("(Using EEPROM Zero Ref @ < 0x"));
 			Serial.print(apg.getEEAddress(), HEX);
@@ -505,7 +505,7 @@ inline void RemoveBefore()
 	{
 		sysC = 0;
 		readEverything();
-		rbf = digitalRead(RBFpin);
+		rbf = digitalRead(RBF_PIN);
 		if (rbfHelper.oneTime())
 		{
 #if USE_PRINT
@@ -584,17 +584,17 @@ inline void WaitUntil()
 			if(baroHasData) apg.calcHeight(baro.getPressure());
 			apg.apgSigma();
 			apg.apgAlpha();
-	#if PapgM
+	#if PRINT_APOGEE_SIGMA_MAX
 			Gutil.comparer(apg.getSigma());
-	#endif // PapgM
+	#endif // PRINT_APOGEE_SIGMA_MAX
 	#endif // USE_APOGEE_DETECTION
-	#if PWMapg
+	#if USE_APOGEE_LED
 			analogWrite(PWMout, (char)(apg.getSigma() * 255));
-	#endif // PWMapg
+	#endif // USE_APOGEE_LED
 
-	#if ((USE_PRINT) || (PERF_Tcom_print))
+	#if ((USE_PRINT) || (PRINT_PERFORMANCE_TIMING))
 			SerialSend();
-	#endif // ((USE_PRINT) || (PERF_Tcom_print))
+	#endif // ((USE_PRINT) || (PRINT_PERFORMANCE_TIMING))
 
 	#if USE_STORAGE
 			SDSend();
@@ -687,11 +687,11 @@ inline void WaitUntilPressureStabilize(float waitTime) {
 
 //////////////////////////////////////////////////////SPT//////////////////////////////////////////////////////
 
-#if ((USE_PRINT) || (PERF_Tcom_print))
+#if ((USE_PRINT) || (PRINT_PERFORMANCE_TIMING))
 inline void SerialSend()
 {
 
-#if Ncom
+#if PRINT_LOOP_RATE
 	if (Gutil.eachN(100))
 	{
 		Serial.print(Gutil.getCount());
@@ -705,14 +705,14 @@ inline void SerialSend()
 	{
 		Gutil.lapse();
 	}
-#endif // Ncom
+#endif // PRINT_LOOP_RATE
 
-#if Lcom
+#if PRINT_LOOP_COUNT
 	Serial.print(Gutil.getCount());
 	Serial.print(F(":\t"));
-#endif // Lcom
+#endif // PRINT_LOOP_COUNT
 
-#if PERF_Tcom_print // Print elapsed iteration time every 100 iterations, for performance tests only
+#if PRINT_PERFORMANCE_TIMING // Print elapsed iteration time every 100 iterations, for performance tests only
 	static Helpful G;
 	static float a;
 
@@ -722,128 +722,128 @@ inline void SerialSend()
 	if ((b - a) * 100 > 1) Serial.println(G.lapse(),6);
 	else G.lapse();
 	a = b;
-#endif // PERF_Tcom_print
+#endif // PRINT_PERFORMANCE_TIMING
 
-#if Tcom
+#if PRINT_TIME
 	Serial.print(Gutil.sinceBegin());
 	Serial.print('\t');
-#endif // Tcom
+#endif // PRINT_TIME
 
 	////////////////////////////////////////////////////
-#if Psep && (PaclX || PaclY || PaclZ)
+#if PRINT_SEPARATORS && (PRINT_ACCEL_X || PRINT_ACCEL_Y || PRINT_ACCEL_Z)
 	Serial.print('|');
-#endif // Psep && (PaclX || PaclY || PaclZ)
-#if PaclX
+#endif // PRINT_SEPARATORS && (PRINT_ACCEL_X || PRINT_ACCEL_Y || PRINT_ACCEL_Z)
+#if PRINT_ACCEL_X
 	Serial.print(MM_accel[0], 3);
 	Serial.print('\t');
-#endif // PaclX
+#endif // PRINT_ACCEL_X
 
-#if PaclY
+#if PRINT_ACCEL_Y
 	Serial.print(MM_accel[1], 3);
 	Serial.print('\t');
-#endif // PaclY
+#endif // PRINT_ACCEL_Y
 
-#if PaclZ
+#if PRINT_ACCEL_Z
 	Serial.print(MM_accel[2], 3);
 	Serial.print('\t');
-#endif // PaclZ
+#endif // PRINT_ACCEL_Z
 
 	/////////////////////////////////////////////////////
-#if Psep && (PgirX || PgirY || PgirZ)
+#if PRINT_SEPARATORS && (PRINT_GYRO_X || PRINT_GYRO_Y || PRINT_GYRO_Z)
 	Serial.print('|');
-#endif // Psep && (PgirX || PgirY || PgirZ)
-#if PgirX
+#endif // PRINT_SEPARATORS && (PRINT_GYRO_X || PRINT_GYRO_Y || PRINT_GYRO_Z)
+#if PRINT_GYRO_X
 	Serial.print(MM_giro[0], 1);
 	Serial.print('\t');
-#endif // PgirX
+#endif // PRINT_GYRO_X
 
-#if PgirY
+#if PRINT_GYRO_Y
 	Serial.print(MM_giro[1], 1);
 	Serial.print('\t');
-#endif // PgirY
+#endif // PRINT_GYRO_Y
 
-#if PgirZ
+#if PRINT_GYRO_Z
 	Serial.print(MM_giro[2], 1);
 	Serial.print('\t');
-#endif // PgirZ
+#endif // PRINT_GYRO_Z
 
 	////////////////////////////////////////////////////
-#if Psep && (PmagX || PmagY || PmagZ)
+#if PRINT_SEPARATORS && (PRINT_MAGN_X || PRINT_MAGN_Y || PRINT_MAGN_Z)
 	Serial.print('|');
-#endif // Psep && (PmagX || PmagY || PmagZ)
-#if PmagX
+#endif // PRINT_SEPARATORS && (PRINT_MAGN_X || PRINT_MAGN_Y || PRINT_MAGN_Z)
+#if PRINT_MAGN_X
 	Serial.print(MM_magn[0], 1);
 	Serial.print('\t');
-#endif // PmagX
-#if PmagY
+#endif // PRINT_MAGN_X
+#if PRINT_MAGN_Y
 	Serial.print(MM_magn[1], 1);
 	Serial.print('\t');
-#endif // PmagY
-#if PmagZ
+#endif // PRINT_MAGN_Y
+#if PRINT_MAGN_Z
 	Serial.print(MM_magn[2], 1);
 	Serial.print('\t');
-#endif // PmagZ
+#endif // PRINT_MAGN_Z
 
 	////////////////////////////////////////////////////
-#if Psep && (PbarT || PbarP)
+#if PRINT_SEPARATORS && (PRINT_BARO_TEMPERATURE || PRINT_BARO_PRESSURE)
 	Serial.print('|');
-#endif // Psep && (PbarT || PbarP)
-#if PbarT
+#endif // PRINT_SEPARATORS && (PRINT_BARO_TEMPERATURE || PRINT_BARO_PRESSURE)
+#if PRINT_BARO_TEMPERATURE
 	Serial.print(MM_baro[0], 1);
 	Serial.print('\t');
-#endif // PbarT
-#if PbarP
+#endif // PRINT_BARO_TEMPERATURE
+#if PRINT_BARO_PRESSURE
 	Serial.print(MM_baro[1], 1);
 	Serial.print('\t');
-#endif // PbarP
+#endif // PRINT_BARO_PRESSURE
 
 	/////////////////////////////////////////////////////
-#if Psep && PapgH
+#if PRINT_SEPARATORS && PRINT_HEIGHT
 	Serial.print('|');
-#endif // Psep && PapgH
-#if PapgH
+#endif // PRINT_SEPARATORS && PRINT_HEIGHT
+#if PRINT_HEIGHT
 	Serial.print(apg.getHeight());
 	Serial.print('\t');
-#endif // PapgH
+#endif // PRINT_HEIGHT
 
-#if Psep && PapgP
+#if PRINT_SEPARATORS && PRINT_PEAK_HEIGHT
 	Serial.print('|');
-#endif // Psep && PapgP
-#if PapgP
+#endif // PRINT_SEPARATORS && PRINT_PEAK_HEIGHT
+#if PRINT_PEAK_HEIGHT
 	Serial.print(apg.getApgPt());
 	Serial.print('\t');
 	Serial.print(apg.getApgTm());
 	Serial.print('\t');
-#endif // PapgP
+#endif // PRINT_PEAK_HEIGHT
 
-#if Psep && (PapgA || PapgS)
+#if PRINT_SEPARATORS && (PRINT_APOGEE_ALPHA || PRINT_APOGEE_SIGMA)
 	Serial.print('|');
-#endif // Psep
-#if PapgA
+#endif // PRINT_SEPARATORS
+#if PRINT_APOGEE_ALPHA
 	Serial.print(apg.getAlpha());
 	Serial.print('\t');
-#endif // PapgA
-#if PapgS
+#endif // PRINT_APOGEE_ALPHA
+#if PRINT_APOGEE_SIGMA
 	Serial.print(apg.getSigma(), 7);
 	Serial.print('\t');
-#endif // PapgS
+#endif // PRINT_APOGEE_SIGMA
 
 
 	/////////////////////////////////////////////////////
-#if Psep && PapgM
+#if PRINT_SEPARATORS && PRINT_APOGEE_SIGMA_MAX
 	Serial.print('|');
-#endif // Psep && PapgM
-#if PapgM
+#endif // PRINT_SEPARATORS && PRINT_APOGEE_SIGMA_MAX
+#if PRINT_APOGEE_SIGMA_MAX
 	Serial.print(Gutil.getMax(), 5);
 	Serial.print('\t');
-#endif // PapgM
+#endif // PRINT_APOGEE_SIGMA_MAX
 
 
 
-#if Pgps
-#if Psep
+#if PRINT_GNSS
+#if PRINT_SEPARATORS
 	Serial.print('|');
-#endif // Psep
+#endif // PRINT_SEPARATORS
 	Serial.print(GpS.getLatitude(), 6);
 	Serial.print('\t');
 	Serial.print(GpS.getLongitude(), 6);
@@ -872,8 +872,29 @@ inline void SerialSend()
 	Serial.print('\t');
 	Serial.print(GpS.getKph());
 	Serial.print('\t');
-#endif // Pgps
-#if PapgW
+#endif // PRINT_GNSS
+
+#if PRINT_RECOVERY_HEALTH
+#if PRINT_SEPARATORS
+	Seria.print('|');
+#endif // PRINT_SEPARATORS
+	Serial.print(rec.mainN.info());
+	Serial.print('\t');
+#if USE_DUAL_DEPLOY
+	Serial.print(rec.drogN.info());
+	Serial.print('\t');
+#endif // USE_DUAL_DEPLOY
+#if USE_MAIN_BACKUP
+	Serial.print(rec.mainB.info());
+	Serial.print('\t');
+#endif // USE_MAIN_BACKUP
+#if USE_DROGUE_BACKUP
+	Serial.print(rec.drogB.info());
+	Serial.print('\t');
+#endif // USE_DROGUE_BACKUP
+#endif // PRINT_RECOVERY_HEALTH
+
+#if PRINT_APOGEE_EVENT
 	if (Gutil.mem)
 	{
 		Serial.print(F("H: "));
@@ -936,14 +957,14 @@ inline void SerialSend()
 #endif // USE_DEPLOY
 #endif // HAS_COMM_CHANNEL
 
-#endif // PapgW
+#endif // PRINT_APOGEE_EVENT
 
-#if PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+#if PRINT_ANY
 	Serial.println();
-#endif // PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom
+#endif // PRINT_ANY
 
 }
-#endif // ((USE_PRINT) || (PERF_Tcom_print))
+#endif // ((USE_PRINT) || (PRINT_PERFORMANCE_TIMING))
 
 //////////////////////////////////////////////////////SDC//////////////////////////////////////////////////////
 
@@ -972,18 +993,18 @@ inline void SDSend()
 
 #endif // USE_BARO
 
-#if Sgps
-#if (!Sgps_C)
+#if LOG_GPS
+#if (!LOG_GPS_EVERY_LINE)
 			if (GpS.isNew())
 			{
-#endif // (!Sgps_C)
+#endif // (!LOG_GPS_EVERY_LINE)
 				SDC.theFile.print(GpS.getLatitude(), 6);	SDC.tab(); //Latitude
 				SDC.theFile.print(GpS.getLongitude(), 6);	SDC.tab(); //Longitude
 				SDC.theFile.print(GpS.getAltitude());		SDC.tab(); //Altitude
 				SDC.theFile.print(GpS.getMps());			SDC.tab(); //Velocidade
 				SDC.theFile.print(GpS.getSatellites());		SDC.tab(); //Numero de satelites
 				SDC.theFile.print(GpS.getPrecision());		SDC.tab(); //Precisao
-#if (!Sgps_C)
+#if (!LOG_GPS_EVERY_LINE)
 			}
 			else
 			{
@@ -994,15 +1015,15 @@ inline void SDSend()
 				SDC.tab();
 				SDC.tab();
 			}
-#endif // (!Sgps_C)
+#endif // (!LOG_GPS_EVERY_LINE)
 			SDC.theFile.print(GpS.isNew());				SDC.tab(); //Fix novo nesta linha
-#endif // Sgps
+#endif // LOG_GPS
 
-#if Sapg
+#if LOG_APOGEE
 			SDC.theFile.print(apg.getAlpha());				SDC.tab(); //Apogeu declarado
 			SDC.theFile.print(apg.getSigma(), 3);			SDC.tab(); //Confianca do apogeu
-#endif // Sapg
-#if Sdpl_C
+#endif // LOG_APOGEE
+#if LOG_DEPLOY_EVERY_LINE
 			SDC.theFile.print(rec.mainN.getGlobalState(0));	SDC.tab(); //Main normal ja acionou
 			SDC.theFile.print(rec.mainN.getState(1));		SDC.tab(); //Main normal disparando agora
 #if USE_DUAL_DEPLOY
@@ -1017,9 +1038,9 @@ inline void SDSend()
 			SDC.theFile.print(rec.drogB.getGlobalState(0));	SDC.tab();
 			SDC.theFile.print(rec.drogB.getState(1));		SDC.tab();
 #endif // USE_DROGUE_BACKUP
-#endif // Sdpl_C
+#endif // LOG_DEPLOY_EVERY_LINE
 
-#if Shea
+#if LOG_IGNITER_HEALTH
 			SDC.theFile.print(rec.mainN.info());			SDC.tab(); //Continuidade main normal
 #if USE_DUAL_DEPLOY
 			SDC.theFile.print(rec.drogN.info());			SDC.tab();
@@ -1030,11 +1051,11 @@ inline void SDSend()
 #if USE_DROGUE_BACKUP
 			SDC.theFile.print(rec.drogB.info());			SDC.tab();
 #endif // USE_DROGUE_BACKUP
-#endif // Shea
+#endif // LOG_IGNITER_HEALTH
 
-#if Semg
+#if LOG_EMERGENCY
 			SDC.theFile.print(rec.mainN.getEmergency());	SDC.tab(); //Estado de emergencia
-#endif // Semg
+#endif // LOG_EMERGENCY
 
 #if USE_APOGEE_DETECTION
 			//if (apg.getApogeu(0.9, 0))
@@ -1132,13 +1153,13 @@ inline void beep(unsigned int N)
 {
 	if (beeper.eachT(holdT*SYSTEM_COUNT * 4) || beeper.oneTime())
 	{
-		beeper.mem = buzzCmd;
+		beeper.mem = BUZZER_ON_LEVEL;
 		beeper.counterReset();
 		beeper.forT(holdT);
 	}
 	if (beeper.getCount() < (N + 1) * 2) if (!beeper.forT())
 	{
-		digitalWrite(buzzPin, beeper.mem);
+		digitalWrite(BUZZER_PIN, beeper.mem);
 		beeper.mem = !beeper.mem;
 		beeper.counter();
 		beeper.forT(holdT);
@@ -1147,7 +1168,7 @@ inline void beep(unsigned int N)
 
 inline void beep()
 {
-	digitalWrite(buzzPin, !buzzCmd);
+	digitalWrite(BUZZER_PIN, !BUZZER_ON_LEVEL);
 	beeper.counterReset();
 }
 #endif // USE_BEEP_SYSTEM_COUNT
@@ -1306,8 +1327,8 @@ inline void LoRaSend()
 #if USE_LoRa_CONTIGUOUS
 	else  LoRa.print(F(
 #if USE_LoRa_KEYVALUE
-		LoRa_KEY_APG_HEIGHT
-#endif // FEYVALUE
+		LoRa_KEY_MAIN_NORMAL
+#endif // USE_LoRa_KEYVALUE
 		"~\t"
 	));
 #endif // USE_LoRa_CONTIGUOUS
@@ -1597,13 +1618,13 @@ inline void printHeaderSD()
 
 		//////////////////File Header//////////////////
 
-#if Srst && defined(ARDUINO_ARCH_ESP32)
+#if LOG_RESET_REASON && defined(ARDUINO_ARCH_ESP32)
 		SDC.theFile.print(F("Reset reason:\t"));
 		SDC.theFile.print(int(esp_reset_reason()));
 		SDC.theFile.print(F(" <"));
 		SDC.theFile.print(resetReasonName(esp_reset_reason()));
 		SDC.theFile.println(F(">"));
-#endif // Srst && defined(ARDUINO_ARCH_ESP32)
+#endif // LOG_RESET_REASON && defined(ARDUINO_ARCH_ESP32)
 #if USE_APOGEE_DETECTION
 		SDC.theFile.print(F("Liftoff flag:\t"));
 		SDC.theFile.print(apg.getLiftoff());
@@ -1640,13 +1661,13 @@ inline void printHeaderSD()
 #if USE_APOGEE_DETECTION
 			"m.h.baro\t"
 #endif // USE_APOGEE_DETECTION
-#if Sgps
+#if LOG_GPS
 			"lat.GPS\tlon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\tnew.GPS\t"
-#endif // Sgps
-#if Sapg
+#endif // LOG_GPS
+#if LOG_APOGEE
 			"alpha.apg\tsigma.apg\t"
-#endif // Sapg
-#if Sdpl_C
+#endif // LOG_APOGEE
+#if LOG_DEPLOY_EVERY_LINE
 			"on.mainN\tfire.mainN\t"
 #if USE_DUAL_DEPLOY
 			"on.drogN\tfire.drogN\t"
@@ -1657,9 +1678,9 @@ inline void printHeaderSD()
 #if USE_DROGUE_BACKUP
 			"on.drogB\tfire.drogB\t"
 #endif // USE_DROGUE_BACKUP
-#endif // Sdpl_C
+#endif // LOG_DEPLOY_EVERY_LINE
 
-#if Shea
+#if LOG_IGNITER_HEALTH
 			"ok.mainN\t"
 #if USE_DUAL_DEPLOY
 			"ok.drogN\t"
@@ -1670,11 +1691,11 @@ inline void printHeaderSD()
 #if USE_DROGUE_BACKUP
 			"ok.drogB\t"
 #endif // USE_DROGUE_BACKUP
-#endif // Shea
+#endif // LOG_IGNITER_HEALTH
 
-#if Semg
+#if LOG_EMERGENCY
 			"emrg\t"
-#endif // Semg
+#endif // LOG_EMERGENCY
 
 
 		));
@@ -1718,164 +1739,178 @@ inline void printHeaderSD()
 #endif // USE_STORAGE
 
 
-#if P_ANY
+#if PRINT_ANY
 inline void printHeaderSerial()
 {
 
 	Serial.println(F(
-#if Lcom
+#if PRINT_LOOP_COUNT
 	"loop\t"
-#endif // Lcom
+#endif // PRINT_LOOP_COUNT
 
-#if PERF_Tcom_print
+#if PRINT_PERFORMANCE_TIMING
 	"temp\t"
-#endif // PERF_Tcom_print
+#endif // PRINT_PERFORMANCE_TIMING
 
-#if Tcom
+#if PRINT_TIME
 	"tempo.s\t"
-#endif // Tcom
+#endif // PRINT_TIME
 
 
-#if PaclX
+#if PRINT_ACCEL_X
 	"mps2.x.accel\t"
-#endif // PaclX
-#if PaclY
+#endif // PRINT_ACCEL_X
+#if PRINT_ACCEL_Y
 	"mps2.y.accel\t"
-#endif // PaclY
-#if PaclZ
+#endif // PRINT_ACCEL_Y
+#if PRINT_ACCEL_Z
 	"mps2.z.accel\t"
-#endif // PaclZ
+#endif // PRINT_ACCEL_Z
 
 
-#if PgirX
+#if PRINT_GYRO_X
 	"dps.x.gyros\t"
-#endif // PgirX
-#if PgirY
+#endif // PRINT_GYRO_X
+#if PRINT_GYRO_Y
 	"dps.y.gyros\t"
-#endif // PgirY
-#if PgirZ
+#endif // PRINT_GYRO_Y
+#if PRINT_GYRO_Z
 	"dps.z.gyros\t"
-#endif // PgirZ
+#endif // PRINT_GYRO_Z
 
 
-#if PmagX
+#if PRINT_MAGN_X
 	"uT.x.magn\t"
-#endif // PmagX
-#if PmagY
+#endif // PRINT_MAGN_X
+#if PRINT_MAGN_Y
 	"uT.y.magn\t"
-#endif // PmagY
-#if PmagZ
+#endif // PRINT_MAGN_Y
+#if PRINT_MAGN_Z
 	"uT.z.magn\t"
-#endif // PmagZ
+#endif // PRINT_MAGN_Z
 
 
-#if PbarT
+#if PRINT_BARO_TEMPERATURE
 	"c.baro\t"
-#endif // PbarT
-#if PbarP
+#endif // PRINT_BARO_TEMPERATURE
+#if PRINT_BARO_PRESSURE
 	"pa.baro\t"
-#endif // PbarP
+#endif // PRINT_BARO_PRESSURE
 
-#if PapgH
+#if PRINT_HEIGHT
 	"m.h.baro\t"
-#endif // PapgH
-#if PapgP
+#endif // PRINT_HEIGHT
+#if PRINT_PEAK_HEIGHT
 	"m.max.apg\tt.max.apg\t"
-#endif // PapgP
-#if PapgA
+#endif // PRINT_PEAK_HEIGHT
+#if PRINT_APOGEE_ALPHA
 	"alpha.apg\t"
-#endif // PapgA
-#if PapgS
+#endif // PRINT_APOGEE_ALPHA
+#if PRINT_APOGEE_SIGMA
 	"sigma.apg\t"
-#endif // PapgS
-#if PapgM
+#endif // PRINT_APOGEE_SIGMA
+#if PRINT_APOGEE_SIGMA_MAX
 	"max.sigma.apg\t"
-#endif // PapgM
+#endif // PRINT_APOGEE_SIGMA_MAX
 
-#if Pgps
+#if PRINT_GNSS
 	"Lat.GPS\tLon.GPS\tm.h.GPS\tmps.GPS\tsat.GPS\tprec.GPS\tchars.GPS\tdate.GPS\ttime.GPS\tKph.GPS\t"
-#endif // Pgps
+#endif // PRINT_GNSS
+
+#if PRINT_RECOVERY_HEALTH
+	"ok.mainN\t"
+#if USE_DUAL_DEPLOY
+	"ok.drogN\t"
+#endif // USE_DUAL_DEPLOY
+#if USE_MAIN_BACKUP
+	"ok.mainB\t"
+#endif // USE_MAIN_BACKUP
+#if USE_DROGUE_BACKUP
+	"ok.drogB\t"
+#endif // USE_DROGUE_BACKUP
+#endif // PRINT_RECOVERY_HEALTH
+
 	));
 
 /*
 	Serial.println(F(
-#if Lcom
+#if PRINT_LOOP_COUNT
 	"\t"
-#endif // Lcom
+#endif // PRINT_LOOP_COUNT
 
-#if PERF_Tcom_print
+#if PRINT_PERFORMANCE_TIMING
 	"s\t"
-#endif // PERF_Tcom_print
+#endif // PRINT_PERFORMANCE_TIMING
 
-#if Tcom
+#if PRINT_TIME
 	"s\t"
-#endif // Tcom
+#endif // PRINT_TIME
 
 
-#if PaclX
+#if PRINT_ACCEL_X
 	"X\t"
-#endif // PaclX
-#if PaclY
+#endif // PRINT_ACCEL_X
+#if PRINT_ACCEL_Y
 	"Y\t"
-#endif // PaclY
-#if PaclZ
+#endif // PRINT_ACCEL_Y
+#if PRINT_ACCEL_Z
 	"Z\t"
-#endif // PaclZ
+#endif // PRINT_ACCEL_Z
 
 
-#if PgirX
+#if PRINT_GYRO_X
 	"X\t"
-#endif // PgirX
-#if PgirY
+#endif // PRINT_GYRO_X
+#if PRINT_GYRO_Y
 	"Y\t"
-#endif // PgirY
-#if PgirZ
+#endif // PRINT_GYRO_Y
+#if PRINT_GYRO_Z
 	"Z\t"
-#endif // PgirZ
+#endif // PRINT_GYRO_Z
 
 
-#if PmagX
+#if PRINT_MAGN_X
 	"X\t"
-#endif // PmagX
-#if PmagY
+#endif // PRINT_MAGN_X
+#if PRINT_MAGN_Y
 	"Y\t"
-#endif // PmagY
-#if PmagZ
+#endif // PRINT_MAGN_Y
+#if PRINT_MAGN_Z
 	"Z\t"
-#endif // PmagZ
+#endif // PRINT_MAGN_Z
 
 
-#if PbarT
+#if PRINT_BARO_TEMPERATURE
 	"C\t"
-#endif // PbarT
-#if PbarP
+#endif // PRINT_BARO_TEMPERATURE
+#if PRINT_BARO_PRESSURE
 	"Pascal\t"
-#endif // PbarP
+#endif // PRINT_BARO_PRESSURE
 
-#if PapgH
+#if PRINT_HEIGHT
 	"m\t"
-#endif // PapgH
-#if PapgP
+#endif // PRINT_HEIGHT
+#if PRINT_PEAK_HEIGHT
 	"Max h\tMax t\t"
-#endif // PapgP
-#if PapgA
+#endif // PRINT_PEAK_HEIGHT
+#if PRINT_APOGEE_ALPHA
 	"Alpha\t"
-#endif // PapgA
-#if PapgS
+#endif // PRINT_APOGEE_ALPHA
+#if PRINT_APOGEE_SIGMA
 	"Sigma\t"
-#endif // PapgS
-#if PapgM
+#endif // PRINT_APOGEE_SIGMA
+#if PRINT_APOGEE_SIGMA_MAX
 	"Max S\t"
-#endif // PapgM
+#endif // PRINT_APOGEE_SIGMA_MAX
 
-#if Pgps
+#if PRINT_GNSS
 	"Latitude\tLongitude\tAltitude\tSpeed (m/s)\tSat\tPrec\t"
-#endif // Pgps
+#endif // PRINT_GNSS
 
 	));
 */
 }
-#endif // P_ANY
+#endif // PRINT_ANY
 
 #pragma endregion
 

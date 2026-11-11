@@ -29,15 +29,15 @@
 				#define IGN_3 46	/*act3*/
 				#define IGN_4 55	/*act4*/
 
-				#define HEAL_1 68	/*health 1*/
-				#define HEAL_2 62	/*health 2*/
-				#define HEAL_3 56	/*health 3*/
-				#define HEAL_4 58	/*health 4*/
+				#define HEALTH_1 68	/*health 1*/
+				#define HEALTH_2 62	/*health 2*/
+				#define HEALTH_3 56	/*health 3*/
+				#define HEALTH_4 58	/*health 4*/
 
-				#define IGN_CMD HIGH	/* State which ign is on */
+				#define IGN_ON_LEVEL HIGH	/* State which ign is on */
 
-				#define buzzPin 54							//Pin that the buzzer is connected
-				#define buzzCmd LOW							//State which buzzer is on
+				#define BUZZER_PIN 54							//Pin that the buzzer is connected
+				#define BUZZER_ON_LEVEL LOW							//State which buzzer is on
 
 				#define PWMout 13							//Pin that the LED who shows apogee state is connected
 
@@ -57,15 +57,15 @@
 				#define IGN_3 46	/*act3*/
 				#define IGN_4 55	/*act4*/
 
-				#define HEAL_1 68	/*health 1*/
-				#define HEAL_2 62	/*health 2*/
-				#define HEAL_3 56	/*health 3*/
-				#define HEAL_4 58	/*health 4*/
+				#define HEALTH_1 68	/*health 1*/
+				#define HEALTH_2 62	/*health 2*/
+				#define HEALTH_3 56	/*health 3*/
+				#define HEALTH_4 58	/*health 4*/
 
-				#define IGN_CMD HIGH	/* State which ign is on */
+				#define IGN_ON_LEVEL HIGH	/* State which ign is on */
 
-				#define buzzPin 22							//Pin that the buzzer is connected
-				#define buzzCmd LOW							//State which buzzer is on
+				#define BUZZER_PIN 22							//Pin that the buzzer is connected
+				#define BUZZER_ON_LEVEL LOW							//State which buzzer is on
 
 				#define PWMout 13							//Pin that the LED who shows apogee state is connected
 
@@ -87,15 +87,15 @@
 				#define IGN_3 58	/*act3*/
 				#define IGN_4 60	/*act4*/
 
-				#define HEAL_1 55	/*health 1*/
-				#define HEAL_2 57	/*health 2*/
-				#define HEAL_3 59	/*health 3*/
-				#define HEAL_4 61	/*health 4*/
+				#define HEALTH_1 55	/*health 1*/
+				#define HEALTH_2 57	/*health 2*/
+				#define HEALTH_3 59	/*health 3*/
+				#define HEALTH_4 61	/*health 4*/
 
-				#define IGN_CMD HIGH	/* State which ign is on */
+				#define IGN_ON_LEVEL HIGH	/* State which ign is on */
 
-				#define buzzPin 22							//Pin that the buzzer is connected
-				#define buzzCmd LOW							//State which buzzer is on
+				#define BUZZER_PIN 22							//Pin that the buzzer is connected
+				#define BUZZER_ON_LEVEL LOW							//State which buzzer is on
 
 				#define PWMout 13							//Pin that the LED who shows apogee state is connected
 
@@ -144,13 +144,13 @@
 				// #define IGN_3 	/*act3*/
 				// #define IGN_4 	/*act4*/
 
-				// #define HEAL_1 	/*health 1*/
-				// #define HEAL_2 	/*health 2*/
-				// #define HEAL_3 	/*health 3*/
-				// #define HEAL_4 	/*health 4*/
+				// #define HEALTH_1 	/*health 1*/
+				// #define HEALTH_2 	/*health 2*/
+				// #define HEALTH_3 	/*health 3*/
+				// #define HEALTH_4 	/*health 4*/
 
-				#define buzzPin 27							//Pin that the buzzer is connected
-				#define buzzCmd LOW							//State which buzzer is on
+				#define BUZZER_PIN 27							//Pin that the buzzer is connected
+				#define BUZZER_ON_LEVEL LOW							//State which buzzer is on
 
 				#define PWMout 12							//Pin that the LED who shows apogee state is connected
 
@@ -189,15 +189,15 @@
 				#define IGN_3 21	/*act3*/
 				#define IGN_4 47	/*act4*/
 
-				#define HEAL_1 5	/*health 1*/
-				#define HEAL_2 7	/*health 2*/
-				#define HEAL_3 2	/*health 3*/
-				#define HEAL_4 1	/*health 4*/
+				#define HEALTH_1 5	/*health 1*/
+				#define HEALTH_2 7	/*health 2*/
+				#define HEALTH_3 2	/*health 3*/
+				#define HEALTH_4 1	/*health 4*/
 
-				#define IGN_CMD HIGH	/* State which ign is on */
+				#define IGN_ON_LEVEL HIGH	/* State which ign is on */
 
-				#define buzzPin 42							//Pin that the buzzer is connected
-				#define buzzCmd LOW							//State which buzzer is on
+				#define BUZZER_PIN 42							//Pin that the buzzer is connected
+				#define BUZZER_ON_LEVEL LOW							//State which buzzer is on
 
 				#define BOARD_HAS_RGB
 
@@ -243,15 +243,15 @@
 				#define IGN_3 15	/*act3*/
 				#define IGN_4 6	/*act4*/
 
-				#define HEAL_1 18	/*health 1*/
-				#define HEAL_2 16	/*health 2*/
-				#define HEAL_3 7	/*health 3*/
-				#define HEAL_4 5	/*health 4*/
+				#define HEALTH_1 18	/*health 1*/
+				#define HEALTH_2 16	/*health 2*/
+				#define HEALTH_3 7	/*health 3*/
+				#define HEALTH_4 5	/*health 4*/
 
-				#define IGN_CMD HIGH	/* State which ign is on */
+				#define IGN_ON_LEVEL HIGH	/* State which ign is on */
 
-				#define buzzPin 2 						//Pin that the buzzer is connected
-				#define buzzCmd LOW							//State which buzzer is on
+				#define BUZZER_PIN 2 						//Pin that the buzzer is connected
+				#define BUZZER_ON_LEVEL LOW							//State which buzzer is on
 
 				#define PWMout 1							//Pin that the LED who shows apogee state is connected
 
@@ -289,15 +289,15 @@
 				#define IGN_3 36	/*act3*/
 				#define IGN_4 35	/*act4*/
 
-				#define HEAL_1 7	/*health 1*/
-				#define HEAL_2 5	/*health 2*/
-				#define HEAL_3 9	/*health 3*/
-				#define HEAL_4 3	/*health 4*/
+				#define HEALTH_1 7	/*health 1*/
+				#define HEALTH_2 5	/*health 2*/
+				#define HEALTH_3 9	/*health 3*/
+				#define HEALTH_4 3	/*health 4*/
 
-				#define IGN_CMD HIGH	/* State which ign is on */
+				#define IGN_ON_LEVEL HIGH	/* State which ign is on */
 
-				#define buzzPin 37							//Pin that the buzzer is connected
-				#define buzzCmd HIGH							//State which buzzer is on
+				#define BUZZER_PIN 37							//Pin that the buzzer is connected
+				#define BUZZER_ON_LEVEL HIGH							//State which buzzer is on
 
 				#define PWMout 1							//Pin that the LED who shows apogee state is connected
 

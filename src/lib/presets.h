@@ -61,6 +61,8 @@
 
 		#endif
 
+		#define USING_ANY_LANCAMENTO
+
 	#elif USING_MODE == MODE_ELEVADOR
 
 		#define CURRENT_MODE_PROJECT_NAME "Lift"

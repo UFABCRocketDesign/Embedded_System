@@ -47,7 +47,7 @@ Apogeu apg(10, 15, 50);						//Apogee checker object declaration
 #if USE_DEPLOY
 #include "./MonoDeploy/MonoDeploy.hpp" // Acionamento de paraquedas simples
 
-const bool MonoDeploy::command = IGN_CMD;
+const bool MonoDeploy::command = IGN_ON_LEVEL;
 
 #if USE_DUAL_DEPLOY
 #define EM_drogN_DELAY 10					// Seconds before forced deployment
@@ -70,10 +70,10 @@ const bool MonoDeploy::command = IGN_CMD;
 #endif // USE_DROGUE_BACKUP
 
 
-#define pins_drogN (IGN_1, HEAL_1) /*act1*/
-#define pins_drogB (IGN_2, HEAL_2) /*act2*/
-#define pins_mainN (IGN_3, HEAL_3) /*act3*/
-#define pins_mainB (IGN_4, HEAL_4) /*act4*/
+#define pins_drogN (IGN_1, HEALTH_1) /*act1*/
+#define pins_drogB (IGN_2, HEALTH_2) /*act2*/
+#define pins_mainN (IGN_3, HEALTH_3) /*act3*/
+#define pins_mainB (IGN_4, HEALTH_4) /*act4*/
 
 
 struct Recovery
@@ -365,13 +365,10 @@ LoRaConfig configLoRa(LoRa, byte(AUX_LORA_PIN), byte(M0_LORA_PIN), byte(M1_LORA_
 ComProtocol Talk(Serial2, 9600);			//Declaration of communication protocol object
 #endif // USE_BOARD_LINK
 
-#if ((USE_PRINT) || (PERF_Tcom_print))
-#endif // ((USE_PRINT) || (PERF_Tcom_print))
-
 Helpful Gutil;								//Declaration of helpful object to general cases
 
 #if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
-#define RBFpin 2							//Pin that the USE_SOFTWARE_REMOVE_BEFORE_FLIGHT system is connected
+#define RBF_PIN 2							//Pin that the USE_SOFTWARE_REMOVE_BEFORE_FLIGHT system is connected
 #endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT
 
 #if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
@@ -379,16 +376,16 @@ unsigned short sysC = 0;
 #endif // USE_SOFTWARE_REMOVE_BEFORE_FLIGHT || USE_WAIT_UNTIL_FLIGHT || FORCE_SYSTEM_COUNT
 
 
-#if USE_BuZZ
+#if USE_BUZZER
 #if 1 < ((USE_BUZZER_ACTIVE) + (USE_BUZZER_PASSIVE) + (USE_BUZZER_AS_LED))
 #error: Multiplos tipos de buzzer definidos
 #endif
 
 #if USE_BUZZER_AS_LED
-#define buzzPin LED_BUILTIN
-#define buzzCmd HIGH
+#define BUZZER_PIN LED_BUILTIN
+#define BUZZER_ON_LEVEL HIGH
 #endif // USE_BUZZER_AS_LED
-#endif // USE_BuZZ
+#endif // USE_BUZZER
 
 #if USE_MORSE_MSG
 
@@ -399,11 +396,11 @@ unsigned short sysC = 0;
 #define ALARM_DELAY 10					// Delay after alarm when all systems working properly
 
 #if USE_BUZZER_ACTIVE
-MorseAtvBzz mensageiro(buzzPin, buzzCmd, "~ ");
-// MorseAtvBzz mensageiro(buzzPin, buzzCmd, "a 1 - . ~ . ^ . < . # . > . [ . ] . { . }");
+MorseAtvBzz mensageiro(BUZZER_PIN, BUZZER_ON_LEVEL, "~ ");
+// MorseAtvBzz mensageiro(BUZZER_PIN, BUZZER_ON_LEVEL, "a 1 - . ~ . ^ . < . # . > . [ . ] . { . }");
 #elif USE_BUZZER_PASSIVE
-Morse mensageiro(buzzPin, "~ ");
-// Morse mensageiro(buzzPin, CURRENT_MODE_PROJECT_NAME);
+Morse mensageiro(BUZZER_PIN, "~ ");
+// Morse mensageiro(BUZZER_PIN, CURRENT_MODE_PROJECT_NAME);
 #endif  // USE_BUZZER_ACTIVE / USE_BUZZER_PASSIVE
 
 #if MORSE_INTERRUPT
@@ -425,7 +422,7 @@ template <typename T, typename R> void transmit(T message, R value);
 template <typename T, typename R> void transmitln(T message, R value);
 #endif // HAS_COMM_CHANNEL
 
-#if (Srst || REPORT_RESET_REASON) && defined(ARDUINO_ARCH_ESP32)
+#if (LOG_RESET_REASON || REPORT_RESET_REASON) && defined(ARDUINO_ARCH_ESP32)
 // Nome do motivo de reinicio. O numero fica no log para scripts;
 // o nome, para quem le o arquivo depois do voo.
 // https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/misc_system_api.html#_CPPv416esp_reset_reasonv
@@ -450,7 +447,7 @@ const __FlashStringHelper* resetReasonName(esp_reset_reason_t reset)
 		default:                 return F("UNKNOWN");
 	}
 }
-#endif // (Srst || REPORT_RESET_REASON) && defined(ARDUINO_ARCH_ESP32)
+#endif // (LOG_RESET_REASON || REPORT_RESET_REASON) && defined(ARDUINO_ARCH_ESP32)
 
 
 

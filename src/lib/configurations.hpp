@@ -90,7 +90,7 @@
 #define USE_GNSS ((USE_GNSS_NEO_M) || (USE_VIRTUALGNSS))	// Use any GNSS
 #define USE_LoRa ((USE_LoRa_DORJI) || (USE_LoRa_E32))	// Use any radio
 #define USE_STORAGE ((USE_SD_SPI))				// Use any storage
-#define USE_BuZZ ((USE_BUZZER_ACTIVE) || (USE_BUZZER_PASSIVE) || (USE_BUZZER_AS_LED))	//Buzzer mode
+#define USE_BUZZER ((USE_BUZZER_ACTIVE) || (USE_BUZZER_PASSIVE) || (USE_BUZZER_AS_LED))	//Buzzer mode
 
 /*********************************** Flight ***********************************/
 
@@ -118,62 +118,63 @@
 #define USE_LoRa_KEYVALUE (USE_LoRa && 1)	// Send LoRa data Using Key-value pair
 
 /*********** Buzzer Options ***********/
-#define USE_MORSE_MSG  (USE_BuZZ && 1)				//Morse beeping
-#define USE_BEEP_SYSTEM_COUNT (USE_BuZZ && 0)					//Buzzer mode
+#define USE_MORSE_MSG  (USE_BUZZER && 1)				//Morse beeping
+#define USE_BEEP_SYSTEM_COUNT (USE_BUZZER && 0)					//Buzzer mode
 
 /******************************** Data Analysis *******************************/
 
-#define PbarT (USE_PRINT && USE_BARO && 1)		//Print barometer temperature data
-#define PbarP (USE_PRINT && USE_BARO && 1)		//Print barometer pressure data
+#define PRINT_BARO_TEMPERATURE (USE_PRINT && USE_BARO && 1)		//Print barometer temperature data
+#define PRINT_BARO_PRESSURE (USE_PRINT && USE_BARO && 1)		//Print barometer pressure data
 
-#define PaclX (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer X axis data
-#define PaclY (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer Y axis data
-#define PaclZ (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer Z axis data
+#define PRINT_ACCEL_X (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer X axis data
+#define PRINT_ACCEL_Y (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer Y axis data
+#define PRINT_ACCEL_Z (USE_PRINT && USE_ACCEL && 1)		//Print accelerometer Z axis data
 
-#define PgirX (USE_PRINT && USE_GYRO && 1)		//Print gyroscope x axis data
-#define PgirY (USE_PRINT && USE_GYRO && 1)		//Print gyroscope Y axis data
-#define PgirZ (USE_PRINT && USE_GYRO && 1)		//Print gyroscope Z axis data
+#define PRINT_GYRO_X (USE_PRINT && USE_GYRO && 1)		//Print gyroscope x axis data
+#define PRINT_GYRO_Y (USE_PRINT && USE_GYRO && 1)		//Print gyroscope Y axis data
+#define PRINT_GYRO_Z (USE_PRINT && USE_GYRO && 1)		//Print gyroscope Z axis data
 
-#define PmagX (USE_PRINT && USE_MAGN && 1)		//Print magnetometer x axis data
-#define PmagY (USE_PRINT && USE_MAGN && 1)		//Print magnetometer Y axis data
-#define PmagZ (USE_PRINT && USE_MAGN && 1)		//Print magnetometer Z axis data
+#define PRINT_MAGN_X (USE_PRINT && USE_MAGN && 1)		//Print magnetometer x axis data
+#define PRINT_MAGN_Y (USE_PRINT && USE_MAGN && 1)		//Print magnetometer Y axis data
+#define PRINT_MAGN_Z (USE_PRINT && USE_MAGN && 1)		//Print magnetometer Z axis data
 
-#define papgI (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print MonoDeploy.info of every instance
-#define PapgW (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee information when detected
-#define PapgH (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print altimeter data
-#define PapgB (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print altimeter base
-#define PapgP (USE_PRINT && USE_APOGEE_DETECTION && 0)		//Print current apogee information
-#define PapgA (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee alpha
-#define PapgS (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee sigma
-#define PapgM (USE_PRINT && USE_APOGEE_DETECTION && 0)		//Print apogee sigma max
+#define PRINT_RECOVERY_HEALTH (USE_PRINT && USE_DEPLOY && 1)		//Print MonoDeploy.info of every instance
 
-#define Pgps (USE_PRINT && USE_GNSS && 1)		//Print GPS informations
-#define Psep (USE_PRINT && 0)					//Print visual separator
+#define PRINT_APOGEE_EVENT (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee information when detected
+#define PRINT_HEIGHT (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print altimeter data
+#define PRINT_GROUND_REFERENCE (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print altimeter base
+#define PRINT_PEAK_HEIGHT (USE_PRINT && USE_APOGEE_DETECTION && 0)		//Print current apogee information
+#define PRINT_APOGEE_ALPHA (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee alpha
+#define PRINT_APOGEE_SIGMA (USE_PRINT && USE_APOGEE_DETECTION && 1)		//Print apogee sigma
+#define PRINT_APOGEE_SIGMA_MAX (USE_PRINT && USE_APOGEE_DETECTION && 0)		//Print apogee sigma max
 
-#define Tcom (USE_PRINT && 1)					//Print time counter
-#define Lcom (USE_PRINT && 0)					//Print loop counter
-#define Ncom (USE_PRINT && 0)					//Print eachN counter
-#define Ps_n (USE_PRINT && 1)					//Print SYSTEM_COUNT
+#define PRINT_GNSS (USE_PRINT && USE_GNSS && 1)		//Print GPS informations
+#define PRINT_SEPARATORS (USE_PRINT && 0)					//Print visual separator
 
-#define PWMapg (USE_APOGEE_DETECTION && 1)				//Show the apogee coefficient in a LED
+#define PRINT_TIME (USE_PRINT && 1)					//Print time counter
+#define PRINT_LOOP_COUNT (USE_PRINT && 0)					//Print loop counter
+#define PRINT_LOOP_RATE (USE_PRINT && 0)					//Print eachN counter
+#define PRINT_SYSTEM_COUNT (USE_PRINT && 1)					//Print SYSTEM_COUNT
 
-#define PERF_Tcom_print (0)				//Print time counter every 100 iterations (for performance tests)
+#define USE_APOGEE_LED (USE_APOGEE_DETECTION && 1)				//Show the apogee coefficient in a LED
 
-#define P_ANY (PbarT || PbarP || PaclX || PaclY || PaclZ || PgirX || PgirY || PgirZ || PmagX || PmagY || PmagZ || PapgW || PapgH || PapgP || PapgA || PapgS || PapgM || Pgps || Psep || Tcom || Lcom || PERF_Tcom_print)
+#define PRINT_PERFORMANCE_TIMING (0)				//Print time counter every 100 iterations (for performance tests)
+
+#define PRINT_ANY (PRINT_BARO_TEMPERATURE || PRINT_BARO_PRESSURE || PRINT_ACCEL_X || PRINT_ACCEL_Y || PRINT_ACCEL_Z || PRINT_GYRO_X || PRINT_GYRO_Y || PRINT_GYRO_Z || PRINT_MAGN_X || PRINT_MAGN_Y || PRINT_MAGN_Z || PRINT_APOGEE_EVENT || PRINT_HEIGHT || PRINT_PEAK_HEIGHT || PRINT_APOGEE_ALPHA || PRINT_APOGEE_SIGMA || PRINT_APOGEE_SIGMA_MAX || PRINT_GNSS || PRINT_RECOVERY_HEALTH || PRINT_SEPARATORS || PRINT_TIME || PRINT_LOOP_COUNT || PRINT_PERFORMANCE_TIMING)
 
 /********************************** Data Log **********************************/
 
-#define Sgps (USE_STORAGE && USE_GNSS && 1)		//Log GPS data
-#define Sapg (USE_STORAGE && USE_APOGEE_DETECTION && 1)		//Log apogee alpha and sigma
-#define Sdpl (USE_STORAGE && USE_DEPLOY && 1)	//Log parachute deployment state
-#define Shea (USE_STORAGE && USE_DEPLOY && 1)	//Log parachute health (igniter continuity)
-#define Semg (USE_STORAGE && USE_DEPLOY && 1)	//Log emergency state
-#define Srst (USE_STORAGE && 1)					//Log reset reason on file header
+#define LOG_GPS (USE_STORAGE && USE_GNSS && 1)		//Log GPS data
+#define LOG_APOGEE (USE_STORAGE && USE_APOGEE_DETECTION && 1)		//Log apogee alpha and sigma
+#define LOG_DEPLOY_STATE (USE_STORAGE && USE_DEPLOY && 1)	//Log parachute deployment state
+#define LOG_IGNITER_HEALTH (USE_STORAGE && USE_DEPLOY && 1)	//Log parachute health (igniter continuity)
+#define LOG_EMERGENCY (USE_STORAGE && USE_DEPLOY && 1)	//Log emergency state
+#define LOG_RESET_REASON (USE_STORAGE && 1)					//Log reset reason on file header
 
 /* Continuous columns: repeat the last known value on every line.
 With 0, the data only shows up at the moment of the event. */
-#define Sgps_C (Sgps && 1)					//GPS on every line
-#define Sdpl_C (Sdpl && 1)					//Deployments on every line
+#define LOG_GPS_EVERY_LINE (LOG_GPS && 1)					//GPS on every line
+#define LOG_DEPLOY_EVERY_LINE (LOG_DEPLOY_STATE && 1)					//Deployments on every line
 
 /*********************************** Derived **********************************/
 
@@ -238,7 +239,7 @@ constexpr uint8_t SYSTEM_COUNT = ( 0
 #if REQUIRE_SD && !USE_STORAGE
 #error: REQUIRE_SD ligado mas nenhum modulo de cartao selecionado
 #endif
-#if REQUIRE_BUZZ && !USE_BuZZ
+#if REQUIRE_BUZZ && !USE_BUZZER
 #error: REQUIRE_BUZZ ligado mas nenhum tipo de buzzer selecionado
 #endif
 #if REQUIRE_DEPLOY && !USE_DEPLOY
@@ -247,13 +248,13 @@ constexpr uint8_t SYSTEM_COUNT = ( 0
 #if REQUIRE_RGB && !USE_RGB
 #error: REQUIRE_RGB ligado mas a placa nao tem LED RGB
 #endif
-#if USE_PRINT && (USING_MODE == MODE_LANCAMENTO)
+#if USE_PRINT && defined(USING_ANY_LANCAMENTO)
 #warning USE_PRINT ligado em build de LANCAMENTO - o Serial rouba tempo do loop
 #endif
-#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT && (USING_MODE == MODE_LANCAMENTO)
+#if USE_SOFTWARE_REMOVE_BEFORE_FLIGHT && defined(USING_ANY_LANCAMENTO)
 #warning USE_SOFTWARE_REMOVE_BEFORE_FLIGHT ligado em build de LANCAMENTO - metodo abandonado, confira o jumper
 #endif
-#if FORCE_SYSTEM_COUNT && (USING_MODE == MODE_LANCAMENTO)
+#if FORCE_SYSTEM_COUNT && defined(USING_ANY_LANCAMENTO)
 #warning FORCE_SYSTEM_COUNT ligado em build de LANCAMENTO - o buzzer vai apitar a contagem de sistemas durante o voo
 #endif
 
